@@ -8,6 +8,7 @@ export type ChatGPTHost = {
   widgetState?: WidgetState | null;
   setWidgetState: (state: WidgetState) => Promise<void>;
   sendFollowUpMessage: (input: {prompt: string}) => Promise<void>;
+  openExternal?: (input:{href:string})=>void;
   requestDisplayMode?: (input: {mode: 'fullscreen'}) => Promise<unknown>;
 };
 export function getChatGPTHost(): ChatGPTHost | undefined {

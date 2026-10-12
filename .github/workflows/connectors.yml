@@ -27,6 +27,7 @@ jobs:
           cache: false
       - run: go test ./...
       - run: go run ./cmd/api -help
+      - run: go run ./cmd/printbridge -help
       - name: Check macOS launcher syntax
         if: runner.os == 'macOS'
         run: bash -n scripts/start-chatgpt-macos.sh scripts/build-connectors.sh

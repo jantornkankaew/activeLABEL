@@ -38,9 +38,12 @@ Render ส่ง `RENDER_EXTERNAL_URL` ให้ process เพื่อจำ�
 - ChatGPT เรียก `labelcraft_propose_edit` ซึ่งตรวจคำสั่งด้วย engine เดียวกับการแก้มือ แล้วแสดง preview **ยังไม่ได้เปลี่ยนฉลากจริง**
 - ตรวจข้อเสนอแล้วกด **ใช้การแก้ไข** หรือ **ไม่ใช้** การเปลี่ยน payload ของบาร์โค้ดเดิมต้องยืนยันเพิ่มเติม
 - ใช้ Undo/Redo ได้ โดย revision เพิ่มขึ้นเสมอ ข้อเสนอที่ revision เก่าจะใช้ไม่ได้
+- ใช้ File menu และแถบแท็บเพื่อสร้าง/เปิดหลายไฟล์งาน; Fit to page ขยายฉลากเต็มพื้นที่ตรงกลาง; Grid/Snap เลือกเปิดปิดได้
+- เปลี่ยนประเภทบาร์โค้ดอัตโนมัติเมื่อข้อมูลถูกต้อง หากผิดให้แก้จากข้อความ error หรือกดปุ่มตัวอย่าง/check digit การเปลี่ยน payload ไม่เกิดขึ้นเงียบ ๆ
+- กด Print เพื่อเปิดเว็บ LabelCraft พร้อมฉลากและหน้าพิมพ์ แล้วเลือก local printer ใน Chrome ดู [คู่มือ](LOCAL_PRINTING.md)
 - ดาวน์โหลด JSON หรือ SVG เพื่อเก็บงาน สถานะปัจจุบันอยู่ใน widget state ของ ChatGPT; undo history อยู่ใน widget ที่เปิดอยู่ ไม่มีฐานข้อมูลฉลากบน MCP server
 
-เวอร์ชันนี้ของ embedded app รองรับ text, barcodes, lines และ boxes ยังไม่รองรับการอัปโหลด image, physical printing, billing หรือ shared account storage การใช้งานเหล่านี้ใน standalone editor ไม่ได้หมายความว่ามีใน ChatGPT app
+เวอร์ชันนี้ของ embedded app รองรับ text, barcodes, lines และ boxes ยังไม่รองรับการอัปโหลด image, การเข้าถึงเครื่องพิมพ์โดยตรงจาก sandbox, billing หรือ shared account storage การใช้งานเหล่านี้ใน standalone editor ไม่ได้หมายความว่ามีใน ChatGPT app
 
 ## ค่าใช้จ่ายและบัญชี
 

@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"io"
 	"labelcraft/internal/bridge"
 	"labelcraft/internal/httpguard"
 	"log"
@@ -14,6 +15,8 @@ import (
 
 func main() {
 	config := flag.String("config", "printers.json", "printer configuration file")
+	cert := flag.String("tls-cert", os.Getenv("BRIDGE_TLS_CERT"), "trusted localhost TLS certificate")
+	key := flag.String("tls-key", os.Getenv("BRIDGE_TLS_KEY"), "TLS private key (local only)")
 	directory := flag.String("jobs", "bridge-jobs", "persistent job directory")
 	flag.Parse()
 	token := os.Getenv("LABELCRAFT_BRIDGE_TOKEN")
@@ -49,7 +52,7 @@ func main() {
 		decoder := json.NewDecoder(r.Body)
 		decoder.DisallowUnknownFields()
 		var j bridge.Job
-		if e := decoder.Decode(&j); e != nil {
+		if e := decoder.Decode(&j); e != nil || decoder.Decode(new(any)) != io.EOF {
 			httpguard.JSON(w, 400, map[string]string{"error": "invalid print job"})
 			return
 		}
@@ -61,7 +64,19 @@ func main() {
 		httpguard.JSON(w, 200, record)
 	})
 	origins := strings.Split(os.Getenv("LABELCRAFT_ALLOWED_ORIGINS"), ",")
-	server := http.Server{Addr: "127.0.0.1:28171", Handler: httpguard.Protect(token, origins, mux), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 20 * time.Second, WriteTimeout: 30 * time.Second, IdleTimeout: 30 * time.Second}
+	server := http.Server{Addr: "127.0.0.1:28171", Handler: httpguard.Loopback(origins, httpguard.Protect(token, origins, mux)), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 20 * time.Second, WriteTimeout: 30 * time.Second, IdleTimeout: 30 * time.Second}
+	if (*cert == "") != (*key == "") {
+		log.Fatal("Set both -tls-cert and -tls-key")
+	}
+	for _, origin := range origins {
+		if strings.HasPrefix(origin, "https://") && *cert == "" {
+			log.Fatal("Hosted HTTPS pages require trusted TLS: set -tls-cert and -tls-key; use Chrome system printing without a bridge if TLS is not configured")
+		}
+	}
 	log.Print("Print bridge on loopback :28171; no physical print success guarantee")
-	log.Fatal(server.ListenAndServe())
+	if *cert != "" {
+		log.Fatal(server.ListenAndServeTLS(*cert, *key))
+	} else {
+		log.Fatal(server.ListenAndServe())
+	}
 }

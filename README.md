@@ -7,9 +7,9 @@ Runnable technical prototype and implementation brief, 12 October 2026. Product 
 - React/TypeScript SVG object editor: text, barcode, image, line and box; millimetre geometry; inspector; selection/dragging; lock; undo/redo; local autosave; JSON import/export and vector SVG export.
 - Shared transaction engine for manual edits and chat operations. EAN checksum, geometry, unique IDs, unsupported operations and stale revision checks.
 - Offline command demonstration clearly labelled as **not an AI model** and a configured API provider for the standalone website. A separate Apps SDK widget and official Go MCP server run LabelCraft inside ChatGPT, using ChatGPT's conversation model without Codex installation or a model API key. No paid credits enabled.
-- Go print bridge: allowlisted printers, loopback binding, token and Origin checks, persistent job IDs, Windows GDI bitmap driver adapter and ZPL LAN bitmap adapter. No PDF required by the application.
+- Real Chrome system print dialog for installed Windows/macOS queues; exact-mm vector pages with bundled fonts, no app-generated PDF. Optional Go print bridge: allowlisted printers, loopback binding, token and Origin checks, persistent job IDs, Windows GDI bitmap driver adapter and ZPL LAN bitmap adapter. No PDF required by the application.
 
-This is not the finished commercial application. The ChatGPT widget, MCP contract and shared command validation have local tests; actual hosting and registration in a user's ChatGPT account are separate prerequisites. Prior API/local-Codex prototype checks passed; the local Codex connector is a legacy optional route and is no longer offered in the website's Settings. Live-model calls, hardware printing and performance measurements remain unverified. Driver vector output, macOS native driver printing, TSPL/CPCL, USB, batch data, billing and advanced capabilities remain implementation tasks in `docs/CODEX_SPEC.md`.
+This is not the finished commercial application. The ChatGPT widget, MCP contract and shared command validation have local tests; actual hosting and registration in a user's ChatGPT account are separate prerequisites. Prior API/local-Codex prototype checks passed; the local Codex connector is a legacy optional route and is no longer offered in the website's Settings. Live-model calls, hardware printing and performance measurements remain unverified. Bridge vector output, native macOS bridge printing, raw TSPL/CPCL/USB, batch data, billing and advanced capabilities remain implementation tasks in `docs/CODEX_SPEC.md`.
 
 ## LabelCraft inside ChatGPT
 
@@ -25,9 +25,13 @@ The project Codex hook is in `.codex/hooks.json`. Supported Codex CLI runtimes n
 
 ## Editor controls
 
-Double-click the label or use the size button to set dimensions. Select a text object to choose Noto Sans, Noto Serif or Noto Sans Mono; width and height are computed automatically. Bundled fonts include Thai fallback. For a barcode, edit its data and type together, then click **Apply barcode**; invalid values leave the original barcode intact. Available types: Code 128, Code 39, Code 93, EAN-13, EAN-8, UPC-A, UPC-E, Interleaved 2 of 5, QR, Data Matrix and PDF417. Barcode aspect ratio is locked to its encoded geometry: changing width recalculates height, and changing height recalculates width. Rulers track the pointer in millimetres on both axes.
+Double-click the label or use the size button to set dimensions. **Fit to page** maximizes and centres the label in the available workspace; screen zoom never changes physical print size. Toggle **Grid** and **Snap** independently and choose spacing in millimetres. Drag objects to position them; drag a selected barcode's corner to scale both axes proportionally. Text width and height are computed from bundled fonts. There are nine font choices: Noto Sans, Noto Serif, Noto Sans Mono, Noto Sans Thai, Noto Serif Thai, Open Sans, DejaVu Sans, DejaVu Serif and DejaVu Sans Mono.
 
-Use **New label** and the job selector to create and reopen multiple files. The standalone website saves these in this browser; the embedded app uses ChatGPT widget state. Download JSON as a portable backup, and use Import JSON / Open JSON to reopen it. Clearing browser data or losing widget state can remove locally saved jobs; this is not cloud account storage.
+Barcode type/data changes apply automatically when valid. Invalid drafts remain editable with an inline error and an explicit checksum correction or sample-data button; existing payloads are never replaced silently. Pending invalid drafts block printing and survive switching selection in the open editor. Available types: Code 128, Code 39, Code 93, EAN-13, EAN-8, UPC-A, UPC-E, Interleaved 2 of 5, QR, Data Matrix and PDF417. Barcode aspect ratio is locked to its encoded geometry. Rulers track the pointer in millimetres on both axes.
+
+The **File** menu provides New label, Open file, Save as JSON and Export SVG. Open labels appear as stable tabs below the header. The standalone website saves jobs in this browser; the embedded app uses ChatGPT widget state. Download JSON as a portable backup. Clearing browser data or losing widget state can remove saved jobs; this is not shared cloud account storage.
+
+For actual local printing, use **Print → Local printer → Print now**, then select the installed queue in Chrome. See [Windows/macOS local printing](docs/LOCAL_PRINTING.md) for driver/media setup and the optional HTTPS bridge. In ChatGPT, Print opens the standalone website with the current label and print preview.
 
 ## Frontend development
 
@@ -45,7 +49,7 @@ Open the Vite URL. Chat starts in offline command-demo mode. Supported examples:
 
 In this repository's GitHub **Settings → Pages**, choose **GitHub Actions** as the build source. The `Deploy LabelCraft to GitHub Pages` workflow builds and publishes the frontend on pushes to `main`; it can also be run manually from **Actions**. After a successful deployment, open `https://jantornkankaew.github.io/labelcraft/` in Chrome.
 
-Pages hosts the standalone static editor with offline demo or API mode. ChatGPT integration uses the separate [embedded app](docs/CHATGPT_APP.md), not a local Codex connector or an OAuth login on GitHub Pages. API mode needs a configured HTTPS API with the Pages origin explicitly allowed. The Go print bridge still runs on the printer's computer; its secure hosted-page connection remains separate. Do not put provider keys into GitHub Pages or browser code.
+Pages hosts the standalone static editor with offline demo or API mode. ChatGPT integration uses the separate [embedded app](docs/CHATGPT_APP.md), not a local Codex connector or an OAuth login on GitHub Pages. API mode needs a configured HTTPS API with the Pages origin explicitly allowed. The default Chrome system-dialog print route needs an installed OS printer queue; it does not need the bridge. The optional direct print bridge runs on the printer's computer. Do not put provider keys into GitHub Pages or browser code.
 
 ## Go service development
 
@@ -74,17 +78,16 @@ Configure environment variables locally, never commit secrets:
 
 In Settings, select API, enter the Go API HTTPS URL and API access token, then verify and apply. Do **not** enter the provider key into the browser. Service use/cost belongs to the operator's provider account; this prototype has no credit billing. For ChatGPT use the embedded app guide above. The older `go run ./cmd/api -local` route remains in source for compatibility; it is not the current ChatGPT app setup.
 
-Copy `printers.example.json` to ignored `printers.json`. Remove unused profiles and configure the exact device address/name and DPI. In Print, enter bridge URL and pairing token, connect printers and select a profile. Jobs use a DPI-sized PNG fallback; this is not the final hybrid/vector engine. Configure paper size in the Windows driver before testing. Never use generic sample printer names or IPs as real targets.
+The default system-dialog route works through installed OS queues on Windows/macOS. Configure the exact model's driver, custom paper size, 100% scale and no margins/headers/footers before printing a test label. Actual physical output remains hardware-dependent.
 
-A hosted HTTPS frontend needs a properly secured local connection (trusted HTTPS/WSS, pairing and browser private-network compatibility). The current HTTP-loopback service is a development route, not a verified production HTTPS bridge. Do not disable browser security to work around it.
-
+For the optional direct bridge, copy `printers.example.json` to ignored `printers.json` and remove unused/sample destinations. Hosted HTTPS origins require a trusted localhost certificate; launch with `-tls-cert` and `-tls-key`. The bridge checks exact Origin, token and loopback Host. See [the printing guide](docs/LOCAL_PRINTING.md). Never disable browser security or certificate checks. This route uses the existing PNG fallback.
 ## Printing safety / limitations
 
-- Job records are persisted before transport. An already recorded job ID is never automatically re-sent, including `sending` or unknown states. Reprinting after uncertainty is an explicit user action with a new job ID.
+- Bridge job records are persisted before transport. An already recorded job ID is never automatically re-sent, including `sending` or unknown states. Reprinting after uncertainty is an explicit user action with a new job ID.
 - `transport_sent` means bytes were written; `spooled` means submitted to Windows spooler. Neither proves paper output.
 - Run only one bridge instance for a job directory. Durable atomic replacement on Windows and cross-process job locking need hardening before production. For production, move job records to SQLite transactions.
-- USB and raw macOS driver adapters are not implemented. macOS can use the included ZPL LAN adapter once tested on its actual printer.
-- Printer raster output, module widths, quiet zones, Thai shaping, feed settings and physical size require device tests. SVG output is editable/vector, but driver output in this release is bitmap fallback.
+- Raw USB and native macOS bridge driver adapters are not implemented; Chrome can use installed USB/network queues on either OS. macOS can use the included ZPL LAN adapter once tested on its actual printer.
+- Printer raster output, module widths, quiet zones, Thai shaping, feed settings and physical size require device tests. Chrome uses the vector SVG page; the optional bridge driver output remains bitmap fallback.
 
 ## Next work
 

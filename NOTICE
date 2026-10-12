@@ -9,3 +9,8 @@ This list is not a substitute for the pinned dependency inventory and transitive
 
 Bundled subset Noto fonts: Copyright Google Inc.; SIL Open Font License 1.1.
 See third_party/Noto-Fonts-LICENSE.txt. Font metrics are derived from these fonts.
+
+Bundled subset Open Sans (Google; Apache-2.0) and DejaVu fonts
+(Bitstream font license; DejaVu changes public domain).
+See third_party/Fonts-open-sans-LICENSE.txt and Fonts-dejavu-LICENSE.txt.
+Fonts were subset for Latin and Thai; metrics derive from bundled files.
