@@ -2,7 +2,7 @@ import {barcodeProfile,barcodeMagnification,barcodeScaleLimits} from './barcodes
 import {dragLineEnd} from './lineGeometry';
 import {useEffect,useRef,useState,type PointerEvent} from 'react';
 import type {Command,LabelDocument,LabelObject} from './core';
-import {proportionalScale,snapCoordinate,resizeExtent} from './canvasGeometry';
+import {proportionalScale,snapCoordinate,resizeExtent,integerPercent} from './canvasGeometry';
 type Drag={item:LabelObject;mode:'move'|'resize';x:number;y:number;rect:DOMRect;pointerId:number;documentId:string};
 export function useCanvasInteraction(doc:LabelDocument|null,select:(id:string)=>void,commit:(commands:Command[],revision?:number)=>boolean,enabled:boolean,snap:boolean,step:number){
  const drag=useRef<Drag|null>(null);const previewRef=useRef<LabelDocument|null>(null);const [preview,setPreview]=useState<LabelDocument|null>(null);
@@ -16,7 +16,7 @@ export function useCanvasInteraction(doc:LabelDocument|null,select:(id:string)=>
   if(current.mode==='move'){item.x=Math.max(0,Math.min(doc.width-item.width,snapCoordinate(current.item.x+dx,step,snap)));item.y=Math.max(0,Math.min(doc.height-item.height,snapCoordinate(current.item.y+dy,step,snap)));}
   else if(item.kind==='line'){Object.assign(item,dragLineEnd(current.item,dx,dy,doc.width,doc.height,step,snap));}
   else if(item.kind==='box'){item.width=resizeExtent(current.item.width,dx,item.x,doc.width,step,snap);if(item.kind==='box')item.height=resizeExtent(current.item.height,dy,item.y,doc.height,step,snap);}
-  else {const profile=barcodeProfile(item.symbology,item.content);const limits=barcodeScaleLimits(item.symbology);const max=Math.min(limits.max,(doc.width-item.x)/profile.width*100,(doc.height-item.y)/profile.height*100);if(max<limits.min)return;const requested=barcodeMagnification(current.item)*proportionalScale(current.item.width,current.item.height,dx,dy,doc.width-item.x,doc.height-item.y);item.barcodeScale=Math.max(limits.min,Math.min(max,requested));item.width=profile.width*item.barcodeScale/100;item.height=profile.height*item.barcodeScale/100;}
+  else {const profile=barcodeProfile(item.symbology,item.content);const limits=barcodeScaleLimits(item.symbology);const max=Math.min(limits.max,(doc.width-item.x)/profile.width*100,(doc.height-item.y)/profile.height*100);if(max<limits.min)return;const requested=barcodeMagnification(current.item)*proportionalScale(current.item.width,current.item.height,dx,dy,doc.width-item.x,doc.height-item.y);const percent=integerPercent(requested,limits.min,max);if(percent===null)return;item.barcodeScale=percent;item.width=profile.width*item.barcodeScale/100;item.height=profile.height*item.barcodeScale/100;}
 
   previewRef.current=next;setPreview(next);
  }

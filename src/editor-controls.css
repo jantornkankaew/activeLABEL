@@ -6,3 +6,5 @@
 .canvas-line-resize{cursor:crosshair!important}
 
 .barcode-size-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:5px 0 10px}.barcode-size-actions button{font-size:10px;padding:6px 2px}
+
+.barcode-main-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px}.barcode-main-fields label{margin:0}.barcode-dimensions{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px;font-size:11px;color:#546977;margin:12px 0}.barcode-dimensions small{color:#08745b}.barcode-details{font-size:11px;color:#73828b;margin:10px 0}.barcode-details summary{cursor:pointer}.barcode-details dl{display:grid;grid-template-columns:80px 1fr;gap:6px;margin:10px 0}.barcode-details dd{margin:0}.printer-select{margin:12px 0}.printer-select small{display:block;font-size:11px;color:#73828b;margin-top:6px}.bridge-connection{font-size:12px;margin:12px 0}.bridge-connection summary{cursor:pointer}.print-options{display:grid;grid-template-columns:1fr 1fr;gap:10px}
