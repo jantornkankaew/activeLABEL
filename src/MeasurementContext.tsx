@@ -1,0 +1,13 @@
+import {createContext,useContext,useEffect,useState,type ReactNode} from 'react';
+import {defaultMeasurements,measurementUnits,type MeasurementSettings,displayMeasurement,toMillimetres,fromMillimetres} from './units';
+const MeasurementContext=createContext({settings:defaultMeasurements,setSettings:(_settings:MeasurementSettings)=>{}});
+export function MeasurementProvider({children}:{children:ReactNode}){
+ const [settings,setSettings]=useState<MeasurementSettings>(()=>{try{const saved=JSON.parse(localStorage.getItem('labelcraft-measurements-v1')??'null');if(saved&&measurementUnits.includes(saved.unit)&&[203,300,600].includes(saved.dpi))return saved;}catch{/* Use a valid default when sandbox storage is unavailable. */}return defaultMeasurements;});
+ useEffect(()=>{try{localStorage.setItem('labelcraft-measurements-v1',JSON.stringify(settings));}catch{/* View preferences do not affect document autosave. */}},[settings]);
+ return <MeasurementContext.Provider value={{settings,setSettings}}>{children}</MeasurementContext.Provider>;
+}
+export const useMeasurements=()=>useContext(MeasurementContext);
+export function MeasurementControls(){const {settings,setSettings}=useMeasurements();return <div className="measurement-controls"><label>Units<select aria-label="Measurement unit" value={settings.unit} onChange={e=>setSettings({...settings,unit:e.target.value as MeasurementSettings['unit']})}>{measurementUnits.map(unit=><option key={unit}>{unit}</option>)}</select></label>{settings.unit==='dot'&&<label>DPI<select aria-label="Measurement DPI" value={settings.dpi} onChange={e=>setSettings({...settings,dpi:Number(e.target.value)})}>{[203,300,600].map(dpi=><option key={dpi}>{dpi}</option>)}</select></label>}</div>;}
+export function MeasurementInput({label,ariaLabel,value,minMm,maxMm,stepMm=.5,disabled,onChange,autoFocus}:{label:string;ariaLabel?:string;value:number;minMm?:number;maxMm?:number;stepMm?:number;disabled?:boolean;onChange:(mm:number)=>void;autoFocus?:boolean}){
+ const {settings}=useMeasurements();return <label>{label} ({settings.unit})<input aria-label={ariaLabel} type="number" autoFocus={autoFocus} disabled={disabled} min={minMm===undefined?undefined:fromMillimetres(minMm,settings.unit,settings.dpi)} max={maxMm===undefined?undefined:fromMillimetres(maxMm,settings.unit,settings.dpi)} step={settings.unit==='dot'?1:settings.unit==='inch'?.001:fromMillimetres(stepMm,settings.unit,settings.dpi)} value={displayMeasurement(value,settings)} onChange={e=>{const numeric=Number(e.target.value);if(Number.isFinite(numeric))onChange(toMillimetres(numeric,settings.unit,settings.dpi));}}/></label>;
+}

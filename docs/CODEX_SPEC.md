@@ -76,3 +76,7 @@ Unit/integration tests for transactions, stale commands, undo revisions, invalid
 Physical proof: known mm patterns, 203/300 DPI where devices available, barcode payload equality on scan, Thai shaping and long text, margins/rotation, repeated batch and offline recovery. Automated decode success is not ISO print-grade certification. Record printer model/firmware/driver/OS/browser/media/transport and known limitations.
 
 Target estimates: 1–2 week technical proof; 10–12 weeks limited MVP with ready testers; expanded advanced platform and hybrid adapters may need more time. Do not treat estimates as commitments before hardware and selected image/UX are validated.
+
+## Measurement preferences and future reference labels
+
+Display/input units are mm, cm, inch or dot with explicit DPI. Canonical document/command geometry remains mm; changing view units must not change revisions or physical printing. Alignment positions selected objects relative to label bounds with six validated undoable actions; exact centre placement bypasses grid snap. Future chat image reconstruction follows [REFERENCE_LABELS.md](REFERENCE_LABELS.md), including physical-size confirmation, decoded barcode payload review and editable preview/apply; it is not currently implemented.
