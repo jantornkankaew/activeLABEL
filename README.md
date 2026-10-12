@@ -6,10 +6,16 @@ Runnable technical prototype and implementation brief, 12 October 2026. Product 
 
 - React/TypeScript SVG object editor: text, barcode, image, line and box; millimetre geometry; inspector; selection/dragging; lock; undo/redo; local autosave; JSON import/export and vector SVG export.
 - Shared transaction engine for manual edits and chat operations. EAN checksum, geometry, unique IDs, unsupported operations and stale revision checks.
-- Offline command demonstration clearly labelled as **not an AI model**. Settings can select a configured API provider or the personal ChatGPT/Codex connector. No model key or OAuth token in the browser. No paid credits enabled.
+- Offline command demonstration clearly labelled as **not an AI model** and a configured API provider for the standalone website. A separate Apps SDK widget and official Go MCP server run LabelCraft inside ChatGPT, using ChatGPT's conversation model without Codex installation or a model API key. No paid credits enabled.
 - Go print bridge: allowlisted printers, loopback binding, token and Origin checks, persistent job IDs, Windows GDI bitmap driver adapter and ZPL LAN bitmap adapter. No PDF required by the application.
 
-This is not the finished commercial application. Desktop/mobile AI Settings, both provider paths with mocks, HTTPS/auth guards, and undo were checked in Chromium on Linux. GitHub Actions passed Go unit tests, connector help and launcher syntax checks on native Windows/macOS runners, then built all four connector ZIPs. Live-model calls, end-to-end Windows/macOS login, hosted-page private-network access, hardware printing and performance measurements remain unverified. Driver vector output, macOS native driver printing, TSPL/CPCL, USB, batch data, billing and advanced capabilities remain implementation tasks in `docs/CODEX_SPEC.md`.
+This is not the finished commercial application. The ChatGPT widget, MCP contract and shared command validation have local tests; actual hosting and registration in a user's ChatGPT account are separate prerequisites. Prior API/local-Codex prototype checks passed; the local Codex connector is a legacy optional route and is no longer offered in the website's Settings. Live-model calls, hardware printing and performance measurements remain unverified. Driver vector output, macOS native driver printing, TSPL/CPCL, USB, batch data, billing and advanced capabilities remain implementation tasks in `docs/CODEX_SPEC.md`.
+
+## LabelCraft inside ChatGPT
+
+Use [the ChatGPT app setup guide](docs/CHATGPT_APP.md). The widget opens inside ChatGPT and supports manual editing, validated AI proposals, explicit Apply/Reject, Undo/Redo and JSON/SVG export. It uses the existing TypeScript engine on both the UI and Go MCP server. It does not extract ChatGPT tokens or call an inference API.
+
+[Deploy the MCP server to Render using GitHub](https://render.com/deploy?repo=https://github.com/jantornkankaew/labelcraft), then add the actual HTTPS `/mcp` endpoint in ChatGPT's developer app settings. GitHub Pages cannot run this server. Account eligibility, hosting and app registration remain user steps; preparing the code is not a completed connection to ChatGPT.
 
 ## RTK CLI for Codex
 
@@ -33,11 +39,11 @@ Open the Vite URL. Chat starts in offline command-demo mode. Supported examples:
 
 In this repository's GitHub **Settings → Pages**, choose **GitHub Actions** as the build source. The `Deploy LabelCraft to GitHub Pages` workflow builds and publishes the frontend on pushes to `main`; it can also be run manually from **Actions**. After a successful deployment, open `https://jantornkankaew.github.io/labelcraft/` in Chrome.
 
-Pages hosts the static editor. Settings offers API or ChatGPT through the personal Codex connector. Follow [AI connection setup for Windows/macOS](docs/AI_CONNECTIONS.md) for the local HTTPS connector, official login and pairing. API mode needs a configured HTTPS API with the Pages origin explicitly allowed. The Go print bridge still runs on the printer's computer; its secure hosted-page connection remains separate. Do not put provider keys into GitHub Pages or browser code.
+Pages hosts the standalone static editor with offline demo or API mode. ChatGPT integration uses the separate [embedded app](docs/CHATGPT_APP.md), not a local Codex connector or an OAuth login on GitHub Pages. API mode needs a configured HTTPS API with the Pages origin explicitly allowed. The Go print bridge still runs on the printer's computer; its secure hosted-page connection remains separate. Do not put provider keys into GitHub Pages or browser code.
 
 ## Go service development
 
-Requires Go 1.22+; no third-party Go modules.
+Requires Go 1.25+ for the official Go MCP SDK; the API/print bridge still use the standard library.
 
 ```sh
 go test ./...
@@ -60,7 +66,7 @@ Configure environment variables locally, never commit secrets:
 | `LABELCRAFT_CODEX_BIN` | Optional native Codex executable path; Windows uses `codex.exe`, not the npm `.cmd` shim |
 | `API_TLS_CERT`, `API_TLS_KEY` | Trusted localhost/server TLS certificate and private key paths; required for hosted HTTPS origins in ChatGPT mode |
 
-In Settings, select API, enter the Go API HTTPS URL and API access token, then verify and apply. Do **not** enter the provider key into the browser. Service use/cost belongs to the operator's provider account; this prototype has no credit billing. For ChatGPT mode use the local launcher documented above. `go run ./cmd/api -local` generates a pairing token in the user configuration directory; it also requires trusted TLS for its default allowed hosted origin and an official Codex login. No LLM API key is required for Codex mode, and failed Codex requests do not fall back to API.
+In Settings, select API, enter the Go API HTTPS URL and API access token, then verify and apply. Do **not** enter the provider key into the browser. Service use/cost belongs to the operator's provider account; this prototype has no credit billing. For ChatGPT use the embedded app guide above. The older `go run ./cmd/api -local` route remains in source for compatibility; it is not the current ChatGPT app setup.
 
 Copy `printers.example.json` to ignored `printers.json`. Remove unused profiles and configure the exact device address/name and DPI. In Print, enter bridge URL and pairing token, connect printers and select a profile. Jobs use a DPI-sized PNG fallback; this is not the final hybrid/vector engine. Configure paper size in the Windows driver before testing. Never use generic sample printer names or IPs as real targets.
 

@@ -1,0 +1,28 @@
+FROM node:24-alpine AS widget
+WORKDIR /src
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY tsconfig.json ./
+COPY src ./src
+COPY tests ./tests
+COPY scripts ./scripts
+RUN npm run build:chatgpt
+
+FROM golang:1.27.2-alpine AS server
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+COPY cmd ./cmd
+COPY internal ./internal
+RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /labelcraft-chatgpt ./cmd/chatgpt
+
+FROM node:24-alpine
+WORKDIR /app
+COPY --from=server /labelcraft-chatgpt ./labelcraft-chatgpt
+COPY --from=widget /src/dist-chatgpt ./dist-chatgpt
+COPY LICENSE NOTICE ./
+COPY third_party ./third_party
+USER node
+ENV PORT=8787
+EXPOSE 8787
+CMD ["/app/labelcraft-chatgpt", "-assets", "/app/dist-chatgpt"]

@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: labelcraft-chatgpt
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile.chatgpt
+    healthCheckPath: /healthz
+    envVars:
+      - key: PORT
+        value: "8787"

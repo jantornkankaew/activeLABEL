@@ -1,0 +1,51 @@
+name: Validate ChatGPT app
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'cmd/chatgpt/**'
+      - 'internal/chatgptapp/**'
+      - 'scripts/**'
+      - 'package*.json'
+      - 'go.mod'
+      - 'go.sum'
+      - 'Dockerfile.chatgpt'
+      - '.dockerignore'
+      - 'render.yaml'
+      - '.github/workflows/chatgpt-app.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.2'
+      - run: npm ci
+      - run: npm test
+      - run: npm run build:chatgpt
+      - run: go test -race ./...
+      - run: docker build -f Dockerfile.chatgpt -t labelcraft-chatgpt:test .
+      - name: Verify the deployed container protocol
+        shell: bash
+        run: |
+          docker run -d --name labelcraft-chatgpt-test -e MCP_PUBLIC_URL=https://localhost -p 127.0.0.1:8788:8787 labelcraft-chatgpt:test
+          trap 'docker rm -f labelcraft-chatgpt-test >/dev/null' EXIT
+          for attempt in {1..30}; do
+            if curl -fsS http://127.0.0.1:8788/healthz >/dev/null; then break; fi
+            sleep 1
+          done
+          node scripts/chatgpt-smoke.mjs http://127.0.0.1:8788/mcp
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LabelCraft-ChatGPT-App
+          path: dist-chatgpt/

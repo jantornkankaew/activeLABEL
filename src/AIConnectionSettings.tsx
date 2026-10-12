@@ -30,19 +30,16 @@ export function AIConnectionSettings({provider, connections, onSave, onClose}: {
     <label>AI provider<select aria-label="AI provider" value={selected} disabled={checking} onChange={event => changeProvider(event.target.value as AIProvider)}>
       <option value="demo">โหมดทดลอง · ไม่ใช้ AI</option>
       <option value="api">API · ใช้ API key บน server</option>
-      <option value="codex">ChatGPT · ผ่าน Codex บนเครื่องคุณ</option>
     </select></label>
     {selected === 'demo' ? <p>ทดลองคำสั่งที่รองรับโดยไม่เรียกโมเดลและไม่มีค่า API</p> : <>
-      {selected === 'codex' ? <div className="connection-info"><p>ใช้บัญชี ChatGPT ที่มีสิทธิ์ Codex ตามโควตาของแพ็กเกจ รองรับตัวเชื่อม Windows และ macOS</p>
-        <ol><li>เปิดตัวช่วยเริ่มระบบ LabelCraft บนเครื่องคุณ</li><li>ล็อกอินผ่าน Codex ทางการใน browser</li><li>ใส่ URL และ pairing token ของตัวเชื่อม แล้วตรวจสอบ</li></ol>
-        <a href="https://github.com/jantornkankaew/labelcraft/blob/main/docs/AI_CONNECTIONS.md" target="_blank" rel="noreferrer">วิธีติดตั้งบน Windows / macOS</a>
-      </div> : <p>ตั้งค่า model API key บน Go server ค่าใช้บริการ API แยกจากแพ็กเกจ ChatGPT อย่าใส่ model API key ในช่องนี้</p>}
-      <label>{selected === 'codex' ? 'Local connector URL' : 'API server URL'}<input aria-label="AI server URL" value={draft[selected].url} disabled={checking} onChange={event => update('url', event.target.value)} /></label>
-      <label>{selected === 'codex' ? 'Pairing token' : 'API access token'}<input aria-label="AI access token" type="password" autoComplete="off" value={draft[selected].token} disabled={checking} onChange={event => update('token', event.target.value)} /></label>
+      <p>ตั้งค่า model API key บน Go server ค่าใช้บริการ API แยกจากแพ็กเกจ ChatGPT อย่าใส่ model API key ในช่องนี้</p>
+      <label>API server URL<input aria-label="AI server URL" value={draft[selected].url} disabled={checking} onChange={event => update('url', event.target.value)} /></label>
+      <label>API access token<input aria-label="AI access token" type="password" autoComplete="off" value={draft[selected].token} disabled={checking} onChange={event => update('token', event.target.value)} /></label>
       <p>Token อยู่ในหน่วยความจำของหน้านี้ ไม่บันทึกลงฉลากหรือ browser storage เว็บที่เผยแพร่ต้องใช้ HTTPS ที่เชื่อถือได้</p>
       <button className="wide" disabled={checking} onClick={check}>{checking ? 'กำลังตรวจสอบ…' : 'ตรวจสอบการเชื่อมต่อ'}</button>
       {status && <p role="status" className="connection-status">{status}</p>}
     </>}
+    <div className="connection-info"><h3>ใช้ LabelCraft ภายใน ChatGPT</h3><p>เปิด editor เป็นแอปในบทสนทนา ChatGPT ได้ ไม่ต้องติดตั้งตัวเชื่อมใน Windows/macOS หรือใส่ API key แต่ต้องเพิ่มแอปจาก MCP server ที่ deploy แล้วก่อน</p><a href="https://github.com/jantornkankaew/labelcraft/blob/main/docs/CHATGPT_APP.md" target="_blank" rel="noreferrer">วิธีเพิ่ม LabelCraft ใน ChatGPT</a></div>
     <div className="modal-actions"><button disabled={checking} onClick={onClose}>Cancel</button><button className="primary" disabled={checking || (selected !== 'demo' && !verified)} onClick={() => onSave(selected, draft)}><Check size={16}/> ใช้ตัวเลือกนี้</button></div>
   </div></div>;
 }

@@ -1,0 +1,32 @@
+import assert from 'node:assert/strict';
+const endpoint = process.argv[2] ?? 'http://127.0.0.1:8787/mcp';
+let id = 0;
+async function rpc(method, params) {
+  const response = await fetch(endpoint, {method: 'POST', headers: {'Content-Type': 'application/json', Accept: 'application/json, text/event-stream', 'MCP-Protocol-Version': '2025-06-18'}, body: JSON.stringify({jsonrpc: '2.0', id: ++id, method, params}), signal: AbortSignal.timeout(15000)});
+  assert.equal(response.status, 200, `${method}: HTTP ${response.status}`);
+  const payload = await response.json();
+  assert.equal(payload.error, undefined, `${method}: protocol error`);
+  return payload.result;
+}
+await rpc('initialize', {protocolVersion: '2025-06-18', capabilities: {}, clientInfo: {name: 'labelcraft-smoke', version: '1'}});
+const {tools} = await rpc('tools/list', {});
+assert.equal(tools.length, 2);
+assert(tools.every(tool => tool.annotations.readOnlyHint && tool._meta['openai/outputTemplate']));
+const uri = tools[0]._meta['openai/outputTemplate'];
+const {contents} = await rpc('resources/read', {uri});
+assert.equal(contents[0].mimeType, 'text/html+skybridge');
+assert(contents[0].text.includes('LabelCraft in ChatGPT'));
+assert(contents[0]._meta['openai/widgetCSP']);
+const opened = await rpc('tools/call', {name: 'labelcraft_open', arguments: {title: 'Smoke label', widthMm: 50, heightMm: 30}});
+assert(!opened.isError);
+const document = opened.structuredContent.document;
+assert.equal(document.objects.length, 0);
+const commands = [{op: 'add', object: {id: 'text', name: 'Product', kind: 'text', x: 3, y: 3, width: 30, height: 5, content: 'User supplied', fontSize: 3, bold: false}}];
+const proposal = await rpc('tools/call', {name: 'labelcraft_propose_edit', arguments: {document, baseRevision: document.revision, commands}});
+assert(!proposal.isError);
+assert.equal(proposal.structuredContent.status, 'proposal_pending');
+assert.equal(proposal.structuredContent.document.revision, 0);
+assert.equal(proposal.structuredContent.proposal.previewDocument.revision, 1);
+const stale = await rpc('tools/call', {name: 'labelcraft_propose_edit', arguments: {document, baseRevision: 99, commands}});
+assert(stale.isError);
+console.log('PASS: MCP handshake, widget, blank label, shared-engine proposal and stale-revision rejection. No model or printer was called.');

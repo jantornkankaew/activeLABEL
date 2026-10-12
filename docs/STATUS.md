@@ -1,5 +1,11 @@
 # Implementation status
 
+Current ChatGPT direction: Apps SDK widget + official Go MCP server, not a personal Codex connector in the website. The standalone API and demo remain. `docs/CHATGPT_APP.md` provides deployment/registration steps; preparing this repository does not deploy a public MCP endpoint or register the app in a ChatGPT account.
+
+Implemented for the embedded app: vector text/barcode/line/box editing, mm geometry, inspector/layers, manual commands through the existing engine, stateless MCP open/propose tools, server validation using the same compiled TypeScript engine, explicit Apply/Reject, barcode-change confirmation, stale-revision rejection, monotonic Undo/Redo, widget state and JSON/SVG export. Image upload, physical printing, account storage and billing are not implemented in the embedded app.
+
+Local checks: 15 TypeScript tests; 18 Go tests including official MCP-client protocol/schema tests; live local MCP smoke with the actual Node worker; Chromium desktop/mobile host-mock interaction checks including Apply/Undo/Redo and barcode confirmation. No live ChatGPT model or account connection was tested. Standard Docker build in this cloud instance encountered its proxy certificate trust restriction; CI is configured to build and smoke-test the normal deployment image before readiness is claimed. Render deployment and ChatGPT registration remain external prerequisites.
+
 12 October 2026 — v0.1 technical prototype.
 
 Implemented: object editor, SVG display/export, JSON save/load, atomic commands, monotonic undo revisions, labelled offline chat, API/ChatGPT provider selector, personal Codex CLI adapter, trusted-TLS configuration and loopback/Host/auth/Origin guards for the AI connector, Windows/macOS launchers and connector ZIP build workflow, PNG print payload, persistent single-process job IDs, ZPL LAN adapter, Windows GDI bitmap adapter.

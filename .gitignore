@@ -1,5 +1,6 @@
 node_modules/
 dist/
+dist-chatgpt/
 bin/
 dist-connectors/
 dist-connectors-checksums.txt

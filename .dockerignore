@@ -1,0 +1,13 @@
+.git
+.codex
+.openai
+node_modules
+dist
+dist-chatgpt
+dist-connectors
+bin
+.env
+.env.*
+*.log
+printers.json
+bridge-jobs

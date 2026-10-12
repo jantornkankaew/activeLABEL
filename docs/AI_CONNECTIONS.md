@@ -1,5 +1,7 @@
 # LabelCraft: API หรือ ChatGPT ผ่าน Codex
 
+> Legacy local-connector documentation. The preferred ChatGPT integration is now [LabelCraft inside ChatGPT](CHATGPT_APP.md), which requires no local Codex installation. The website no longer offers the local Codex option. The API section remains applicable.
+
 LabelCraft มี 3 โหมด: ทดลองคำสั่งออฟไลน์, API, และ ChatGPT ผ่าน Codex CLI ทางการบนเครื่องของคุณ การใช้ ChatGPT ขึ้นอยู่กับสิทธิ์ Codex และโควตาของแพ็กเกจ ไม่ใช่ API credit และไม่รับประกันว่าใช้ได้ไม่จำกัด
 
 ## ChatGPT — Windows และ macOS
