@@ -1,0 +1,3 @@
+# Third-party notices
+
+The optional local-printer integration bundles the unmodified QZ Tray JavaScript connector, `qz-tray` version 2.3.0, under LGPL-2.1-only. The package license banner remains in the browser bundle. Original source is available from [the exact npm source archive](https://registry.npmjs.org/qz-tray/-/qz-tray-2.3.0.tgz) and [the publisher's repository](https://github.com/qzind/tray); the dependency version and integrity are recorded in package-lock.json. Obtain the [LGPL 2.1 license text](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html). The separately installed native QZ Tray application is downloaded directly from the publisher, not redistributed by this project.

@@ -2,6 +2,12 @@
 
 The default **Print → เปิดรายชื่อเครื่องพิมพ์ใน Chrome** route opens Chrome's real system print dialog. Choose an installed local queue, then click Print in Chrome. LabelCraft does not generate or require a PDF. It prepares a vector SVG page with bundled fonts and the document's millimetre size. The screen's fit-to-page zoom, grid, snap and selection handles are excluded from printing.
 
+## Show local printer names inside LabelCraft
+
+Install and open QZ Tray on the computer used to print. In **Print**, choose **ติดตั้ง QZ Tray** for direct Windows/macOS installer links, then **ค้นหาเครื่องพิมพ์** and approve the requesting LabelCraft website in QZ Tray. The OS printer names then appear in the in-app **Printer** selector. Select a queue, set its actual DPI/copies and click **Print now**. QZ permission prompts are expected; the application does not bypass them. This route uses the existing installed driver and a DPI-sized PNG image; it does not infer protocol support from the brand or confirm that paper came out.
+
+See [discovery setup, API sources, tests and native-verification limits](LOCAL_PRINTER_DISCOVERY.md). No configured helper means no in-app OS discovery; Chrome printing remains available. The old Go bridge with explicit profile allowlisting is retained as an advanced option.
+
 ## Install and select the actual printer
 
 1. Install the manufacturer driver for the exact model and OS, then add its USB or network queue in Windows Printers & scanners or macOS Printers & Scanners.
@@ -15,7 +21,7 @@ TSC, Zebra, Honeywell, EPSON and SATO queues can use this system-dialog route wh
 
 Inside ChatGPT, **Print** opens the standalone LabelCraft website with the current label and print preview. The label is passed in the URL fragment, which is not sent to the web server; the website clears the fragment after importing it. You still choose the local queue and confirm printing in Chrome. The ChatGPT sandbox does not directly access local USB printers.
 
-The website cannot enumerate operating-system printer queues through the standard browser printing API. Without an installed/configured bridge, the real queue list appears in Chrome's native print dialog. The in-app selector only lists authenticated profiles returned by the local bridge; it does not invent printers or claim that every installed queue has been discovered.
+The website cannot enumerate operating-system printer queues through the standard browser printing API. Without an installed/configured bridge, the real queue list appears in Chrome's native print dialog. The in-app selector lists OS queues returned by the permitted QZ helper or authenticated profiles from the Go bridge; it does not invent printer names.
 
 ## Chrome does not list my printer
 
