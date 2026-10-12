@@ -38,7 +38,7 @@ jobs:
       - name: Verify the deployed container protocol
         shell: bash
         run: |
-          docker run -d --name labelcraft-chatgpt-test -e MCP_PUBLIC_URL=https://localhost -p 127.0.0.1:8788:8787 labelcraft-chatgpt:test
+          docker run -d --name labelcraft-chatgpt-test -e MCP_PUBLIC_URL=https://127.0.0.1 -p 127.0.0.1:8788:8787 labelcraft-chatgpt:test
           trap 'docker rm -f labelcraft-chatgpt-test >/dev/null' EXIT
           for attempt in {1..30}; do
             if curl -fsS http://127.0.0.1:8788/healthz >/dev/null; then break; fi
