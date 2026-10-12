@@ -1,0 +1,6 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {resizeExtent} from '../src/canvasGeometry';
+import {apply,object,seed,restoreRevision} from '../src/core';
+test('free shape resizing clamps both expansion and shrink within physical label bounds',()=>{assert.equal(resizeExtent(10,5,3,50,2,false),15);assert.equal(resizeExtent(10,-30,3,50,2,false),.1);assert.equal(resizeExtent(10,100,3,50,2,false),47);assert.equal(resizeExtent(10,4.2,3,50,2,true),15);assert.equal(resizeExtent(10,100,3,50,2,true),47);});
+test('box independently changes width and height and line changes only length, with validated undo',()=>{for(const kind of ['box','line'] as const){const doc=seed();const item=object(kind,{id:kind,x:3,y:3,width:10,height:kind==='line'?.3:5});const added=apply(doc,[{op:'add',object:item}]);const changes=kind==='line'?{width:20}:{width:20,height:3};const next=apply(added,[{op:'update',id:kind,changes}]);const result=next.objects.find(o=>o.id===kind)!;assert.equal(result.width,20);assert.equal(result.height,kind==='line'?.3:3);assert.equal(result.x,3);assert.equal(result.y,3);const undone=restoreRevision(next,added);assert.equal(undone.objects.find(o=>o.id===kind)!.width,10);assert.equal(undone.revision,next.revision+1);}});

@@ -1,6 +1,6 @@
 import {useEffect,useRef,useState,type PointerEvent} from 'react';
 import type {Command,LabelDocument,LabelObject} from './core';
-import {proportionalScale,snapCoordinate} from './canvasGeometry';
+import {proportionalScale,snapCoordinate,resizeExtent} from './canvasGeometry';
 type Drag={item:LabelObject;mode:'move'|'resize';x:number;y:number;rect:DOMRect;pointerId:number;documentId:string};
 export function useCanvasInteraction(doc:LabelDocument|null,select:(id:string)=>void,commit:(commands:Command[],revision?:number)=>boolean,enabled:boolean,snap:boolean,step:number){
  const drag=useRef<Drag|null>(null);const previewRef=useRef<LabelDocument|null>(null);const [preview,setPreview]=useState<LabelDocument|null>(null);
@@ -12,6 +12,7 @@ export function useCanvasInteraction(doc:LabelDocument|null,select:(id:string)=>
  function move(event:PointerEvent){const current=drag.current;if(!doc||!current||event.pointerId!==current.pointerId||current.documentId!==doc.id)return;
   const next=structuredClone(doc);const item=next.objects.find(o=>o.id===current.item.id)!;const dx=(event.clientX-current.x)*doc.width/current.rect.width;const dy=(event.clientY-current.y)*doc.height/current.rect.height;
   if(current.mode==='move'){item.x=Math.max(0,Math.min(doc.width-item.width,snapCoordinate(current.item.x+dx,step,snap)));item.y=Math.max(0,Math.min(doc.height-item.height,snapCoordinate(current.item.y+dy,step,snap)));}
+  else if(item.kind==='box'||item.kind==='line'){item.width=resizeExtent(current.item.width,dx,item.x,doc.width,step,snap);if(item.kind==='box')item.height=resizeExtent(current.item.height,dy,item.y,doc.height,step,snap);}
   else {let scale=proportionalScale(current.item.width,current.item.height,dx,dy,doc.width-item.x,doc.height-item.y);if(snap){const snappedWidth=snapCoordinate(item.x+current.item.width*scale,step,true)-item.x;scale=Math.max(.01,Math.min(snappedWidth/current.item.width,(doc.width-item.x)/current.item.width,(doc.height-item.y)/current.item.height));}item.width=current.item.width*scale;item.height=current.item.height*scale;}
   previewRef.current=next;setPreview(next);
  }

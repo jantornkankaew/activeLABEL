@@ -98,3 +98,5 @@ Give Codex `docs/CODEX_START_PROMPT.md`, `docs/CODEX_SPEC.md` and this repositor
 Original source: Apache-2.0. Third-party libraries retain their own licenses and notices; see NOTICE and the lockfile. The chosen public code release does not exempt the product from third-party patents. Review dependency versions, FTO and the product name before commercial release.
 
 Editor units can be switched between **mm, cm, inch and dot**. For dots choose the actual printer DPI (203, 300 or 600); changing the display preference does not resize the physical label. Select an object to align left/centre/right or top/centre/bottom against the label, with Undo/Redo support. Grid spacing also displays in the chosen unit. Reference-image reconstruction through chat is [planned](docs/REFERENCE_LABELS.md).
+
+Select a **line** and drag its right-end handle to change length; select a **box** and drag its bottom-right corner to change width and height independently. Mouse resizing supports grid snap and Undo/Redo in both editors. Unlock an object before resizing it.
