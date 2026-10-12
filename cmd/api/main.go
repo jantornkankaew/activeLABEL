@@ -168,7 +168,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 				httpguard.JSON(w, 502, map[string]string{"error": "invalid AI changes"})
 				return
 			}
-			allowed := map[string]bool{"x": true, "y": true, "width": true, "height": true, "content": true, "bold": true, "fontSize": true, "fontName": true, "symbology": true, "name": true}
+			allowed := map[string]bool{"line": true, "x": true, "y": true, "width": true, "height": true, "content": true, "bold": true, "fontSize": true, "fontName": true, "symbology": true, "name": true}
 			for k := range changes {
 				if !allowed[k] {
 					httpguard.JSON(w, 502, map[string]string{"error": "unsupported AI property"})

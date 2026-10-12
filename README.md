@@ -100,3 +100,7 @@ Original source: Apache-2.0. Third-party libraries retain their own licenses and
 Editor units can be switched between **mm, cm, inch and dot**. For dots choose the actual printer DPI (203, 300 or 600); changing the display preference does not resize the physical label. Select an object to align left/centre/right or top/centre/bottom against the label, with Undo/Redo support. Grid spacing also displays in the chosen unit. Reference-image reconstruction through chat is [planned](docs/REFERENCE_LABELS.md).
 
 Select a **line** and drag its right-end handle to change length; select a **box** and drag its bottom-right corner to change width and height independently. Mouse resizing supports grid snap and Undo/Redo in both editors. Unlock an object before resizing it.
+
+**Share** replaces the header Save action: copy an editable snapshot link, use the browser's share sheet where available, or download a JSON file to send. Receivers get an independent document; later edits do not sync. Large labels use files. JSON export remains in File.
+
+Line tail handles now move freely in both axes to change the angle while holding the start in place. Double-click an object to reveal its Properties; double-click empty paper to open **Document property** (formerly Label size).

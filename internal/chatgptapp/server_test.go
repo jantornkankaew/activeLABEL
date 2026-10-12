@@ -67,6 +67,20 @@ func TestOfficialMCPClientToolsAndWidgetResource(t *testing.T) {
 	if engine.calls != 1 {
 		t.Fatal("schema-invalid requests reached the engine")
 	}
+	line := map[string]any{"startX": 0, "startY": 5, "endX": 10, "endY": 0}
+	args := map[string]any{"document": map[string]any{"schemaVersion": 1, "id": "test-label", "revision": 0, "title": "Test", "width": 50, "height": 30, "objects": []any{}}, "baseRevision": 0, "commands": []any{map[string]any{"op": "add", "object": map[string]any{"id": "line", "name": "Line", "kind": "line", "x": 3, "y": 3, "width": 10, "height": 5, "content": "", "line": line}}}}
+	result, err = session.CallTool(ctx, &mcp.CallToolParams{Name: "labelcraft_propose_edit", Arguments: args})
+	if err != nil || result.IsError || engine.calls != 2 {
+		t.Fatalf("freeform line schema: %v %+v", err, result)
+	}
+	line["execute"] = "invalid"
+	result, err = session.CallTool(ctx, &mcp.CallToolParams{Name: "labelcraft_propose_edit", Arguments: args})
+	if err == nil && !result.IsError {
+		t.Fatal("unknown nested line property accepted")
+	}
+	if engine.calls != 2 {
+		t.Fatal("invalid nested line reached engine")
+	}
 }
 
 func TestMCPRejectsUnknownCommandBeforeEngine(t *testing.T) {

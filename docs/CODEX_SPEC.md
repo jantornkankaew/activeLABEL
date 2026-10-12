@@ -80,3 +80,11 @@ Target estimates: 1–2 week technical proof; 10–12 weeks limited MVP with rea
 ## Measurement preferences and future reference labels
 
 Display/input units are mm, cm, inch or dot with explicit DPI. Canonical document/command geometry remains mm; changing view units must not change revisions or physical printing. Alignment positions selected objects relative to label bounds with six validated undoable actions; exact centre placement bypasses grid snap. Future chat image reconstruction follows [REFERENCE_LABELS.md](REFERENCE_LABELS.md), including physical-size confirmation, decoded barcode payload review and editable preview/apply; it is not currently implemented.
+
+## Freeform lines, properties and sharing
+
+Lines may have optional local-mm `line: {startX,startY,endX,endY}` points inside their canonical x/y/width/height bounds. Missing points retain legacy horizontal rendering. Dragging the tail keeps the start fixed, supports any direction including vertical and reversed lines, snaps the tail optionally and commits once on release. Reject invalid or zero-length endpoints; preserve vector points through import/export, moves, alignment, proposals, print and undo.
+
+Double-click an object to select it and reveal its inspector; stop the event before document handling. Double-click blank paper to open Document property. The former Label size heading uses Document property.
+
+The header Share action shares an editable snapshot via a validated `#share=` URL or JSON file. A receiver imports a new document identity, clears the fragment and never automatically prints. Keep links bounded (16,000 characters); large documents use file sharing. Native share/clipboard availability must have explicit fallbacks. This is snapshot sharing, not synchronized collaboration or cloud account storage.

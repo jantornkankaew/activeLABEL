@@ -1,3 +1,4 @@
+import {dragLineEnd} from './lineGeometry';
 import {useEffect,useRef,useState,type PointerEvent} from 'react';
 import type {Command,LabelDocument,LabelObject} from './core';
 import {proportionalScale,snapCoordinate,resizeExtent} from './canvasGeometry';
@@ -12,11 +13,12 @@ export function useCanvasInteraction(doc:LabelDocument|null,select:(id:string)=>
  function move(event:PointerEvent){const current=drag.current;if(!doc||!current||event.pointerId!==current.pointerId||current.documentId!==doc.id)return;
   const next=structuredClone(doc);const item=next.objects.find(o=>o.id===current.item.id)!;const dx=(event.clientX-current.x)*doc.width/current.rect.width;const dy=(event.clientY-current.y)*doc.height/current.rect.height;
   if(current.mode==='move'){item.x=Math.max(0,Math.min(doc.width-item.width,snapCoordinate(current.item.x+dx,step,snap)));item.y=Math.max(0,Math.min(doc.height-item.height,snapCoordinate(current.item.y+dy,step,snap)));}
-  else if(item.kind==='box'||item.kind==='line'){item.width=resizeExtent(current.item.width,dx,item.x,doc.width,step,snap);if(item.kind==='box')item.height=resizeExtent(current.item.height,dy,item.y,doc.height,step,snap);}
+  else if(item.kind==='line'){Object.assign(item,dragLineEnd(current.item,dx,dy,doc.width,doc.height,step,snap));}
+  else if(item.kind==='box'){item.width=resizeExtent(current.item.width,dx,item.x,doc.width,step,snap);if(item.kind==='box')item.height=resizeExtent(current.item.height,dy,item.y,doc.height,step,snap);}
   else {let scale=proportionalScale(current.item.width,current.item.height,dx,dy,doc.width-item.x,doc.height-item.y);if(snap){const snappedWidth=snapCoordinate(item.x+current.item.width*scale,step,true)-item.x;scale=Math.max(.01,Math.min(snappedWidth/current.item.width,(doc.width-item.x)/current.item.width,(doc.height-item.y)/current.item.height));}item.width=current.item.width*scale;item.height=current.item.height*scale;}
   previewRef.current=next;setPreview(next);
  }
- function finish(){const current=drag.current;const next=previewRef.current;if(doc&&current&&next&&current.documentId===doc.id){const item=next.objects.find(o=>o.id===current.item.id)!;const changes=current.mode==='move'?{x:item.x,y:item.y}:{width:item.width,height:item.height};if(Object.entries(changes).some(([key,value])=>current.item[key as keyof LabelObject]!==value))commit([{op:'update',id:item.id,changes}],doc.revision);}drag.current=null;previewRef.current=null;setPreview(null);}
+ function finish(){const current=drag.current;const next=previewRef.current;if(doc&&current&&next&&current.documentId===doc.id){const item=next.objects.find(o=>o.id===current.item.id)!;const changes=current.mode==='move'?{x:item.x,y:item.y}:{x:item.x,y:item.y,width:item.width,height:item.height,...(item.line?{line:item.line}:{})};if(Object.entries(changes).some(([key,value])=>current.item[key as keyof LabelObject]!==value))commit([{op:'update',id:item.id,changes}],doc.revision);}drag.current=null;previewRef.current=null;setPreview(null);}
  function cancel(){drag.current=null;previewRef.current=null;setPreview(null);}
  return {preview,onPointerDown:(e:PointerEvent<SVGGElement>)=>start(e,'move'),onResizeStart:(e:PointerEvent<SVGRectElement>)=>start(e,'resize'),onPointerMove:move,onPointerUp:finish,onPointerCancel:cancel};
 }
