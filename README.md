@@ -9,7 +9,7 @@ Runnable technical prototype and implementation brief, 12 October 2026. Product 
 - Offline command demonstration clearly labelled as **not an AI model**. Settings can select a configured API provider or the personal ChatGPT/Codex connector. No model key or OAuth token in the browser. No paid credits enabled.
 - Go print bridge: allowlisted printers, loopback binding, token and Origin checks, persistent job IDs, Windows GDI bitmap driver adapter and ZPL LAN bitmap adapter. No PDF required by the application.
 
-This is not the finished commercial application. Desktop/mobile AI Settings, both provider paths with mocks, HTTPS/auth guards, and undo were checked in Chromium on Linux. Live-model calls, native Windows/macOS execution, hosted-page private-network access, hardware printing and performance measurements remain unverified. Driver vector output, macOS native driver printing, TSPL/CPCL, USB, batch data, billing and advanced capabilities remain implementation tasks in `docs/CODEX_SPEC.md`.
+This is not the finished commercial application. Desktop/mobile AI Settings, both provider paths with mocks, HTTPS/auth guards, and undo were checked in Chromium on Linux. GitHub Actions passed Go unit tests, connector help and launcher syntax checks on native Windows/macOS runners, then built all four connector ZIPs. Live-model calls, end-to-end Windows/macOS login, hosted-page private-network access, hardware printing and performance measurements remain unverified. Driver vector output, macOS native driver printing, TSPL/CPCL, USB, batch data, billing and advanced capabilities remain implementation tasks in `docs/CODEX_SPEC.md`.
 
 ## RTK CLI for Codex
 
