@@ -6,10 +6,10 @@ Runnable technical prototype and implementation brief, 12 October 2026. Product 
 
 - React/TypeScript SVG object editor: text, barcode, image, line and box; millimetre geometry; inspector; selection/dragging; lock; undo/redo; local autosave; JSON import/export and vector SVG export.
 - Shared transaction engine for manual edits and chat operations. EAN checksum, geometry, unique IDs, unsupported operations and stale revision checks.
-- Offline command demonstration clearly labelled as **not an AI model**. Go API adapter for a configured Chat Completions-compatible provider. No model key in the browser. No paid credits enabled.
+- Offline command demonstration clearly labelled as **not an AI model**. Settings can select a configured API provider or the personal ChatGPT/Codex connector. No model key or OAuth token in the browser. No paid credits enabled.
 - Go print bridge: allowlisted printers, loopback binding, token and Origin checks, persistent job IDs, Windows GDI bitmap driver adapter and ZPL LAN bitmap adapter. No PDF required by the application.
 
-This is not the finished commercial application. Browser visual/interaction QA, live-model calls, native Windows/macOS execution, hardware printing and performance measurements have not been verified in this Linux environment. Driver vector output, macOS native driver printing, TSPL/CPCL, USB, batch data, billing and advanced capabilities remain implementation tasks in `docs/CODEX_SPEC.md`.
+This is not the finished commercial application. Desktop/mobile AI Settings, both provider paths with mocks, HTTPS/auth guards, and undo were checked in Chromium on Linux. Live-model calls, native Windows/macOS execution, hosted-page private-network access, hardware printing and performance measurements remain unverified. Driver vector output, macOS native driver printing, TSPL/CPCL, USB, batch data, billing and advanced capabilities remain implementation tasks in `docs/CODEX_SPEC.md`.
 
 ## RTK CLI for Codex
 
@@ -33,7 +33,7 @@ Open the Vite URL. Chat starts in offline command-demo mode. Supported examples:
 
 In this repository's GitHub **Settings → Pages**, choose **GitHub Actions** as the build source. The `Deploy LabelCraft to GitHub Pages` workflow builds and publishes the frontend on pushes to `main`; it can also be run manually from **Actions**. After a successful deployment, open `https://jantornkankaew.github.io/labelcraft/` in Chrome.
 
-Pages hosts the static editor and labelled offline command demo. Live AI requires a separately hosted HTTPS API with the Pages origin explicitly allowed. The Go print bridge still runs on the printer's computer; secure connectivity from hosted HTTPS remains a separate implementation task. Do not put provider keys into GitHub Pages or browser code.
+Pages hosts the static editor. Settings offers API or ChatGPT through the personal Codex connector. Follow [AI connection setup for Windows/macOS](docs/AI_CONNECTIONS.md) for the local HTTPS connector, official login and pairing. API mode needs a configured HTTPS API with the Pages origin explicitly allowed. The Go print bridge still runs on the printer's computer; its secure hosted-page connection remains separate. Do not put provider keys into GitHub Pages or browser code.
 
 ## Go service development
 
@@ -56,8 +56,11 @@ Configure environment variables locally, never commit secrets:
 | `LABELCRAFT_BRIDGE_TOKEN` | Separate random local pairing token, at least 24 characters |
 | `LABELCRAFT_ALLOWED_ORIGINS` | Comma-separated exact allowed frontend origins, e.g. local Vite origin |
 | `API_LISTEN` | Optional API address; default loopback `127.0.0.1:28172` |
+| `LABELCRAFT_CODEX_ENABLED` | Set to `1` to enable the personal ChatGPT connector; requires loopback binding |
+| `LABELCRAFT_CODEX_BIN` | Optional native Codex executable path; Windows uses `codex.exe`, not the npm `.cmd` shim |
+| `API_TLS_CERT`, `API_TLS_KEY` | Trusted localhost/server TLS certificate and private key paths; required for hosted HTTPS origins in ChatGPT mode |
 
-In Settings, enter the Go API URL and API access token and enable live mode. Do **not** enter the provider key into the browser. Service use/cost belongs to the operator's provider account; this prototype has no credit billing.
+In Settings, select API, enter the Go API HTTPS URL and API access token, then verify and apply. Do **not** enter the provider key into the browser. Service use/cost belongs to the operator's provider account; this prototype has no credit billing. For ChatGPT mode use the local launcher documented above. `go run ./cmd/api -local` generates a pairing token in the user configuration directory; it also requires trusted TLS for its default allowed hosted origin and an official Codex login. No LLM API key is required for Codex mode, and failed Codex requests do not fall back to API.
 
 Copy `printers.example.json` to ignored `printers.json`. Remove unused profiles and configure the exact device address/name and DPI. In Print, enter bridge URL and pairing token, connect printers and select a profile. Jobs use a DPI-sized PNG fallback; this is not the final hybrid/vector engine. Configure paper size in the Windows driver before testing. Never use generic sample printer names or IPs as real targets.
 

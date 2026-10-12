@@ -1,6 +1,8 @@
 node_modules/
 dist/
 bin/
+dist-connectors/
+dist-connectors-checksums.txt
 .sites-runtime/
 .env
 *.log
