@@ -1,0 +1,7 @@
+LabelCraft prototype — original source released under Apache-2.0.
+Third-party packages retain their own licenses and copyright notices.
+React / React DOM: MIT. Vite: MIT. TypeScript: Apache-2.0.
+bwip-js: MIT (with incorporated Barcode Writer in Pure PostScript notices; preserve package LICENSE and related files).
+lucide-react: ISC. tsx: MIT. @types packages: MIT.
+Go standard library/toolchain: BSD-style license; see the Go distribution LICENSE.
+This list is not a substitute for the pinned dependency inventory and transitive-license review before distribution.

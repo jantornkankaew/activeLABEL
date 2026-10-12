@@ -1,0 +1,78 @@
+# Product specification — LabelCraft
+
+Version 1.1 · 12 October 2026 · Working name. This specification supersedes earlier PDF-first/no-agent recommendations. Prototype status is documented separately.
+
+## Product intent
+
+One professional web workspace combines an object designer and conversational AI. It produces dependable barcode labels and print jobs. The editor/core are open source; a separately operated AI service can sell credits. Users may design manually without purchasing AI.
+
+Primary screen: document header with save/undo/redo/print; left object tools/layers/inspector; centre physical label canvas with rulers and zoom; right conversational assistant, selected-object context and proposed changes. Support panel collapse and keyboard use. Thai and English UI/content; fonts with licensed embedding. Responsive usability; desktop is first production target.
+
+## Accepted technology and printing requirements
+
+TypeScript frontend (current React/Vite); Go API and background Print Engine; PostgreSQL for hosted accounts/credit ledger; SQLite for hardened local print ledger. Print bridge runs on Windows and macOS Intel/Apple Silicon. Keep low overhead: no bundled Chromium desktop UI, no idle polling loops, bounded queues/jobs/images, measure idle and burst RSS/CPU.
+
+The user explicitly accepts installing a small bridge. They want direct printing via driver, without a PDF step. On macOS when vendor drivers are unavailable, use tested raw-command adapters. LAN comes first; USB is model-specific follow-up. Driver/platform adapters must be distinct from the canonical document and transport adapters.
+
+## Source of truth and commands
+
+Versioned label document: stable IDs, revision, physical dimensions, typed objects, licensed asset/font references, field bindings, rules and printer/media profiles. Coordinates mm; screen zoom separate. Barcode module width and quiet zone explicit in mm/device dots. Numeric rounding cannot stretch or compress barcode modules unpredictably. History revisions stay monotonic even when undo returns old contents.
+
+Commands: add/update/remove/group/align/distribute/bind/resize/reorder; validated atomic transactions. Shared schemas generated for TS and Go; server revalidates authenticated AI commands and bills only a validated deliverable. Client rejects stale revision responses; never overwrite edits made while AI runs. Every UI path and AI tool uses the same rules.
+
+Text shaping must preserve Thai combining marks; fit/wrap/clipping are explicit properties. Barcode payloads are strings. Prevent leading-zero loss. Keep QR square and respect EAN/Code128 symbology rules. Images and effects do not turn the whole document into opaque pixels.
+
+## Capability milestones beyond a basic editor
+
+| Capability | User outcome | Implementation / proof |
+|---|---|---|
+| Constraint-aware layout | “Make it 40×25, keep barcode readable” gives a feasible layout or explains why not | Solver/layout rules enforce margins, fixed sizes and module constraints; AI chooses/proposes among valid layouts |
+| Preflight | Detect overflow, invalid data, clipped quiet zones, insufficient image resolution and font issues before print | Deterministic report by object/row; does not claim ISO grade without verifier |
+| Data intelligence | Upload Excel/CSV, map fields, find duplicates/missing IDs and preview variants | Local parsing by default, confirmed mapping, validate each row; show exact errors |
+| Batch composition | One template becomes 500 variable labels with bounded resource use | Streaming/chunking, cancellation, previews and row-level validation |
+| Reference reconstruction | Image/PDF example becomes editable text/shape/barcode layout | Ask for physical size, OCR confidence, confirm decoded payload; never manufacture a barcode from guessed pixels |
+| Template memory | Reuse company layout, fonts and constraints on future work | User-approved preferences and versioned templates, scoped to organization |
+| Conversational editing | Edit selection, apply a style, compare alternatives, revert a turn | Typed command proposals, preview/diff, atomic history |
+| Calibration profiles | Consistent output for actual printer/media | Stored per-model/DPI/media offsets, test pattern and measured compatibility matrix |
+| Hybrid Print Engine | Crisp text/shapes/barcodes with images where needed | Vector/text platform rendering or native printer primitives; bitmap only for unsupported regions/fallback |
+| Controlled operations | Teams share/approve templates and audit reprints | Account/organization authorization, immutable approved versions, audit and explicit reprint reasons |
+| Integration API | ERP/stock apps generate jobs from a template plus data | Scoped API keys, validation, idempotency, status without false physical-success claims |
+
+These are target capabilities, not all available in v0.1. Start with edit/preflight/data/printing correctness. Do not add artistic AI QR, arbitrary code execution, RFID, 3D packaging optimization or regulated-label certification without separate scope and IP/standards review.
+
+## AI orchestration
+
+Use existing model APIs, not own model training initially. Benchmark a lower-cost model and a stronger fallback on the same 100+ prompts. Tools include getSelection, proposeCommands, inspectConstraints, suggestFieldMapping and previewVariant. No direct tool bypasses authorization, validation or print confirmation.
+
+Send minimal context and selected IDs. External document/CSV text is data, never privileged instruction. Do not upload all business data by default. Model/refusal/timeout/malformed-output failures leave the document intact. Limit tokens, iterations and retries. Store cost/latency/outcome metadata without logging provider keys or sensitive sample rows.
+
+Single safe edit can update canvas immediately with undo. Complex changes show diff/proposal. Printing initiated through chat presents printer, dimensions, copies and data range for review before transport; ambiguous destructive data edits ask targeted questions.
+
+## Printing pipeline
+
+Canonical document → resolve data/font/constraints → preflight → display list → platform/printer renderer → transport/spooler → observed status.
+
+- Driver renderer: text/glyph paths, fills/strokes and images in physical coordinates. Windows native GDI/other suitable API; macOS native print route where queue exists. Validate custom media, printable offsets and DPI; do not assume driver paper is correct.
+- Raw renderer: use supported ZPL/TSPL/CPCL primitives where verified; unsupported text/font/effects rendered as device-resolution bitmap. No arbitrary AI raw command accepted.
+- Fallback renderer: monochrome raster at target DPI, crisp barcode edges, no fit-to-page. Not the default replacement for the entire vector architecture.
+- Transports: configured Windows queue, macOS queue or allowlisted LAN endpoint. USB after targeted-device tests. No arbitrary destination passed by browser.
+- Local connection: trusted HTTPS/WSS/pairing; explicit Origin/Host checks, token scope, replay-resistant jobs, allowlisted app origins, no public bind by default. Test Chromium private-network protections and Safari compatibility; current HTTP demo is insufficient for hosted production.
+- Durable jobs: SQLite transactions, lock against multiple instances, persisted intent and outcome; at-most-once automatic submission per job ID. A lost acknowledgement gives uncertain status; user chooses explicit reprint with new ID. No false exactly-once physical-print promise.
+
+Status vocabulary: validated, queued, rendering, sending, spooled/transport_sent, printer_reported (if supported), confirmed_by_user, failed_before_send, unknown_after_send. Browser dialogue closure is not physical success. Paper-out/offline/cover-open monitoring is device-specific.
+
+## Open source and paid credits
+
+Core/editor Apache-2.0; preserve dependency licenses, NOTICE and font licenses. Hosted AI/billing operation can be separate. Open source allows competitors to fork and sell; do not add a no-commercial clause and still call it open source. Trademark and third-party patent clearance remains separate.
+
+Credits: quote → reserve → execute → validated/persisted deliverable → settle; failed/no deliverable → release. Server is authority. Append-only ledger and unique provider/payment/job IDs. Verify signed payment webhooks, reconcile duplicates/out-of-order events; never credit based on browser redirect. Provider failures cannot double-charge. Undo after delivered generation does not inherently refund inference. Show policy in UI.
+
+Prices are hypotheses until actual cost p50/p95 and willingness-to-pay tests. No unlimited AI free tier or hidden cost escalation. Manual edit/export/reprint unchanged labels does not consume AI credits.
+
+## Definition of done
+
+Unit/integration tests for transactions, stale commands, undo revisions, invalid inputs, per-tenant access, webhook/job duplicates and crash recovery. TS build; Go tests/race checks; cross-compile Win amd64, Mac amd64/arm64. Browser QA desktop/mobile plus real native OS tests and hardware matrix. Reference-image fidelity review when the user's exact selected image is available.
+
+Physical proof: known mm patterns, 203/300 DPI where devices available, barcode payload equality on scan, Thai shaping and long text, margins/rotation, repeated batch and offline recovery. Automated decode success is not ISO print-grade certification. Record printer model/firmware/driver/OS/browser/media/transport and known limitations.
+
+Target estimates: 1–2 week technical proof; 10–12 weeks limited MVP with ready testers; expanded advanced platform and hybrid adapters may need more time. Do not treat estimates as commitments before hardware and selected image/UX are validated.

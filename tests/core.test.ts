@@ -1,0 +1,9 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {apply,seed,validate,demoCommands,restoreRevision} from '../src/core.ts';
+test('manual and chat share transactional edit engine',()=>{const d=seed();const r=demoCommands('ย้ายราคาไปขวาบน',d,null);const n=apply(d,r.commands);assert.equal(n.objects.find(o=>o.id==='price')!.y,2);assert.equal(d.objects.find(o=>o.id==='price')!.y,3);assert.equal(n.revision,1);});
+test('invalid compound edits do not partially apply',()=>{const d=seed();assert.throws(()=>apply(d,[{op:'update',id:'price',changes:{content:'999'}},{op:'update',id:'brand',changes:{x:100}}]));assert.equal(d.objects.find(o=>o.id==='price')!.content,'129.00 THB');});
+test('stale AI is rejected after undo restores monotonic revision',()=>{const d=seed();const n=apply(d,[{op:'update',id:'price',changes:{y:2}}]);const u=restoreRevision(n,d);assert.equal(u.revision,2);assert.throws(()=>apply(u,[{op:'update',id:'price',changes:{y:1}}],0));});
+test('EAN requires valid checksum',()=>{const d=seed();d.objects.find(o=>o.id==='barcode')!.symbology='ean13';d.objects.find(o=>o.id==='barcode')!.content='4006381333931';validate(d);d.objects.find(o=>o.id==='barcode')!.content='4006381333932';assert.throws(()=>validate(d));});
+test('locked objects and remote image URLs cannot be changed',()=>{const d=seed();d.objects[0].locked=true;assert.throws(()=>apply(d,[{op:'remove',id:d.objects[0].id}]));const i={...d.objects[0],id:'image',kind:'image' as const,content:'https://example.com/image.png'};assert.throws(()=>apply(d,[{op:'add',object:i}]));});
+test('empty, duplicate and unknown operations are rejected',()=>{const d=seed();assert.throws(()=>apply(d,[]));assert.throws(()=>apply(d,[{op:'add',object:d.objects[0]}]));assert.throws(()=>apply(d,[{op:'update',id:'price',changes:{id:'other'} as never}]));});

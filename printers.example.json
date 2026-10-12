@@ -1,0 +1,4 @@
+[
+  {"id":"zpl-lan","name":"ZPL-compatible LAN printer","mode":"zpl_tcp","address":"192.168.1.100:9100","dpi":203},
+  {"id":"windows-label","name":"Replace with installed Windows printer name","mode":"windows_driver","dpi":203}
+]
