@@ -1,13 +1,13 @@
 # Local printing on Windows and macOS
 
-The default **Print → เครื่องพิมพ์ใน Chrome… → เลือกเครื่องพิมพ์…** route opens Chrome's real system print dialog. Choose an installed local queue, then click Print in Chrome. LabelCraft does not generate or require a PDF. It prepares a vector SVG page with bundled fonts and the document's millimetre size. The screen's fit-to-page zoom, grid, snap and selection handles are excluded from printing.
+The default **Print → เปิดรายชื่อเครื่องพิมพ์ใน Chrome** route opens Chrome's real system print dialog. Choose an installed local queue, then click Print in Chrome. LabelCraft does not generate or require a PDF. It prepares a vector SVG page with bundled fonts and the document's millimetre size. The screen's fit-to-page zoom, grid, snap and selection handles are excluded from printing.
 
 ## Install and select the actual printer
 
 1. Install the manufacturer driver for the exact model and OS, then add its USB or network queue in Windows Printers & scanners or macOS Printers & Scanners.
 2. Use the OS's test-page function first. LabelCraft cannot install a hardware driver or inspect USB devices remotely from GitHub Pages.
 3. Configure custom media matching the label (e.g. 50 × 30 mm) in the driver. Thermal printers may also need the correct gap/black-mark mode and calibration.
-4. Open LabelCraft's Print preview and choose **เครื่องพิมพ์ใน Chrome…**. Set the number of label pages, then **เลือกเครื่องพิมพ์…**.
+4. Open LabelCraft's Print preview, set the number of label pages, then choose **เปิดรายชื่อเครื่องพิมพ์ใน Chrome**. If bridge profiles are loaded, select the Chrome route first.
 5. In Chrome, select the installed queue, choose the same media size, **Scale 100%**, **Margins None**, and disable **Headers and footers**. Leave Chrome copies at 1 when the app already created multiple label pages.
 6. Check one label's physical size, feed and barcode scan before a batch. Custom `@page` dimensions are requests; the browser/driver can override them. Do not select “Fit to printable area” if it changes the intended physical size.
 
@@ -17,9 +17,18 @@ Inside ChatGPT, **Print** opens the standalone LabelCraft website with the curre
 
 The website cannot enumerate operating-system printer queues through the standard browser printing API. Without an installed/configured bridge, the real queue list appears in Chrome's native print dialog. The in-app selector only lists authenticated profiles returned by the local bridge; it does not invent printers or claim that every installed queue has been discovered.
 
+## Chrome does not list my printer
+
+Open **Destination / ปลายทาง → See more… / ดูเพิ่มเติม…** in Chrome's print preview; the initial menu may show only recent destinations and Save as PDF. If the installed queue is still absent, choose **Print using system dialog…** to inspect the operating-system printer list.
+
+- Windows 11: **Settings → Bluetooth & devices → Printers & scanners**. Windows 10: **Settings → Devices → Printers & scanners**. Confirm that the exact queue exists, then open its printer properties and print a test page. If no queue exists, install the exact-model manufacturer driver and add its USB or network printer.
+- macOS: **System Settings → Printers & Scanners**. Confirm the queue exists; use **Add Printer, Scanner, or Fax…** if necessary, using the exact model's supported driver or AirPrint when the printer supports it. Check printing from another application first.
+
+If OS printing works but Chrome still omits the queue, close and reopen Chrome after adding the printer, then use the system dialog. If OS printing fails, resolve the queue/driver/connection there before using LabelCraft. The cloud workspace cannot inspect or install printers on the user's computer. The Chrome route does not require Local Print Bridge, and listing a printer or opening a dialog does not establish physical output.
+
 ## Barcode size and preflight
 
-Select the actual printer DPI (203/300/600) in Barcode properties or Print. Barcode sizing uses reference magnification (%) and keeps both axes, module widths and quiet zones proportional. Changing the DPI selector in Barcode properties or Print immediately applies an undoable uniform adjustment to make X an integer number of device dots; no Apply button is required. It can fail if the corrected dimensions do not fit the document. Increasing document size or moving the barcode may be necessary, especially for retail symbols at 203 DPI. The toolbar display-unit DPI remains a view preference; Barcode/Print DPI controls perform the explicit size adjustment.
+Select the actual printer DPI (203/300/600) in Barcode properties or Print. Barcode sizing uses reference magnification (%) and keeps both axes, module widths and quiet zones proportional. Changing the DPI selector in Barcode properties or Print immediately applies an undoable uniform adjustment to make X an integer number of device dots; no Apply button is required. It can fail if a barcode is locked or the ratio exceeds its supported limits; document overflow remains editable but blocks printing. Increasing document size or moving the barcode may be necessary, especially for retail symbols at 203 DPI. The toolbar display-unit DPI remains a view preference; Barcode/Print DPI controls perform the explicit size adjustment.
 
 Print blocks legacy retail magnifications outside 80–200%, modules below one device dot and other objects intersecting the reserved quiet zones. It warns about fractional device-dot modules and generic Code39/Code93 bars below recommended height. Generic application references do not replace GS1-specific usage requirements or physical print-quality verification. No automatic resizing or print submission occurs. See [barcode sizing sources and limits](BARCODE_STANDARDS_RESEARCH.md).
 
