@@ -1,8 +1,8 @@
 import type {ChatGPTToolOutput} from './chatgptEngine';
 import {validateChatGPTDocument} from './chatgptEngine';
-import type {LabelDocument} from './core';
+import {migrateDocument,type LabelDocument} from './core';
 
-export type WidgetState = {document: LabelDocument; resolvedProposals: string[]};
+export type WidgetState = {document: LabelDocument; resolvedProposals: string[]; documents?:LabelDocument[]};
 export type ChatGPTHost = {
   toolOutput?: ChatGPTToolOutput | null;
   widgetState?: WidgetState | null;
@@ -17,9 +17,12 @@ export function getChatGPTHost(): ChatGPTHost | undefined {
 export function initialChatGPTDocument(host: ChatGPTHost | undefined): LabelDocument | null {
   const stored = host?.widgetState?.document;
   const incoming = host?.toolOutput?.document;
-  const candidates = [stored && (!incoming || stored.id === incoming.id) ? stored : undefined, incoming];
+  const knownIncoming=host?.widgetState?.documents?.find(doc=>doc.id===incoming?.id);
+  const resolvedIncoming=host?.toolOutput?.proposal?.id&&host?.widgetState?.resolvedProposals.includes(host.toolOutput.proposal.id);
+  const keepSelection=stored&&(!incoming||stored.id===incoming.id||(knownIncoming&&(host?.toolOutput?.status==='opened'||resolvedIncoming)));
+  const candidates = [keepSelection?stored:knownIncoming, incoming];
   for (const doc of candidates) {
-    try { if (doc) { validateChatGPTDocument(doc); return structuredClone(doc); } } catch { /* Try the verified tool output next. */ }
+    try { if (doc) { validateChatGPTDocument(doc); return migrateDocument(doc); } } catch { /* Try the verified tool output next. */ }
   }
   return null;
 }

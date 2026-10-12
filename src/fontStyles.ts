@@ -1,0 +1,11 @@
+import NotoSansRegular from './fonts/NotoSans-Regular.woff?inline';
+import NotoSansBold from './fonts/NotoSans-Bold.woff?inline';
+import NotoSerifRegular from './fonts/NotoSerif-Regular.woff?inline';
+import NotoSerifBold from './fonts/NotoSerif-Bold.woff?inline';
+import NotoSansMonoRegular from './fonts/NotoSansMono-Regular.woff?inline';
+import NotoSansMonoBold from './fonts/NotoSansMono-Bold.woff?inline';
+import NotoSansThaiRegular from './fonts/NotoSansThai-Regular.woff?inline';
+import NotoSansThaiBold from './fonts/NotoSansThai-Bold.woff?inline';
+import NotoSerifThaiRegular from './fonts/NotoSerifThai-Regular.woff?inline';
+import NotoSerifThaiBold from './fonts/NotoSerifThai-Bold.woff?inline';
+export const fontStyles=[['Noto Sans',400,NotoSansRegular],['Noto Sans',700,NotoSansBold],['Noto Serif',400,NotoSerifRegular],['Noto Serif',700,NotoSerifBold],['Noto Sans Mono',400,NotoSansMonoRegular],['Noto Sans Mono',700,NotoSansMonoBold],['Noto Sans Thai',400,NotoSansThaiRegular],['Noto Sans Thai',700,NotoSansThaiBold],['Noto Serif Thai',400,NotoSerifThaiRegular],['Noto Serif Thai',700,NotoSerifThaiBold]].map(([family,weight,url])=>`@font-face{font-family:"${family}";font-weight:${weight};src:url(${url}) format("woff");font-display:block;}`).join("\n");

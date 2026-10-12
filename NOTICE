@@ -6,3 +6,6 @@ lucide-react: ISC. tsx: MIT. @types packages: MIT.
 Go standard library/toolchain: BSD-style license; see the Go distribution LICENSE.
 Official Go MCP SDK v1.8.0: mixed Apache-2.0/MIT licensing transition as stated in its original LICENSE; preserved in third_party/go-mcp-sdk-LICENSE.txt. Go module versions and checksums are recorded in go.mod/go.sum.
 This list is not a substitute for the pinned dependency inventory and transitive-license review before distribution.
+
+Bundled subset Noto fonts: Copyright Google Inc.; SIL Open Font License 1.1.
+See third_party/Noto-Fonts-LICENSE.txt. Font metrics are derived from these fonts.

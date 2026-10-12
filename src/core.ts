@@ -1,11 +1,15 @@
+import {fontNames,textMetrics,type FontName} from './typography';
+import {barcodeTypes,isSquareCode,validateBarcode,type Symbology} from './barcodes';
 export type Kind = 'text' | 'barcode' | 'image' | 'box' | 'line';
-export type LabelObject = {id:string; name:string; kind:Kind; x:number; y:number; width:number; height:number; content:string; fontSize:number; bold:boolean; locked:boolean; symbology:'code128'|'qrcode'|'ean13';};
+export type LabelObject = {id:string; name:string; kind:Kind; x:number; y:number; width:number; height:number; content:string; fontSize:number; bold:boolean; locked:boolean; symbology:Symbology; fontName?:FontName;};
 export type LabelDocument = {schemaVersion:1; id:string; revision:number; title:string; width:number; height:number; objects:LabelObject[]};
 export type Command = {op:'add'; object:LabelObject} | {op:'update'; id:string; changes:Partial<Omit<LabelObject,'id'|'kind'>>} | {op:'remove'; id:string} | {op:'resize'; width:number; height:number};
 export const uid=()=>globalThis.crypto.randomUUID();
-export function object(kind:Kind, changes:Partial<LabelObject>={}):LabelObject {return {id:uid(),name:kind,kind,x:3,y:3,width:kind==='barcode'?40:20,height:kind==='barcode'?8:5,content:kind==='barcode'?'A50001':kind==='text'?'New text':'',fontSize:3,bold:false,locked:false,symbology:'code128',...changes};}
+export function object(kind:Kind, changes:Partial<LabelObject>={}):LabelObject {return sizeText({id:uid(),name:kind,kind,x:3,y:3,width:kind==='barcode'?40:20,height:kind==='barcode'?8:5,content:kind==='barcode'?'A50001':kind==='text'?'New text':'',fontSize:3,bold:false,locked:false,symbology:'code128',fontName:'Noto Sans',...changes});}
 export function seed():LabelDocument{return {schemaVersion:1,id:uid(),revision:0,title:'Product label',width:50,height:30,objects:[object('text',{id:'brand',name:'Brand',content:'ACTIVE 5',width:27,height:5,fontSize:4.5,bold:true}),object('text',{id:'price',name:'Price',content:'129.00 THB',x:32,width:16,height:4,fontSize:2.7,bold:true}),object('text',{id:'name',name:'Product name',content:'Product label',y:9,width:42,height:4,fontSize:3.2}),object('text',{id:'sku',name:'SKU',content:'SKU A50001',y:14,width:42,height:3,fontSize:2.5}),object('barcode',{id:'barcode',name:'Barcode',x:4,y:19,width:42,height:8,content:'A50001'})]};}
-const updateKeys=new Set(['name','x','y','width','height','content','fontSize','bold','locked','symbology']);
+export function sizeText(o:LabelObject):LabelObject {return o.kind==='text'?{...o,fontName:o.fontName??'Noto Sans',...(({width,height})=>({width,height}))(textMetrics(o.content,o.fontSize,o.fontName,o.bold))}:o;}
+export function migrateDocument(doc:LabelDocument):LabelDocument {validate(doc);const next=structuredClone(doc);next.objects=next.objects.map(sizeText);validate(next);return next;}
+const updateKeys=new Set(['name','x','y','width','height','content','fontSize','fontName','bold','locked','symbology']);
 export function validate(doc:LabelDocument):void {
  if(doc.schemaVersion!==1||typeof doc.id!=='string'||!Number.isInteger(doc.revision)||doc.revision<0||typeof doc.title!=='string'||doc.title.length>120)throw Error('Invalid document header');
  if(!Number.isFinite(doc.width)||!Number.isFinite(doc.height)||doc.width<10||doc.height<10||doc.width>300||doc.height>300)throw Error('Label size must be 10–300 mm');
@@ -13,12 +17,12 @@ export function validate(doc:LabelDocument):void {
  const ids=new Set<string>();
  for(const o of doc.objects){if(!o||typeof o.id!=='string'||ids.has(o.id))throw Error('Invalid or duplicate object ID');ids.add(o.id);
  if(!['text','barcode','image','box','line'].includes(o.kind))throw Error('Unsupported object type');
- if(typeof o.content!=='string'||typeof o.name!=='string'||o.content.length>3_000_000||typeof o.locked!=='boolean'||typeof o.bold!=='boolean'||!['code128','qrcode','ean13'].includes(o.symbology))throw Error('Invalid object properties');
+ if(typeof o.content!=='string'||typeof o.name!=='string'||o.content.length>3_000_000||typeof o.locked!=='boolean'||typeof o.bold!=='boolean'||!barcodeTypes.some(t=>t.value===o.symbology)||(o.fontName!==undefined&&!fontNames.includes(o.fontName)))throw Error('Invalid object properties');
  for(const n of [o.x,o.y,o.width,o.height,o.fontSize])if(!Number.isFinite(n))throw Error('Invalid numeric value');
  if(o.x<0||o.y<0||o.width<=0||o.height<=0||o.x+o.width>doc.width+.001||o.y+o.height>doc.height+.001)throw Error(`${o.name} exceeds label bounds`);
  if(o.fontSize<.5||o.fontSize>30)throw Error('Font size must be 0.5–30 mm');
  if(o.kind==='image'&&!/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(o.content))throw Error('Image must be an uploaded PNG, JPEG or WebP');
- if(o.kind==='barcode'){if(!o.content||o.content.length>300)throw Error('Barcode payload must be 1–300 characters');if(o.symbology==='code128'&&!/^[\x20-\x7e]+$/.test(o.content))throw Error('Code 128 supports printable ASCII in this prototype');if(o.symbology==='ean13'){if(!/^\d{13}$/.test(o.content))throw Error('EAN-13 requires 13 digits');const sum=[...o.content.slice(0,12)].reduce((n,c,i)=>n+Number(c)*(i%2?3:1),0);if((10-sum%10)%10!==Number(o.content[12]))throw Error('EAN-13 check digit is invalid');}}
+ if(o.kind==='barcode'){validateBarcode(o.symbology,o.content);if(isSquareCode(o.symbology)&&Math.abs(o.width-o.height)>.001)throw Error('QR and Data Matrix codes must remain square');}
  }
 }
 export function apply(doc:LabelDocument,commands:Command[],baseRevision=doc.revision):LabelDocument {
@@ -26,7 +30,7 @@ export function apply(doc:LabelDocument,commands:Command[],baseRevision=doc.revi
  if(!Array.isArray(commands)||commands.length<1||commands.length>50)throw Error('Invalid command count');
  const next=structuredClone(doc);
  for(const c of commands){if(c.op==='resize'){next.width=c.width;next.height=c.height;}else if(c.op==='add'){next.objects.push(c.object);}else if(c.op==='update'||c.op==='remove'){const i=next.objects.findIndex(o=>o.id===c.id);if(i<0)throw Error('Unknown object');const unlockOnly=c.op==='update'&&c.changes.locked===false&&Object.keys(c.changes).length===1;if(next.objects[i].locked&&!unlockOnly)throw Error('Unlock the object before editing');if(c.op==='remove')next.objects.splice(i,1);else {for(const k of Object.keys(c.changes))if(!updateKeys.has(k))throw Error('Unsupported property');Object.assign(next.objects[i],c.changes);}}else throw Error('Unsupported operation');}
- next.revision=doc.revision+1;validate(next);return next;
+ next.objects=next.objects.map(sizeText);next.revision=doc.revision+1;validate(next);return next;
 }
 export function restoreRevision(current:LabelDocument,snapshot:LabelDocument):LabelDocument {const d=structuredClone(snapshot);d.revision=current.revision+1;validate(d);return d;}
 // A transparent offline command demo, not a language model. Production AI uses the Go API.
