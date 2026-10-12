@@ -1,3 +1,4 @@
+import {exceedsLabel} from './labelBounds';
 import {linePoints} from './lineGeometry';
 import type {LabelDocument,LabelObject} from './core';
 import {barcodeMagnification,barcodeProfile,barcodeScaleLimits,retailBarcode} from './barcodes';
@@ -7,6 +8,7 @@ function inkInZone(other:LabelObject,zone:Zone){if(other.kind==='line'){const p=
 export function barcodePreflight(doc:LabelDocument,dpi:number){
  if(![203,300,600].includes(dpi))throw Error('Unsupported printer DPI');const errors:string[]=[],warnings:string[]=[];
  for(const item of doc.objects.filter(o=>o.kind==='barcode')){const p=barcodeProfile(item.symbology,item.content);const scale=barcodeMagnification(item);const limits=barcodeScaleLimits(item.symbology);const x=p.moduleMm*scale/100;const dots=x*dpi/25.4;
+ if(exceedsLabel(item,doc))errors.push(`${item.name}: บาร์โค้ดล้นฉลาก กรุณาย่อหรือย้ายกลับเข้าฉลากก่อนพิมพ์`);
  if(retailBarcode(item.symbology)&&(scale<limits.min-1e-7||scale>limits.max+1e-7))errors.push(`${item.name}: EAN/UPC retail ต้องมี magnification ${limits.min}–${limits.max}% (ปัจจุบัน ${scale.toFixed(2)}%)`);
  if(dots<1-1e-7)errors.push(`${item.name}: โมดูลแคบกว่า 1 dot ที่ ${dpi} DPI กรุณาเพิ่ม ratio`);
  else if(Math.abs(dots-Math.round(dots))>.001)warnings.push(`${item.name}: X = ${dots.toFixed(3)} dots/module ที่ ${dpi} DPI ใช้ “ปรับ ratio ให้เหมาะกับ DPI” เพื่อลดความคลาดเคลื่อนจากการ rasterize`);

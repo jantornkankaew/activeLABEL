@@ -13,10 +13,10 @@ export function useCanvasInteraction(doc:LabelDocument|null,select:(id:string)=>
  }
  function move(event:PointerEvent){const current=drag.current;if(!doc||!current||event.pointerId!==current.pointerId||current.documentId!==doc.id)return;
   const next=structuredClone(doc);const item=next.objects.find(o=>o.id===current.item.id)!;const dx=(event.clientX-current.x)*doc.width/current.rect.width;const dy=(event.clientY-current.y)*doc.height/current.rect.height;
-  if(current.mode==='move'){item.x=Math.max(0,Math.min(doc.width-item.width,snapCoordinate(current.item.x+dx,step,snap)));item.y=Math.max(0,Math.min(doc.height-item.height,snapCoordinate(current.item.y+dy,step,snap)));}
+  if(current.mode==='move'){item.x=snapCoordinate(current.item.x+dx,step,snap);item.y=snapCoordinate(current.item.y+dy,step,snap);if(item.kind!=='barcode'){item.x=Math.max(0,Math.min(doc.width-item.width,item.x));item.y=Math.max(0,Math.min(doc.height-item.height,item.y));}}
   else if(item.kind==='line'){Object.assign(item,dragLineEnd(current.item,dx,dy,doc.width,doc.height,step,snap));}
   else if(item.kind==='box'){item.width=resizeExtent(current.item.width,dx,item.x,doc.width,step,snap);if(item.kind==='box')item.height=resizeExtent(current.item.height,dy,item.y,doc.height,step,snap);}
-  else {const profile=barcodeProfile(item.symbology,item.content);const limits=barcodeScaleLimits(item.symbology);const max=Math.min(limits.max,(doc.width-item.x)/profile.width*100,(doc.height-item.y)/profile.height*100);if(max<limits.min)return;const requested=barcodeMagnification(current.item)*proportionalScale(current.item.width,current.item.height,dx,dy,doc.width-item.x,doc.height-item.y);const percent=integerPercent(requested,limits.min,max);if(percent===null)return;item.barcodeScale=percent;item.width=profile.width*item.barcodeScale/100;item.height=profile.height*item.barcodeScale/100;}
+  else {const profile=barcodeProfile(item.symbology,item.content);const limits=barcodeScaleLimits(item.symbology);const max=limits.max;const requested=barcodeMagnification(current.item)*proportionalScale(current.item.width,current.item.height,dx,dy,Infinity,Infinity);const percent=integerPercent(requested,limits.min,max);if(percent===null)return;item.barcodeScale=percent;item.width=profile.width*item.barcodeScale/100;item.height=profile.height*item.barcodeScale/100;}
 
   previewRef.current=next;setPreview(next);
  }

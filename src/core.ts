@@ -20,7 +20,7 @@ export function validate(doc:LabelDocument,checkBarcodeRatio=true):void {
  if(!['text','barcode','image','box','line'].includes(o.kind))throw Error('Unsupported object type');
  if(typeof o.content!=='string'||typeof o.name!=='string'||o.content.length>3_000_000||typeof o.locked!=='boolean'||typeof o.bold!=='boolean'||!barcodeTypes.some(t=>t.value===o.symbology)||(o.fontName!==undefined&&!fontNames.includes(o.fontName)))throw Error('Invalid object properties');
  for(const n of [o.x,o.y,o.width,o.height,o.fontSize])if(!Number.isFinite(n))throw Error('Invalid numeric value');
- if(o.x<0||o.y<0||o.width<=0||o.height<=0||o.x+o.width>doc.width+.001||o.y+o.height>doc.height+.001)throw Error(`${o.name} exceeds label bounds`);
+ if(o.width<=0||o.height<=0||(o.kind!=='barcode'&&(o.x<0||o.y<0||o.x+o.width>doc.width+.001||o.y+o.height>doc.height+.001)))throw Error(`${o.name} exceeds label bounds`);
  if(o.barcodeScale!==undefined&&o.kind!=='barcode')throw Error('Magnification applies only to barcodes');
  if(o.line!==undefined){const p=o.line;if(o.kind!=='line'||!p||typeof p!=='object'||Array.isArray(p)||Object.keys(p).length!==4||Object.keys(p).some(k=>!['startX','startY','endX','endY'].includes(k))||![p.startX,p.startY,p.endX,p.endY].every(Number.isFinite)||Math.min(p.startX,p.endX)<0||Math.min(p.startY,p.endY)<0||Math.max(p.startX,p.endX)>o.width+.001||Math.max(p.startY,p.endY)>o.height+.001||Math.hypot(p.endX-p.startX,p.endY-p.startY)<.1)throw Error('Invalid line endpoints');}
  if(o.fontSize<.5||o.fontSize>30)throw Error('Font size must be 0.5–30 mm');

@@ -37,5 +37,5 @@ test('Barcode resize scales both axes uniformly for every encoder, including pay
  }
  const legacy=seed();const old=legacy.objects.find(o=>o.kind==='barcode')!;old.width=42;old.height=8;const migrated=migrateDocument(legacy).objects.find(o=>o.id===old.id)!;assert(migrated.width<=42);assert(migrated.height<=8);assert.equal(migrated.content,old.content);
  const doc=seed();doc.width=200;const existing=doc.objects.find(o=>o.kind==='barcode')!;const changed=apply(doc,[{op:'update',id:existing.id,changes:{content:'LONGER-PAYLOAD-123'}}]).objects.find(o=>o.id===existing.id)!;assert.equal(changed.barcodeScale,existing.barcodeScale);assert.equal(changed.content,'LONGER-PAYLOAD-123');
- assert.throws(()=>apply(doc,[{op:'update',id:existing.id,changes:{width:200}}]),/bounds/);
+ assert.equal(apply(doc,[{op:'update',id:existing.id,changes:{width:200}}]).objects.find(o=>o.id===existing.id)!.width,200);
 });

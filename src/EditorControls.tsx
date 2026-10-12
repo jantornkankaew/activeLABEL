@@ -1,3 +1,4 @@
+import {exceedsLabel} from './labelBounds';
 import {MeasurementInput,useMeasurements} from './MeasurementContext';
 import {displayMeasurement,rulerTicks} from './units';
 import type {BarcodeDraft} from './useBarcodeDrafts';
@@ -11,11 +12,11 @@ export function FontPicker({item,disabled,onUpdate}:{item:LabelObject;disabled?:
  const {settings}=useMeasurements();
  return <><label>Font name<select aria-label="Font name" value={item.fontName??'Noto Sans'} disabled={disabled} onChange={e=>onUpdate({fontName:e.target.value as FontName})}>{fontNames.map(name=><option key={name}>{name}</option>)}</select></label><p className="automatic-size">ขนาดข้อความอัตโนมัติ: {displayMeasurement(item.width,settings)} × {displayMeasurement(item.height,settings)} {settings.unit}</p></>;
 }
-export function BarcodeEditor({item,disabled,onUpdate,draft,onDraftChange}:{item:LabelObject;doc:LabelDocument;disabled?:boolean;onUpdate:(changes:Partial<LabelObject>)=>boolean|void;draft?:BarcodeDraft;onDraftChange?:(draft:BarcodeDraft)=>void}) {
+export function BarcodeEditor({item,doc,disabled,onUpdate,draft,onDraftChange}:{item:LabelObject;doc:LabelDocument;disabled?:boolean;onUpdate:(changes:Partial<LabelObject>)=>boolean|void;draft?:BarcodeDraft;onDraftChange?:(draft:BarcodeDraft)=>void}) {
  const {settings,setSettings}=useMeasurements();const profile=barcodeProfile(item.symbology,item.content);const scale=barcodeMagnification(item);const limits=barcodeScaleLimits(item.symbology);
  const [sizeError,setSizeError]=useState('');const [scaleDraft,setScaleDraft]=useState(String(Number(scale.toFixed(2))));
  useEffect(()=>{setScaleDraft(String(Number(scale.toFixed(2))));setSizeError('');},[item.id,item.symbology,item.content,scale]);
- function resize(percent:number){if(onUpdate({barcodeScale:percent})===false){setSizeError('ขนาดไม่พอดีฉลาก หรืออยู่นอกช่วงที่กำหนด');return false;}setSizeError('');return true;}
+ function resize(percent:number){if(onUpdate({barcodeScale:percent})===false){setSizeError('Ratio อยู่นอกช่วงที่กำหนด');return false;}setSizeError('');return true;}
  function changeDPI(dpi:number){if(resize(barcodeDeviceScale(item,dpi)))setSettings({...settings,dpi});}
  const [content,setContent]=useState(draft?.content??item.content);const [type,setType]=useState<Symbology>(draft?.type??item.symbology);const [error,setError]=useState(draft?.error??'');const signature=JSON.stringify([item.id,item.content,item.symbology]);const lastModel=useRef(signature);
  useEffect(()=>{if(lastModel.current===signature)return;lastModel.current=signature;setContent(item.content);setType(item.symbology);setError('');onDraftChange?.({content:item.content,type:item.symbology,error:''});},[signature]);
@@ -27,7 +28,7 @@ export function BarcodeEditor({item,disabled,onUpdate,draft,onDraftChange}:{item
  <div className="barcode-size-actions">{(limits.min===80?[80,100,150,200]:[50,100,150,200]).map(value=><button key={value} disabled={disabled} onClick={()=>resize(value)}>{value}%</button>)}</div>
  <div className="barcode-dimensions"><span>{item.width.toFixed(2)} × {item.height.toFixed(2)} mm</span><small>🔒 {profile.wideRatio?`แท่ง ${profile.wideRatio}:1`:'สัดส่วนคงที่'}</small></div>
  <details className="barcode-details"><summary>รายละเอียด</summary><dl><dt>Profile</dt><dd>{profile.reference}</dd><dt>ช่วง</dt><dd>{limits.min}–{limits.max}%</dd><dt>X</dt><dd>{(profile.moduleMm*scale/100).toFixed(4)} mm</dd><dt>Quiet zone</dt><dd>{profile.quiet.left}X / {profile.quiet.right}X</dd>{profile.barHeightMm>0&&<><dt>Bar height</dt><dd>{(profile.barHeightMm*scale/100).toFixed(3)} mm</dd></>}{profile.rowHeightX&&<><dt>Row height</dt><dd>{profile.rowHeightX}X</dd></>}<dt>Module</dt><dd>{(profile.moduleMm*scale/100*settings.dpi/25.4).toFixed(3)} dots</dd></dl></details>
- {(scale<limits.min||scale>limits.max)&&<p role="alert" className="barcode-error">ขนาดเดิมอยู่นอกช่วง {limits.min}–{limits.max}%</p>}{sizeError&&<p role="alert" className="barcode-error">{sizeError}</p>}
+ {exceedsLabel(item,doc)&&<p role="alert" className="barcode-error">ล้นฉลาก · ย่อหรือย้ายกลับเข้ากรอบ</p>}{(scale<limits.min||scale>limits.max)&&<p role="alert" className="barcode-error">ขนาดเดิมอยู่นอกช่วง {limits.min}–{limits.max}%</p>}{sizeError&&<p role="alert" className="barcode-error">{sizeError}</p>}
  </div>;
 }
 export function LabelSizeDialog({doc,onResize,onClose}:{doc:LabelDocument;onResize:(width:number,height:number)=>boolean;onClose:()=>void}) {
