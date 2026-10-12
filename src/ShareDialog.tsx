@@ -1,8 +1,8 @@
-import {useState} from 'react';
+import {useMemo,useState} from 'react';
 import type {LabelDocument} from './core';
 import {shareURL} from './sharing';
 export function ShareDialog({doc,onClose}:{doc:LabelDocument;onClose:()=>void}){
- const [status,setStatus]=useState('');let url='',error='';try{url=shareURL(doc);}catch(e){error=(e as Error).message;}
+ const [status,setStatus]=useState('');const {url,error}=useMemo(()=>{try{return {url:shareURL(doc),error:''};}catch(e){return {url:'',error:(e as Error).message};}},[doc]);
  const file=()=>new File([JSON.stringify(doc,null,2)],'labelcraft.json',{type:'application/json'});
  async function copy(){try{await navigator.clipboard.writeText(url);setStatus('คัดลอกลิงก์แล้ว');}catch{setStatus('คัดลอกอัตโนมัติไม่ได้ เลือกลิงก์แล้วคัดลอกเองได้');}}
  async function share(){try{const f=file();if(navigator.canShare?.({files:[f]}))await navigator.share({title:doc.title,files:[f]});else if(url&&navigator.share)await navigator.share({title:doc.title,url});else{setStatus('เบราว์เซอร์นี้ไม่มีหน้าต่างแชร์ ใช้ Copy link หรือ Download file');return;}setStatus('ปิดหน้าต่างแชร์แล้ว');}catch(e){setStatus((e as Error).name==='AbortError'?'ยกเลิกการแชร์':(e as Error).message);}}
