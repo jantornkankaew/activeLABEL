@@ -11,7 +11,13 @@ Runnable technical prototype and implementation brief, 12 October 2026. Product 
 
 This is not the finished commercial application. Browser visual/interaction QA, live-model calls, native Windows/macOS execution, hardware printing and performance measurements have not been verified in this Linux environment. Driver vector output, macOS native driver printing, TSPL/CPCL, USB, batch data, billing and advanced capabilities remain implementation tasks in `docs/CODEX_SPEC.md`.
 
-## Frontend
+## RTK CLI for Codex
+
+RTK 0.51.0 condenses development command output. In the Linux x86_64 cloud environment, install with `bash scripts/install-rtk.sh` (pinned official release with SHA-256 verification), then run commands through `bash scripts/rtk-exec.sh`, for example `bash scripts/rtk-exec.sh npm test` or `bash scripts/rtk-exec.sh git status`. Run `bash scripts/rtk-exec.sh gain` for measured savings and `bash scripts/rtk-exec.sh proxy <command>` for full output.
+
+The project Codex hook is in `.codex/hooks.json`. Supported Codex CLI runtimes need RTK on PATH and a restart; approve the project hook if Codex asks. The wrapper is the explicit fallback for cloud runtimes without hooks. Tracking/configuration stay outside the repository under `/workspace/.cache/rtk`. RTK does not provide AI credentials or printing capabilities.
+
+## Frontend development
 
 Requires Node.js compatible with Vite 6 and npm.
 

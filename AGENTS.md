@@ -13,3 +13,7 @@ No fake credits, payment success, AI output, printer connection or print success
 Run `npm test`, `npm run build`, `go test ./...`; cross-compile bridge for windows/amd64, darwin/arm64 and darwin/amd64. Native API behaviour and hardware output still need target-system tests; cross-compilation does not establish compatibility.
 
 Deliver only claims backed by tests. Track remaining work honestly in docs/STATUS.md. Use a local mock transport for automated tests; do not send to a real printer without the user's requested print action.
+
+@RTK.md
+
+Use RTK CLI for supported development commands. Run `bash scripts/rtk-exec.sh git status`, `bash scripts/rtk-exec.sh npm test`, or `bash scripts/rtk-exec.sh go test ./...`. The wrapper configures PATH and writable tracking directories. Install it first with `bash scripts/install-rtk.sh` when missing. Codex runtimes without project-hook support must use the wrapper explicitly. Use `bash scripts/rtk-exec.sh proxy <command>` when complete output is needed; preserve command exit codes and never use RTK to dump secrets or environment values.
