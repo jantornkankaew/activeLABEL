@@ -13,7 +13,26 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  native-printer-check:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.2'
+          cache: false
+      - name: Start Windows spooler
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: Start-Service Spooler
+      - name: Discover native queues without printing
+        run: go run ./cmd/printbridge -list
   build:
+    needs: native-printer-check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
