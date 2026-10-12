@@ -29,7 +29,13 @@ npm run dev
 
 Open the Vite URL. Chat starts in offline command-demo mode. Supported examples: `ย้ายราคาไปขวาบน`, `จัดบาร์โค้ดตรงกลาง`, `เพิ่ม Lot`, `สร้างฉลาก`. Unsupported prompts explain the limitation. Objects and their contents are editable through the inspector.
 
-## Go services
+## Open in Chrome with GitHub Pages
+
+In this repository's GitHub **Settings → Pages**, choose **GitHub Actions** as the build source. The `Deploy LabelCraft to GitHub Pages` workflow builds and publishes the frontend on pushes to `main`; it can also be run manually from **Actions**. After a successful deployment, open `https://jantornkankaew.github.io/labelcraft/` in Chrome.
+
+Pages hosts the static editor and labelled offline command demo. Live AI requires a separately hosted HTTPS API with the Pages origin explicitly allowed. The Go print bridge still runs on the printer's computer; secure connectivity from hosted HTTPS remains a separate implementation task. Do not put provider keys into GitHub Pages or browser code.
+
+## Go service development
 
 Requires Go 1.22+; no third-party Go modules.
 
