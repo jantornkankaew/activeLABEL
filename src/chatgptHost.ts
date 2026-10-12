@@ -22,7 +22,7 @@ export function initialChatGPTDocument(host: ChatGPTHost | undefined): LabelDocu
   const keepSelection=stored&&(!incoming||stored.id===incoming.id||(knownIncoming&&(host?.toolOutput?.status==='opened'||resolvedIncoming)));
   const candidates = [keepSelection?stored:knownIncoming, incoming];
   for (const doc of candidates) {
-    try { if (doc) { validateChatGPTDocument(doc); return migrateDocument(doc); } } catch { /* Try the verified tool output next. */ }
+    try { if (doc) { const migrated=migrateDocument(doc);validateChatGPTDocument(migrated); return migrated; } } catch { /* Try the verified tool output next. */ }
   }
   return null;
 }

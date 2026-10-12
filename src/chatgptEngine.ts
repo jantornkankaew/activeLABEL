@@ -14,7 +14,7 @@ export function validateChatGPTDocument(doc: LabelDocument) {
   validate(doc);
   for (const item of doc.objects) keys(item, objectKeys);
   if (doc.objects.some(item => item.kind === 'image')) throw Error('This ChatGPT app version supports text, barcodes, lines and boxes; image uploads remain in the standalone editor');
-  if (doc.objects.some(item => item.kind === 'barcode' && item.symbology === 'qrcode' && Math.abs(item.width - item.height) > .001)) throw Error('QR codes must remain square');
+
   if (JSON.stringify(doc).length > 200_000) throw Error('Label document is too large');
 }
 export function changesBarcodePayload(doc: LabelDocument, commands: Command[]): boolean {

@@ -30,5 +30,5 @@ test('Existing barcode payload changes are flagged for explicit UI confirmation'
 });
 test('ChatGPT proposals preserve square QR geometry', () => {
   const document = seed();
-  assert.throws(() => prepareProposal({document, baseRevision: 0, commands: [{op: 'update', id: 'barcode', changes: {symbology: 'qrcode'}}]}), /square/);
+  const next=prepareProposal({document,baseRevision:0,commands:[{op:'update',id:'barcode',changes:{symbology:'qrcode'}}]}).proposal!.previewDocument.objects.find(o=>o.id==='barcode')!;assert.equal(next.width,next.height);
 });

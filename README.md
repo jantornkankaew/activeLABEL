@@ -25,7 +25,7 @@ The project Codex hook is in `.codex/hooks.json`. Supported Codex CLI runtimes n
 
 ## Editor controls
 
-Double-click the label or use the size button to set dimensions. Select a text object to choose Noto Sans, Noto Serif or Noto Sans Mono; width and height are computed automatically. Bundled fonts include Thai fallback. For a barcode, edit its data and type together, then click **Apply barcode**; invalid values leave the original barcode intact. Available types: Code 128, Code 39, Code 93, EAN-13, EAN-8, UPC-A, UPC-E, Interleaved 2 of 5, QR, Data Matrix and PDF417. Rulers track the pointer in millimetres on both axes.
+Double-click the label or use the size button to set dimensions. Select a text object to choose Noto Sans, Noto Serif or Noto Sans Mono; width and height are computed automatically. Bundled fonts include Thai fallback. For a barcode, edit its data and type together, then click **Apply barcode**; invalid values leave the original barcode intact. Available types: Code 128, Code 39, Code 93, EAN-13, EAN-8, UPC-A, UPC-E, Interleaved 2 of 5, QR, Data Matrix and PDF417. Barcode aspect ratio is locked to its encoded geometry: changing width recalculates height, and changing height recalculates width. Rulers track the pointer in millimetres on both axes.
 
 Use **New label** and the job selector to create and reopen multiple files. The standalone website saves these in this browser; the embedded app uses ChatGPT widget state. Download JSON as a portable backup, and use Import JSON / Open JSON to reopen it. Clearing browser data or losing widget state can remove locally saved jobs; this is not cloud account storage.
 

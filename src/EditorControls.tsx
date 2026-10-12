@@ -1,5 +1,5 @@
 import {useState, type CSSProperties, type RefObject, type ReactNode} from 'react';
-import {barcodeTypes,isSquareCode,type Symbology} from './barcodes';
+import {barcodeTypes,barcodeRatio,type Symbology} from './barcodes';
 import {fontNames,type FontName} from './typography';
 import type {LabelDocument,LabelObject} from './core';
 import './editor-controls.css';
@@ -9,8 +9,8 @@ export function FontPicker({item,disabled,onUpdate}:{item:LabelObject;disabled?:
 }
 export function BarcodeEditor({item,doc,disabled,onUpdate}:{item:LabelObject;doc:LabelDocument;disabled?:boolean;onUpdate:(changes:Partial<LabelObject>)=>boolean|void}) {
  const [content,setContent]=useState(item.content);const [type,setType]=useState<Symbology>(item.symbology);
- return <form className="barcode-editor" onSubmit={e=>{e.preventDefault();const changes:Partial<LabelObject>={content,symbology:type};if(isSquareCode(type)){const side=Math.min(item.width,item.height,doc.width-item.x,doc.height-item.y);changes.width=side;changes.height=side;}onUpdate(changes);}}>
- <label>Barcode data<input aria-label="Barcode data" value={content} disabled={disabled} onChange={e=>setContent(e.target.value)}/></label><label>Symbology<select aria-label="Barcode type" disabled={disabled} value={type} onChange={e=>setType(e.target.value as Symbology)}>{barcodeTypes.map(t=><option key={t.value} value={t.value}>{t.name}</option>)}</select></label><button disabled={disabled} type="submit">Apply barcode</button><p className="automatic-size">เปลี่ยนประเภทและข้อมูลแล้วกด Apply · ข้อมูลเดิมจะคงอยู่จนกว่าค่าจะถูกต้อง</p></form>;
+ return <form className="barcode-editor" onSubmit={e=>{e.preventDefault();const changes:Partial<LabelObject>={content,symbology:type};onUpdate(changes);}}>
+ <label>Barcode data<input aria-label="Barcode data" value={content} disabled={disabled} onChange={e=>setContent(e.target.value)}/></label><label>Symbology<select aria-label="Barcode type" disabled={disabled} value={type} onChange={e=>setType(e.target.value as Symbology)}>{barcodeTypes.map(t=><option key={t.value} value={t.value}>{t.name}</option>)}</select></label><button disabled={disabled} type="submit">Apply barcode</button><p className="automatic-size">เปลี่ยนประเภทและข้อมูลแล้วกด Apply · ข้อมูลเดิมจะคงอยู่จนกว่าค่าจะถูกต้อง</p><p className="automatic-size">🔒 ล็อกสัดส่วน {barcodeRatio(item.symbology,item.content).toFixed(3)} : 1 · เปลี่ยนกว้างหรือสูง อีกด้านปรับอัตโนมัติ</p></form>;
 }
 export function LabelSizeDialog({doc,onResize,onClose}:{doc:LabelDocument;onResize:(width:number,height:number)=>boolean;onClose:()=>void}) {
  const [width,setWidth]=useState(doc.width);const [height,setHeight]=useState(doc.height);const [error,setError]=useState('');
