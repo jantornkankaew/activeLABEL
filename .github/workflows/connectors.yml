@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - 'cmd/api/**'
+      - 'cmd/printbridge/**'
       - 'internal/**'
       - 'scripts/**'
       - 'docs/AI_CONNECTIONS.md'
@@ -25,7 +26,13 @@ jobs:
         with:
           go-version: '1.27.2'
           cache: false
+      - name: Start Windows print spooler for discovery checks
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: Start-Service Spooler
       - run: go test ./...
+      - name: Read native printer queues without printing
+        run: go run ./cmd/printbridge -list
       - run: go run ./cmd/api -help
       - run: go run ./cmd/printbridge -help
       - name: Check macOS launcher syntax

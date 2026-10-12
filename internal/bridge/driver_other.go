@@ -1,4 +1,4 @@
-//go:build !windows
+//go:build !windows && !darwin
 
 package bridge
 
@@ -8,5 +8,5 @@ import (
 )
 
 func PrintDriver(name string, im image.Image, j Job) error {
-	return errors.New("native macOS driver adapter is not implemented; use tested ZPL LAN profile")
+	return errors.New("native printer driver requires Windows or macOS")
 }
