@@ -1,3 +1,4 @@
+import {useObjectDelete} from './ObjectDelete';
 import {ShareDialog} from './ShareDialog';
 import {MeasurementInput,useMeasurements} from './MeasurementContext';
 import {displayMeasurement} from './units';
@@ -74,6 +75,7 @@ export function ChatGPTWidget() {
     catch { return undefined; }
   }, [doc, active]);
   const interaction=useCanvasInteraction(doc,setSelected,commit,!active,grid.snap,grid.step);
+  const deletion=useObjectDelete(doc,doc?.objects.find(value=>value.id===selected),Boolean(host&&doc)&&!active&&!interaction.preview&&!sizeOpen&&!shareOpen,commit,()=>setSelected(null));
   if (!host || !doc) return <div className="cg-unavailable"><h1>LabelCraft in ChatGPT</h1><p>เปิดแอปนี้จากเครื่องมือ LabelCraft ใน ChatGPT เพื่อออกแบบฉลากและให้ ChatGPT ช่วยแก้ไข</p><p>หน้านี้ไม่มีการเชื่อมต่อ ChatGPT เมื่อเปิดเป็นเว็บเดี่ยว</p></div>;
   const current = doc;
   const documents=mergeJobs(jobs,current);
@@ -124,8 +126,8 @@ export function ChatGPTWidget() {
         <div className="cg-fields">{(item.kind==='text'||item.kind==='barcode'?(['x','y'] as const):(['x','y','width','height'] as const)).map(field=><MeasurementInput key={field} label={field} ariaLabel={`Object ${field}`} value={item[field]} disabled={Boolean(active)||item.locked} minMm={field==='x'||field==='y'?0:.1} onChange={mm=>update({[field]:mm})}/>)}</div>
         {item.kind==='text'&&<FontPicker item={item} disabled={Boolean(active)||item.locked} onUpdate={update}/>}
         {item.kind === 'text' && <div className="cg-fields"><MeasurementInput label="Font" ariaLabel="Font size" value={item.fontSize} minMm={.5} maxMm={30} stepMm={.1} disabled={Boolean(active)||item.locked} onChange={mm=>update({fontSize:mm})}/><label>Style<button aria-label="Bold style" disabled={Boolean(active) || item.locked} aria-pressed={item.bold} onClick={() => update({bold: !item.bold})}><b>B</b> Bold</button></label></div>}
-        <AlignmentControls disabled={Boolean(active)||item.locked} onAlign={alignSelected}/><button className="cg-danger" disabled={Boolean(active) || item.locked} onClick={() => {if (commit([{op: 'remove', id: item.id}])) setSelected(null);}}><Trash2 size={14}/> ลบวัตถุ</button></section>}
-    </aside><main className="cg-canvas"><div className="cg-canvas-title"><span>{current.title}</span><small>{displayMeasurement(display.width,measurements)} × {displayMeasurement(display.height,measurements)} {measurements.unit}</small></div><DesignSurface doc={display} paperRef={paper} grid={grid} onGrid={setGrid} onSize={()=>{if(!active){setSelected(null);setSizeOpen(true);}}} onPointerMove={interaction.onPointerMove} onPointerUp={interaction.onPointerUp} onPointerCancel={interaction.onPointerCancel}><LabelSvg fonts={fontStyles} doc={display} selectedId={selected} grid={grid.visible} gridStep={grid.step} onObjectDoubleClick={id=>{setSelected(id);requestAnimationFrame(()=>document.querySelector('.object-properties')?.scrollIntoView({block:'nearest'}));}} onPointerDown={interaction.onPointerDown} onResizeStart={active?undefined:interaction.onResizeStart}/></DesignSurface><footer>revision {current.revision}{reviewed && ' · กำลังแสดงตัวอย่าง ยังไม่ได้ใช้การแก้ไข'}</footer></main></div>
+        <AlignmentControls disabled={Boolean(active)||item.locked} onAlign={alignSelected}/><button className="cg-danger" disabled={Boolean(active) || item.locked} onClick={deletion.request}><Trash2 size={14}/> ลบวัตถุ</button></section>}
+    </aside><main className="cg-canvas"><div className="cg-canvas-title"><span>{current.title}</span><small>{displayMeasurement(display.width,measurements)} × {displayMeasurement(display.height,measurements)} {measurements.unit}</small></div><DesignSurface onBlankPointerDown={()=>setSelected(null)} doc={display} paperRef={paper} grid={grid} onGrid={setGrid} onSize={()=>{if(!active){setSelected(null);setSizeOpen(true);}}} onPointerMove={interaction.onPointerMove} onPointerUp={interaction.onPointerUp} onPointerCancel={interaction.onPointerCancel}><LabelSvg fonts={fontStyles} doc={display} selectedId={selected} grid={grid.visible} gridStep={grid.step} onObjectDoubleClick={id=>{setSelected(id);requestAnimationFrame(()=>document.querySelector('.object-properties')?.scrollIntoView({block:'nearest'}));}} onPointerDown={interaction.onPointerDown} onResizeStart={active?undefined:interaction.onResizeStart}/></DesignSurface><footer>revision {current.revision}{reviewed && ' · กำลังแสดงตัวอย่าง ยังไม่ได้ใช้การแก้ไข'}</footer></main></div>
     <input hidden ref={importFile} type="file" accept="application/json,.json" onChange={async event=>{const input=event.currentTarget;try{const file=input.files?.[0];if(!file)return;if(file.size>200_000)throw Error('Maximum 200 KB in ChatGPT');const next=migrateDocument(JSON.parse(await file.text()));validateChatGPTDocument(next);if(documents.length>=50)throw Error('Maximum 50 jobs');if(documents.some(d=>d.id===next.id))next.id=crypto.randomUUID();openJob(next);}catch(error){setNotice((error as Error).message);}input.value='';}}/>
     {shareOpen&&<ShareDialog doc={current} onClose={()=>setShareOpen(false)}/>}
     {sizeOpen&&<LabelSizeDialog doc={current} onResize={(width,height)=>commit([{op:'resize',width,height}])} onClose={()=>setSizeOpen(false)}/>}
@@ -135,7 +137,7 @@ export function ChatGPTWidget() {
       <div className="cg-proposal-actions"><button onClick={() => {setResolved(previous => [...previous.slice(-19), active.id]); setAllowBarcode(false);}}><X size={16}/> ไม่ใช้</button><button className="cg-primary" disabled={!reviewed || (barcodeChange && !allowBarcode)} onClick={() => {if (reviewed && commit(reviewed.commands, active.baseRevision)) {setResolved(previous => [...previous.slice(-19), active.id]); setAllowBarcode(false);}}}><Check size={16}/> ใช้การแก้ไข</button></div>
     </section>}
     <form className="cg-prompt" onSubmit={event => {event.preventDefault(); void askChatGPT();}}><Sparkles size={19}/><input aria-label="Ask ChatGPT" placeholder="บอก ChatGPT ว่าต้องการสร้างหรือแก้ฉลากอย่างไร…" value={prompt} disabled={sending || Boolean(active)} onChange={event => setPrompt(event.target.value)}/><button className="cg-primary" disabled={sending || !prompt.trim() || Boolean(active)}><Send size={16}/> ส่งให้ ChatGPT</button></form>
-    {notice && <p className="cg-notice" role="status">{notice}</p>}
+    {deletion.dialog}{notice && <p className="cg-notice" role="status">{notice}</p>}
     <p className="cg-footnote">AI มาจากบทสนทนา ChatGPT · ไม่มี API key หรือตัวเชื่อมในเครื่อง · Print เปิดหน้าพิมพ์ในเว็บเพื่อเลือก local printer</p>
   </div>;
 }
