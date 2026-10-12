@@ -4,3 +4,5 @@
 .measurement-controls{display:flex;align-items:center;gap:7px}.measurement-controls label{display:flex;align-items:center;gap:5px;flex-direction:row;font-size:11px;margin:0;white-space:nowrap}.measurement-controls select{width:68px;font:inherit;padding:5px;border:1px solid #d7e1e5;border-radius:5px;height:28px;background:white}.alignment-controls{margin:12px 0 18px}.alignment-controls h4{font-size:12px;color:#506672;margin:0 0 9px}.alignment-controls>small{display:block;font-size:10px;color:#819199;margin:8px 0 5px}.alignment-controls>div{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}.alignment-controls button{flex-direction:column;gap:4px;font-size:10px;padding:7px 2px}.ruler-horizontal span,.ruler-vertical span{font-variant-numeric:tabular-nums}.ruler-vertical span{font-size:8px}
 
 .canvas-line-resize{cursor:crosshair!important}
+
+.barcode-size-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:5px 0 10px}.barcode-size-actions button{font-size:10px;padding:6px 2px}

@@ -2,8 +2,39 @@ import bwipjs from 'bwip-js/browser';
 export const barcodeTypes = [{value:'code128',name:'Code 128'},{value:'code39',name:'Code 39'},{value:'code93',name:'Code 93'},{value:'ean13',name:'EAN-13'},{value:'ean8',name:'EAN-8'},{value:'upca',name:'UPC-A'},{value:'upce',name:'UPC-E'},{value:'interleaved2of5',name:'Interleaved 2 of 5'},{value:'qrcode',name:'QR Code'},{value:'datamatrix',name:'Data Matrix'},{value:'pdf417',name:'PDF417'}] as const;
 export type Symbology=typeof barcodeTypes[number]['value'];
 export const isSquareCode=(type:Symbology)=>type==='qrcode'||type==='datamatrix';
-const svgCache=new Map<string,string>();
-export function encodeBarcode(symbology:Symbology,content:string){const key=JSON.stringify([symbology,content]);const cached=svgCache.get(key);if(cached)return cached;const svg=bwipjs.toSVG({bcid:symbology,text:content,scale:3,...(isSquareCode(symbology)||symbology==='pdf417'?{}:{height:10}),includetext:!isSquareCode(symbology)&&symbology!=='pdf417',textxalign:'center',paddingwidth:10,paddingheight:isSquareCode(symbology)?10:2});if(svgCache.size>=100)svgCache.delete(svgCache.keys().next().value!);svgCache.set(key,svg);return svg;}
+export const retailBarcode=(type:Symbology)=>['ean13','ean8','upca','upce'].includes(type);
+export type BarcodeProfile={svg:string;width:number;height:number;moduleMm:number;barHeightMm:number;quiet:{left:number;right:number;top:number;bottom:number};wideRatio?:number;rowHeightX?:number;reference:string};
+const profileCache=new Map<string,BarcodeProfile>();
+const X=.33;
+export function barcodeProfile(symbology:Symbology,content:string):BarcodeProfile {
+ const key=JSON.stringify([symbology,content]);const cached=profileCache.get(key);if(cached)return cached;
+ const matrix=isSquareCode(symbology)||symbology==='pdf417';const retail=retailBarcode(symbology);
+ const raw=bwipjs.raw({bcid:symbology,text:content,...(symbology==='code93'?{includecheck:true}:{})})[0] as unknown as {sbs?:number[];pixx?:number;pixy?:number;width?:number;height?:number};
+ const trailing=raw.sbs&&raw.sbs.length%2===0?raw.sbs.at(-1)!:0;
+ const modules=(raw.sbs?.reduce((sum,value)=>sum+value*(symbology==='interleaved2of5'?2:1)-(symbology==='interleaved2of5'?1:0),0)??raw.pixx!)-trailing;
+ const quiet=matrix?{left:symbology==='qrcode'?4:symbology==='datamatrix'?1:2,right:symbology==='qrcode'?4:symbology==='datamatrix'?1:2,top:symbology==='qrcode'?4:symbology==='datamatrix'?1:2,bottom:symbology==='qrcode'?4:symbology==='datamatrix'?1:2}:{left:symbology==='ean13'?11:['upca','upce'].includes(symbology)?9:symbology==='ean8'?7:10,right:symbology==='ean13'||symbology==='ean8'||symbology==='upce'?7:symbology==='upca'?9:10,top:0,bottom:0};
+ const barHeight=retail?(symbology==='ean8'?18.23:22.85):matrix?0:symbology==='code39'?Math.max(5,.15*modules*X):symbology==='code93'?Math.max(5.08,.15*(modules+20)*X):Math.max(10,.15*modules*X);
+ const options={bcid:symbology,text:content,scale:4,...(symbology==='code93'?{includecheck:true}:{}),includetext:!matrix,textsize:12,text1size:12,...(!matrix?{height:barHeight/X*25.4/72}:{}),...(symbology==='pdf417'?{rowmult:3}:{})};
+ const source=bwipjs.toSVG(options);const match=/viewBox="0 0 ([\d.]+) ([\d.]+)"/.exec(source);if(!match)throw Error('Barcode dimensions unavailable');
+ let unit=4,left=0;
+ if(matrix)unit=Number(match[1])/raw.pixx!;
+ else{let min=Infinity;for(const path of source.matchAll(/<path[^>]*stroke-width="([\d.]+)"[^>]*d="([^"]+)"/g)){for(const move of path[2].matchAll(/M(-?[\d.]+) /g))min=Math.min(min,Number(move[1])-Number(path[1])/2);}if(!Number.isFinite(min))throw Error('Barcode bars unavailable');left=min;}
+ const w=modules+quiet.left+quiet.right;
+ const h=retail?(symbology==='ean8'?21.31:25.93)/X:Number(match[2])/unit+quiet.top+quiet.bottom;
+ let body=source.slice(source.indexOf('>')+1,source.lastIndexOf('</svg>'));
+ // BWIPP UPC-E places its outside check digit beyond the 7X right quiet zone.
+ // Centre that HRI glyph in the reserved zone; encoded bars stay untouched.
+ if(symbology==='upce'){const at=body.lastIndexOf('<path');body=body.slice(0,at)+'<g transform="translate(-12 0)">'+body.slice(at)+'</g>';}
+ const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}"><rect width="${w}" height="${h}" fill="white"/><g transform="translate(${quiet.left-left/unit} ${quiet.top}) scale(${1/unit})">${body}</g></svg>`;
+ const profile:BarcodeProfile={svg,width:w*X,height:h*X,moduleMm:X,barHeightMm:barHeight,quiet,...(['code39','interleaved2of5'].includes(symbology)?{wideRatio:3}:{}),...(symbology==='pdf417'?{rowHeightX:3}:{}),reference:retail?'EAN/UPC retail nominal':'Generic application reference'};
+ if(profileCache.size>=100)profileCache.delete(profileCache.keys().next().value!);profileCache.set(key,profile);return profile;
+}
+export function encodeBarcode(symbology:Symbology,content:string){return barcodeProfile(symbology,content).svg;}
+export function barcodeMagnification(item:{symbology:Symbology;content:string;width:number}){return item.width/barcodeProfile(item.symbology,item.content).width*100;}
+export function barcodeScaleLimits(type:Symbology){return retailBarcode(type)?{min:80,max:200}:{min:10,max:1000};}
+export function barcodeDeviceScale(item:{symbology:Symbology;content:string;width:number},dpi:number){
+ if(![203,300,600].includes(dpi))throw Error('Unsupported printer DPI');const limits=barcodeScaleLimits(item.symbology);const currentX=barcodeMagnification(item)/100*X;const minDots=Math.max(1,Math.ceil(limits.min/100*X*dpi/25.4-1e-9));const maxDots=Math.floor(limits.max/100*X*dpi/25.4+1e-9);const dots=Math.max(minDots,Math.min(maxDots,Math.round(currentX*dpi/25.4)));return dots*25.4/dpi/X*100;
+}
 export function validateBarcode(symbology:Symbology,content:string){
  if(!barcodeTypes.some(type=>type.value===symbology))throw Error('Unsupported barcode type');
  if(!content||content.length>300)throw Error('Barcode payload must be 1–300 characters');
@@ -13,17 +44,11 @@ export function validateBarcode(symbology:Symbology,content:string){
  try{encodeBarcode(symbology,content);}catch(error){throw Error(String(error).replace(/^Error:\s*/,''));}
 }
 
-const ratioCache=new Map<string,number>();
-// Ratio includes the encoder's bars/modules, human-readable text and quiet padding.
-export function barcodeRatio(symbology:Symbology,content:string):number {
- const key=JSON.stringify([symbology,content]);const cached=ratioCache.get(key);if(cached!==undefined)return cached;
- const svg=encodeBarcode(symbology,content);const match=/viewBox="0 0 ([\d.]+) ([\d.]+)"/.exec(svg);
- if(!match||Number(match[2])<=0)throw Error('Barcode dimensions unavailable');
- const ratio=Number(match[1])/Number(match[2]);if(ratioCache.size>=100)ratioCache.delete(ratioCache.keys().next().value!);ratioCache.set(key,ratio);return ratio;
-}
-export function fitBarcodeBox<T extends {kind:string;symbology:Symbology;content:string;width:number;height:number}>(item:T):T {
- if(item.kind!=='barcode'||!item.content)return item;
- const ratio=barcodeRatio(item.symbology,item.content);const width=Math.min(item.width,item.height*ratio);return {...item,width,height:width/ratio};
+export function barcodeRatio(symbology:Symbology,content:string):number {const p=barcodeProfile(symbology,content);return p.width/p.height;}
+export function fitBarcodeBox<T extends {kind:string;symbology:Symbology;content:string;width:number;height:number;barcodeScale?:number}>(item:T,legacy=false):T {
+ if(item.kind!=='barcode'||!item.content)return item;const p=barcodeProfile(item.symbology,item.content);const limits=barcodeScaleLimits(item.symbology);
+ const scale=item.barcodeScale??Math.min(item.width/p.width,item.height/p.height)*100;const chosen=legacy||item.barcodeScale!==undefined?scale:Math.max(limits.min,Math.min(limits.max,scale));
+ return {...item,width:p.width*chosen/100,height:p.height*chosen/100,...(!legacy||item.barcodeScale!==undefined?{barcodeScale:chosen}:{})};
 }
 export function barcodeSuggestion(symbology:Symbology,content:string):{value:string;label:string}|undefined {
  const lengths:Partial<Record<Symbology,number>>={ean13:13,ean8:8,upca:12};const length=lengths[symbology];

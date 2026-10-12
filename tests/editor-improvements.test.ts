@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {apply,object,seed,migrateDocument,restoreRevision} from '../src/core';
-import {barcodeTypes,validateBarcode,encodeBarcode} from '../src/barcodes';
+import {barcodeTypes,validateBarcode,encodeBarcode,retailBarcode} from '../src/barcodes';
 import {mergeJobs,readJobs,newJob} from '../src/jobLibrary';
 import {textMetrics} from '../src/typography';
 
@@ -31,11 +31,11 @@ test('Barcode resize scales both axes uniformly for every encoder, including pay
  const payloads:Record<string,string>={code128:'SKU001',code39:'SKU001',code93:'SKU001',ean13:'4006381333931',ean8:'96385074',upca:'036000291452',upce:'04252614',interleaved2of5:'001234',qrcode:'กาแฟ',datamatrix:'SKU001',pdf417:'SKU001'};
  for(const {value} of barcodeTypes){const barcode=object('barcode',{symbology:value,content:payloads[value],x:1,y:1,width:40,height:15});const doc={...newJob(1),width:100,height:100,objects:[barcode]};
  const wider=apply(doc,[{op:'update',id:barcode.id,changes:{width:barcode.width*1.5}}]).objects[0];assert(Math.abs(wider.height/barcode.height-1.5)<1e-9);assert.equal(wider.content,barcode.content);
- const shorter=apply(doc,[{op:'update',id:barcode.id,changes:{height:barcode.height*.5}}]).objects[0];assert(Math.abs(shorter.width/barcode.width-.5)<1e-9);
+ if(retailBarcode(value)){assert.throws(()=>apply(doc,[{op:'update',id:barcode.id,changes:{height:barcode.height*.5}}]),/magnification/);}else{const shorter=apply(doc,[{op:'update',id:barcode.id,changes:{height:barcode.height*.5}}]).objects[0];assert(Math.abs(shorter.width/barcode.width-.5)<1e-9);}
  assert.throws(()=>apply(doc,[{op:'update',id:barcode.id,changes:{width:barcode.width*2,height:barcode.height}}]),/aspect ratio/);
  const restored=restoreRevision({...doc,revision:1},doc);assert.equal(restored.objects[0].width,barcode.width);
  }
  const legacy=seed();const old=legacy.objects.find(o=>o.kind==='barcode')!;old.width=42;old.height=8;const migrated=migrateDocument(legacy).objects.find(o=>o.id===old.id)!;assert(migrated.width<=42);assert(migrated.height<=8);assert.equal(migrated.content,old.content);
- const doc=seed();const existing=doc.objects.find(o=>o.kind==='barcode')!;const changed=apply(doc,[{op:'update',id:existing.id,changes:{content:'LONGER-PAYLOAD-123'}}]).objects.find(o=>o.id===existing.id)!;assert(changed.width<=existing.width+.001);assert(changed.height<=existing.height+.001);
+ const doc=seed();doc.width=200;const existing=doc.objects.find(o=>o.kind==='barcode')!;const changed=apply(doc,[{op:'update',id:existing.id,changes:{content:'LONGER-PAYLOAD-123'}}]).objects.find(o=>o.id===existing.id)!;assert.equal(changed.barcodeScale,existing.barcodeScale);assert.equal(changed.content,'LONGER-PAYLOAD-123');
  assert.throws(()=>apply(doc,[{op:'update',id:existing.id,changes:{width:200}}]),/bounds/);
 });

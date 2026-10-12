@@ -1,3 +1,4 @@
+import {barcodeProfile,barcodeMagnification,barcodeScaleLimits} from './barcodes';
 import {dragLineEnd} from './lineGeometry';
 import {useEffect,useRef,useState,type PointerEvent} from 'react';
 import type {Command,LabelDocument,LabelObject} from './core';
@@ -15,10 +16,11 @@ export function useCanvasInteraction(doc:LabelDocument|null,select:(id:string)=>
   if(current.mode==='move'){item.x=Math.max(0,Math.min(doc.width-item.width,snapCoordinate(current.item.x+dx,step,snap)));item.y=Math.max(0,Math.min(doc.height-item.height,snapCoordinate(current.item.y+dy,step,snap)));}
   else if(item.kind==='line'){Object.assign(item,dragLineEnd(current.item,dx,dy,doc.width,doc.height,step,snap));}
   else if(item.kind==='box'){item.width=resizeExtent(current.item.width,dx,item.x,doc.width,step,snap);if(item.kind==='box')item.height=resizeExtent(current.item.height,dy,item.y,doc.height,step,snap);}
-  else {let scale=proportionalScale(current.item.width,current.item.height,dx,dy,doc.width-item.x,doc.height-item.y);if(snap){const snappedWidth=snapCoordinate(item.x+current.item.width*scale,step,true)-item.x;scale=Math.max(.01,Math.min(snappedWidth/current.item.width,(doc.width-item.x)/current.item.width,(doc.height-item.y)/current.item.height));}item.width=current.item.width*scale;item.height=current.item.height*scale;}
+  else {const profile=barcodeProfile(item.symbology,item.content);const limits=barcodeScaleLimits(item.symbology);const max=Math.min(limits.max,(doc.width-item.x)/profile.width*100,(doc.height-item.y)/profile.height*100);if(max<limits.min)return;const requested=barcodeMagnification(current.item)*proportionalScale(current.item.width,current.item.height,dx,dy,doc.width-item.x,doc.height-item.y);item.barcodeScale=Math.max(limits.min,Math.min(max,requested));item.width=profile.width*item.barcodeScale/100;item.height=profile.height*item.barcodeScale/100;}
+
   previewRef.current=next;setPreview(next);
  }
- function finish(){const current=drag.current;const next=previewRef.current;if(doc&&current&&next&&current.documentId===doc.id){const item=next.objects.find(o=>o.id===current.item.id)!;const changes=current.mode==='move'?{x:item.x,y:item.y}:{x:item.x,y:item.y,width:item.width,height:item.height,...(item.line?{line:item.line}:{})};if(Object.entries(changes).some(([key,value])=>current.item[key as keyof LabelObject]!==value))commit([{op:'update',id:item.id,changes}],doc.revision);}drag.current=null;previewRef.current=null;setPreview(null);}
+ function finish(){const current=drag.current;const next=previewRef.current;if(doc&&current&&next&&current.documentId===doc.id){const item=next.objects.find(o=>o.id===current.item.id)!;const changes=current.mode==='move'?{x:item.x,y:item.y}:{x:item.x,y:item.y,width:item.width,height:item.height,...(item.line?{line:item.line}:{}),...(item.kind==='barcode'?{barcodeScale:item.barcodeScale}:{})};if(Object.entries(changes).some(([key,value])=>current.item[key as keyof LabelObject]!==value))commit([{op:'update',id:item.id,changes}],doc.revision);}drag.current=null;previewRef.current=null;setPreview(null);}
  function cancel(){drag.current=null;previewRef.current=null;setPreview(null);}
  return {preview,onPointerDown:(e:PointerEvent<SVGGElement>)=>start(e,'move'),onResizeStart:(e:PointerEvent<SVGRectElement>)=>start(e,'resize'),onPointerMove:move,onPointerUp:finish,onPointerCancel:cancel};
 }

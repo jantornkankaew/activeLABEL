@@ -15,6 +15,12 @@ TSC, Zebra, Honeywell, EPSON and SATO queues can use this system-dialog route wh
 
 Inside ChatGPT, **Print** opens the standalone LabelCraft website with the current label and print preview. The label is passed in the URL fragment, which is not sent to the web server; the website clears the fragment after importing it. You still choose the local queue and confirm printing in Chrome. The ChatGPT sandbox does not directly access local USB printers.
 
+## Barcode size and preflight
+
+Select the actual printer DPI (203/300/600) in Barcode properties or Print. Barcode sizing uses reference magnification (%) and keeps both axes, module widths and quiet zones proportional. “ปรับ ratio … DPI” is an explicit, undoable change to make X an integer number of device dots; it can fail if the corrected dimensions do not fit the document. Increasing document size or moving the barcode may be necessary, especially for retail symbols at 203 DPI. Changing the DPI preference alone does not resize a label.
+
+Print blocks legacy retail magnifications outside 80–200%, modules below one device dot and other objects intersecting the reserved quiet zones. It warns about fractional device-dot modules and generic Code39/Code93 bars below recommended height. Generic application references do not replace GS1-specific usage requirements or physical print-quality verification. No automatic resizing or print submission occurs. See [barcode sizing sources and limits](BARCODE_STANDARDS_RESEARCH.md).
+
 ## Optional direct print bridge
 
 Use this only if you need the existing configured Windows driver or ZPL LAN adapter, rather than Chrome's dialog. No arbitrary printer destination or executable printer command is accepted from the browser. The bridge binds to `127.0.0.1:28171`, checks Host and exact Origin, and requires a random 24+ character pairing token. A hosted HTTPS page requires a trusted localhost TLS certificate; never disable browser certificate/security checks.
