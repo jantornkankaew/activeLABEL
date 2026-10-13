@@ -1,4 +1,4 @@
-//go:build !windows && !darwin
+//go:build !windows && !darwin && !linux
 
 package bridge
 
@@ -8,5 +8,5 @@ import (
 )
 
 func PrintDriver(name string, im image.Image, j Job) error {
-	return errors.New("native printer driver requires Windows or macOS")
+	return errors.New("native printer driver requires Windows, macOS or Linux with CUPS")
 }

@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest]
+        os: [windows-latest, macos-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -25,6 +25,9 @@ jobs:
         with:
           go-version: '1.27.2'
           cache: false
+      - name: Install Linux print discovery
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y cups-client cups-daemon && sudo systemctl start cups
       - name: Start Windows spooler
         if: runner.os == 'Windows'
         shell: pwsh
@@ -43,6 +46,8 @@ jobs:
       - run: npm ci
       - run: npm test
       - name: Build for the repository Pages path
+        env:
+          VITE_SHARE_SERVICE_URL: ${{ vars.VITE_SHARE_SERVICE_URL }}
         run: npm run build -- --base=/labelcraft/
       - uses: actions/setup-go@v5
         with:

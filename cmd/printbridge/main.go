@@ -202,6 +202,8 @@ func openBrowser(value string) error {
 			}
 		}
 		return exec.Command("rundll32.exe", "url.dll,FileProtocolHandler", value).Run()
+	case "linux":
+		return exec.Command("/usr/bin/xdg-open", value).Run()
 	case "darwin":
 		return exec.Command("/usr/bin/open", "-a", "Google Chrome", value).Run()
 	default:

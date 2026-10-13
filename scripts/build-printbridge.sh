@@ -5,7 +5,7 @@ task_output="${1:-dist/downloads}"
 mkdir -p "$task_output"
 task_staging="$(mktemp -d /tmp/labelcraft-printbridge.XXXXXX)"
 trap 'rm -rf "$task_staging"' EXIT
-for task_target in windows/amd64 windows/arm64 darwin/amd64 darwin/arm64; do
+for task_target in windows/amd64 windows/arm64 darwin/amd64 darwin/arm64 linux/amd64 linux/arm64; do
  task_os="${task_target%/*}"; task_arch="${task_target#*/}"
  task_directory="$task_staging/labelcraft-printbridge-$task_os-$task_arch"
  mkdir -p "$task_directory"
@@ -13,7 +13,7 @@ for task_target in windows/amd64 windows/arm64 darwin/amd64 darwin/arm64; do
  if [[ "$task_os" == windows ]]; then task_binary+=.exe; fi
  GOOS="$task_os" GOARCH="$task_arch" go build -trimpath -o "$task_directory/$task_binary" ./cmd/printbridge
  cp docs/NATIVE_PRINT_SETUP.md "$task_directory/README.md"
- if [[ "$task_os" == darwin ]]; then
+ if [[ "$task_os" == darwin || "$task_os" == linux ]]; then
   cat > "$task_directory/Start-LabelCraft.command" <<'LAUNCHER'
 #!/bin/bash
 set -e

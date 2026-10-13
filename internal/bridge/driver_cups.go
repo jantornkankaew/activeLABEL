@@ -1,4 +1,4 @@
-//go:build darwin
+//go:build darwin || linux
 
 package bridge
 
@@ -32,7 +32,7 @@ func PrintDriver(name string, im image.Image, j Job) error {
 	media := fmt.Sprintf("media=Custom.%sx%smm", strconv.FormatFloat(j.WidthMM, 'f', 3, 64), strconv.FormatFloat(j.HeightMM, 'f', 3, 64))
 	_, stderr, err := nativeCommand(30*time.Second, "/usr/bin/lp", "-d", name, "-n", strconv.Itoa(j.Copies), "-t", "LabelCraft "+j.JobID, "-o", media, "-o", "fit-to-page=false", "-o", "scaling=100", "-o", "position=top-left", "-o", "page-left=0", "-o", "page-right=0", "-o", "page-top=0", "-o", "page-bottom=0", "-o", "sides=one-sided", path)
 	if err != nil {
-		return fmt.Errorf("macOS lp submission: %v: %s", err, strings.TrimSpace(stderr))
+		return fmt.Errorf("CUPS lp submission: %v: %s", err, strings.TrimSpace(stderr))
 	}
 	return nil
 }

@@ -1,9 +1,10 @@
-//go:build darwin
+//go:build darwin || linux
 
 package bridge
 
 import (
 	"fmt"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -15,7 +16,11 @@ func DiscoverPrinters() ([]Printer, error) {
 		if strings.Contains(lower, "no destinations") || strings.Contains(lower, "no printers") {
 			return []Printer{}, nil
 		}
-		return nil, fmt.Errorf("macOS printer discovery: %v: %s", err, strings.TrimSpace(stderr))
+		return nil, fmt.Errorf("CUPS printer discovery: %v: %s", err, strings.TrimSpace(stderr))
 	}
-	return nativePrinters(parseCUPSNames(out), "macos_driver")
+	mode := "macos_driver"
+	if runtime.GOOS == "linux" {
+		mode = "linux_driver"
+	}
+	return nativePrinters(parseCUPSNames(out), mode)
 }

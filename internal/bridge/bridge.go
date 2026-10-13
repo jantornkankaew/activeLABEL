@@ -177,7 +177,7 @@ func (m *Manager) Submit(j Job) (Record, error) {
 			}
 			conn.Close()
 		}
-	case "windows_driver", "macos_driver":
+	case "windows_driver", "macos_driver", "linux_driver":
 		e = PrintDriver(p.Name, im, j)
 	default:
 		e = errors.New("unsupported printer adapter")
@@ -185,7 +185,7 @@ func (m *Manager) Submit(j Job) (Record, error) {
 	if e != nil {
 		r.Status = "unknown_or_failed"
 		r.Error = e.Error()
-	} else if p.Mode == "windows_driver" || p.Mode == "macos_driver" {
+	} else if p.Mode == "windows_driver" || p.Mode == "macos_driver" || p.Mode == "linux_driver" {
 		r.Status = "spooled"
 	} else {
 		r.Status = "transport_sent"
@@ -203,7 +203,7 @@ func ValidatePrinters(printers []Printer) error {
 			return errors.New("invalid printer config")
 		}
 		ids[p.ID] = true
-		if p.DPI != 203 && p.DPI != 300 && p.DPI != 600 && !(p.DPI == 0 && (p.Mode == "windows_driver" || p.Mode == "macos_driver")) {
+		if p.DPI != 203 && p.DPI != 300 && p.DPI != 600 && !(p.DPI == 0 && (p.Mode == "windows_driver" || p.Mode == "macos_driver" || p.Mode == "linux_driver")) {
 			return errors.New("invalid printer DPI")
 		}
 		if p.Mode == "zpl_tcp" {
@@ -215,7 +215,7 @@ func ValidatePrinters(printers []Printer) error {
 			if e != nil || n < 1 || n > 65535 {
 				return errors.New("invalid TCP port")
 			}
-		} else if p.Mode != "windows_driver" && p.Mode != "macos_driver" {
+		} else if p.Mode != "windows_driver" && p.Mode != "macos_driver" && p.Mode != "linux_driver" {
 			return errors.New("unsupported mode")
 		}
 	}

@@ -20,3 +20,7 @@ Actual Chromium/Playwright UI checks passed for ratio and automatic DPI, invalid
 P3 follow-up: the fit label maximizes available space, so its rendered size varies from the reference image; this preserves the requested fit-to-page behavior. Long conversations and full properties intentionally open as scrollable panels instead of consuming canvas space permanently.
 
 final result: passed
+
+## Follow-up requested refinements
+
+Actual captures `/tmp/handles-desktop.png` and `/tmp/handles-mobile.png`: solid blue frame, eight white square handles at constant screen size, grid enabled and expanded compact toolbar. Real mouse tests exercised all eight resize directions, integer barcode magnification/ratio, undo, typed zoom and presets. Verified original-tab printer pairing with an explicitly labeled local queue fixture; zero print submissions. No layout overflow on 390px viewport. Production short aliases and physical printer output remain deployment/hardware limitations, not verified successes.
