@@ -1,0 +1,18 @@
+.atelier .modal.print-compact{width:520px;max-width:100%;padding:0;border:1px solid #e5e4e1;outline:none;overflow:auto}
+.print-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:24px 26px 20px}
+.atelier .print-heading h2{font-size:20px;font-weight:600;margin:0 0 4px;letter-spacing:-.4px}
+.print-heading>div{min-width:0}.print-heading p{margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:380px}
+.atelier .print-heading button{padding:4px;border:0;background:transparent;min-height:30px;color:#777a80}
+.print-proof{display:flex;align-items:center;justify-content:center;min-height:230px;padding:28px;background:#f4f3f0;border-block:1px solid #eae9e5}
+.print-proof-paper{max-width:100%;flex-shrink:0;box-shadow:0 3px 16px #26252016;background:white;outline:1px solid #e5e4e1}
+.print-proof-paper svg{display:block;width:100%;height:100%}
+.print-specs{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 26px;color:#36383b;font-size:14px}
+.print-specs small{color:#85878b;font-size:12px}.print-specs label{display:flex;flex-direction:row;align-items:center;gap:10px;margin:0;font-size:12px;color:#85878b}
+.print-specs select{width:82px;border-color:#e5e4e1;border-radius:8px;height:34px}
+.print-bottom{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;padding:18px 26px 24px;border-top:1px solid #eeede9}
+.atelier .print-bottom>.primary{min-width:112px;min-height:42px;flex-shrink:0}
+.print-tips,.print-checks{font-size:11px;color:#777a80;line-height:1.7}
+.print-tips summary,.print-checks summary{cursor:pointer;width:fit-content}.print-tips p{font-size:11px!important;margin:8px 0 0}
+.print-checks{margin:0 26px 16px}.print-compact>.barcode-error,.print-compact>.print-failure{margin:0 26px 16px}
+.print-compact .print-failure{color:#a33232;background:#fff3f1;padding:10px 12px;border-radius:8px;overflow-wrap:anywhere}
+@media(max-width:540px){.atelier .modal.print-compact{padding:0}.print-heading{padding:20px}.print-proof{padding:24px;min-height:180px}.print-specs{padding:18px 20px}.print-bottom{padding:16px 20px 20px;gap:12px}.print-heading p{max-width:230px}}

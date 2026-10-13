@@ -1,14 +1,18 @@
 # Local printing on Windows and macOS
 
-The default **Print → เลือกเครื่องพิมพ์…** route opens Chrome's real system print dialog. Choose an installed local queue, then click Print in Chrome. LabelCraft does not generate or require a PDF. It prepares a vector SVG page with bundled fonts and the document's millimetre size. The screen's fit-to-page zoom, grid, snap and selection handles are excluded from printing.
+The default **Print → Print…** route opens Chrome's real system print dialog. Choose an installed local queue, then click Print in Chrome. LabelCraft does not generate or require a PDF. It prepares a vector SVG page with bundled fonts and the document's millimetre size. The screen's fit-to-page zoom, grid, snap and selection handles are excluded from printing.
+
+The compact preview contains the label, dimensions and DPI. Print invokes a same-origin iframe directly: no popup tab or popup permission. Printer selection and copies are configured once in Chrome. Barcode errors remain blocking; help and warnings expand only when needed.
+
+The Chromium source defines [`chrome.printing`](https://github.com/chromium/chromium/blob/main/chrome/common/extensions/api/printing.idl) with `platforms=("chromeos")`. This extension API does not expose printer enumeration to ordinary websites on Windows/macOS.
 
 ## Install and select the actual printer
 
 1. Install the manufacturer driver for the exact model and OS, then add its USB or network queue in Windows Printers & scanners or macOS Printers & Scanners.
 2. Use the OS's test-page function first. LabelCraft cannot install a hardware driver or inspect USB devices remotely from GitHub Pages.
 3. Configure custom media matching the label (e.g. 50 × 30 mm) in the driver. Thermal printers may also need the correct gap/black-mark mode and calibration.
-4. Open LabelCraft's Print preview, set the number of label pages, then choose **เลือกเครื่องพิมพ์…**.
-5. In Chrome, select the installed queue, choose the same media size, **Scale 100%**, **Margins None**, and disable **Headers and footers**. Leave Chrome copies at 1 when the app already created multiple label pages.
+4. Open LabelCraft's Print preview, check the label and DPI, then choose **Print…**.
+5. In Chrome, select the installed queue, choose the same media size, **Scale 100%**, **Margins None**, and disable **Headers and footers**. Set the required copies in Chrome; LabelCraft prepares one label page.
 6. Check one label's physical size, feed and barcode scan before a batch. Custom `@page` dimensions are requests; the browser/driver can override them. Do not select “Fit to printable area” if it changes the intended physical size.
 
 TSC, Zebra, Honeywell, EPSON and SATO queues can use this system-dialog route when the actual model has a working driver for that OS. This is not a claim that every model supports macOS, or that any of these devices has been tested in this cloud environment. A brand name alone is insufficient to choose ZPL, TSPL, EPL, ESC/POS or a native driver protocol.

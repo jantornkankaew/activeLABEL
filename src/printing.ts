@@ -7,14 +7,20 @@ export function printWindowCSS(doc:LabelDocument){validate(doc);validatePrintBou
 export async function openSystemPrint(doc:LabelDocument,svg:string,copies:number):Promise<void>{
  validate(doc);validatePrintBounds(doc);if(!Number.isInteger(copies)||copies<1||copies>100)throw Error('Copies must be 1–100');
  const parsed=new DOMParser().parseFromString(svg,'image/svg+xml');if(parsed.querySelector('parsererror')||parsed.documentElement.localName!=='svg')throw Error('Print SVG is invalid');
- const popup=window.open('','_blank','popup,width=920,height=760');if(!popup)throw Error('Chrome บล็อกหน้าพิมพ์ กรุณาอนุญาต pop-up สำหรับ LabelCraft แล้วลองอีกครั้ง');popup.opener=null;
- const printDoc=popup.document;printDoc.title=doc.title+' — LabelCraft Print';printDoc.documentElement.lang='th';const style=printDoc.createElement('style');style.textContent=printWindowCSS(doc);printDoc.head.append(style);
- const info=printDoc.createElement('div');info.className='print-instructions';const message=printDoc.createElement('p');message.textContent=`${doc.width} × ${doc.height} mm · Scale 100% · Margins None · ปิด Headers and footers · Copies ใน Chrome = 1 (เตรียมไว้ ${copies} หน้า) เลือกเครื่องพิมพ์ที่ Destination → See more… หรือ Print using system dialog…`;const again=printDoc.createElement('button');again.textContent='เปิดหน้าต่างพิมพ์อีกครั้ง';again.addEventListener('click',()=>popup.print());info.append(message,again);printDoc.body.append(info);
+ // A same-origin print frame uses Chrome's native dialog without a popup or helper.
+ const previousFocus=document.activeElement as HTMLElement|null;
+ document.querySelectorAll('iframe[data-labelcraft-print]').forEach(frame=>frame.remove());
+ const frame=document.createElement('iframe');frame.dataset.labelcraftPrint='';frame.title='LabelCraft print document';frame.setAttribute('aria-hidden','true');frame.tabIndex=-1;frame.style.cssText='position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;pointer-events:none;opacity:0';document.body.append(frame);
+ const printWindow=frame.contentWindow;const printDoc=frame.contentDocument;
+ if(!printWindow||!printDoc){frame.remove();throw Error('เตรียมหน้าพิมพ์ไม่ได้ กรุณาลองอีกครั้ง');}
+ printDoc.title=doc.title+' — LabelCraft Print';printDoc.documentElement.lang='th';const style=printDoc.createElement('style');style.textContent=printWindowCSS(doc);printDoc.head.append(style);
  for(let i=0;i<copies;i++){const sheet=printDoc.createElement('div');sheet.className='print-sheet';sheet.append(printDoc.importNode(parsed.documentElement,true));printDoc.body.append(sheet);}
  void printDoc.body.offsetHeight; // Flush layout so the active embedded font loads have started.
  let watch:number|undefined;let deadline:number|undefined;
- const cancelled=new Promise<never>((_,reject)=>{watch=window.setInterval(()=>{if(popup.closed)reject(Error('หน้าพิมพ์ถูกปิด ยังไม่ได้สั่งพิมพ์'));},100);deadline=window.setTimeout(()=>reject(Error('เตรียมหน้าพิมพ์ไม่สำเร็จภายใน 15 วินาที กรุณาปิดหน้าพิมพ์และลองใหม่')),15000);});
- try{await Promise.race([(async()=>{await printDoc.fonts.ready;if(popup.closed)throw Error('หน้าพิมพ์ถูกปิด');await new Promise<void>(resolve=>popup.requestAnimationFrame(()=>popup.requestAnimationFrame(()=>resolve())));})(),cancelled]);}finally{window.clearInterval(watch);window.clearTimeout(deadline);}
- if(popup.closed)throw Error('หน้าพิมพ์ถูกปิด');popup.focus();popup.print();
+ const cancelled=new Promise<never>((_,reject)=>{watch=window.setInterval(()=>{if(!frame.isConnected)reject(Error('หน้าพิมพ์ถูกปิด ยังไม่ได้สั่งพิมพ์'));},100);deadline=window.setTimeout(()=>reject(Error('เตรียมหน้าพิมพ์ไม่สำเร็จภายใน 15 วินาที กรุณาปิดหน้าพิมพ์และลองใหม่')),15000);});
+ try{await Promise.race([(async()=>{await printDoc.fonts.ready;if(!frame.isConnected)throw Error('หน้าพิมพ์ถูกปิด');await new Promise<void>(resolve=>printWindow.requestAnimationFrame(()=>printWindow.requestAnimationFrame(()=>resolve())));})(),cancelled]);}catch(error){frame.remove();throw error;}finally{window.clearInterval(watch);window.clearTimeout(deadline);}
+ if(!frame.isConnected)throw Error('หน้าพิมพ์ถูกปิด');
+ printWindow.addEventListener('afterprint',()=>{window.setTimeout(()=>{frame.remove();window.focus();if(previousFocus?.isConnected)previousFocus.focus();},0);},{once:true});
+ try{printWindow.focus();printWindow.print();}catch(error){frame.remove();throw error;}
 }
 export function localBridgeURL(value:string,pageProtocol:string){const url=new URL(value);if(!['localhost','127.0.0.1','[::1]'].includes(url.hostname)||url.username||url.password||url.search||url.hash||url.pathname!=='/'||!['http:','https:'].includes(url.protocol))throw Error('ใช้ URL ของ print bridge ในเครื่องนี้ เช่น https://localhost:28171');return url.origin;}
