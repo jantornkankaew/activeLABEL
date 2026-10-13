@@ -16,7 +16,11 @@ export function barcodePreflight(doc:LabelDocument,dpi:number){
  const q=[{x:item.x,y:item.y,width:p.quiet.left*x,height:item.height},{x:item.x+item.width-p.quiet.right*x,y:item.y,width:p.quiet.right*x,height:item.height},...(p.quiet.top?[{x:item.x,y:item.y,width:item.width,height:p.quiet.top*x},{x:item.x,y:item.y+item.height-p.quiet.bottom*x,width:item.width,height:p.quiet.bottom*x}]:[])];
  // The barcode SVG paints an opaque white background, hiding earlier layers.
  const above=doc.objects.slice(doc.objects.indexOf(item)+1);
- const enclosing=(other:LabelObject)=>other.kind==='box'&&other.x<=item.x+1e-7&&other.y<=item.y+1e-7&&other.x+other.width>=item.x+item.width-1e-7&&other.y+other.height>=item.y+item.height-1e-7;
+ // A frame can sit within the white margin while still surrounding every module.
+ // Keep a spacing warning, but only block a stroke that reaches the encoded area.
+ const encoded={x:item.x+p.quiet.left*x,y:item.y+p.quiet.top*x,width:item.width-(p.quiet.left+p.quiet.right)*x,height:item.height-(p.quiet.top+p.quiet.bottom)*x};
+ const enclosing=(other:LabelObject)=>other.kind==='box'&&((other.x<=item.x+1e-7&&other.y<=item.y+1e-7&&other.x+other.width>=item.x+item.width-1e-7&&other.y+other.height>=item.y+item.height-1e-7)||(other.x<=encoded.x+1e-7&&other.y<=encoded.y+1e-7&&other.x+other.width>=encoded.x+encoded.width-1e-7&&other.y+other.height>=encoded.y+encoded.height-1e-7&&!inkInZone(other,encoded)));
+
  if(above.some(other=>enclosing(other)&&q.some(zone=>inkInZone(other,zone))))warnings.push(`${item.name}: กรอบชิดขอบบาร์โค้ด ควรเว้นระยะเพิ่มเพื่อให้สแกนง่าย`);
  if(above.some(other=>!enclosing(other)&&inkInZone(other,item)))errors.push(`${item.name}: มีวัตถุอื่นทับพื้นที่ว่างรอบบาร์โค้ดหรือตัวรหัส กรุณาย้ายวัตถุก่อนพิมพ์`);
  }
