@@ -122,3 +122,9 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
 - Added Windows Start-LabelCraft.cmd and retained macOS/Linux terminal launchers with visible startup errors. Print setup points Windows users to the launcher.
 - Tested real helper private-page HEAD response and 0600 session-file permissions with a configured test fixture; zero print jobs. Session URL validation rejects remote destinations, credentials, query/fragment and non-private paths. Unit tests, frontend build and all six package builds pass; launcher syntax inspected/checked. Actual desktop browser-launch integration remains covered only by target-platform APIs, not a claim of testing the user's machine.
 - Short-link hosting remains blocked: no persistent hosting account/service is connected. Existing Go service and deployment instructions are ready; no public short-code service has been provisioned and no paid resources were created.
+
+## Browser-only printing (current user choice)
+
+- Removed connector downloads, pairing, discovery, token inputs and local job submission from the website print flow. Old pairing fragments are discarded; stored pairing data and cross-tab broadcasts no longer trigger connections. Go bridge source remains for legacy development.
+- Print → เลือกเครื่องพิมพ์… opens Chrome/system print selection. Retains immediate DPI adjustment, preflight, copies and exact-mm vector pages with bundled fonts. No in-app printer enumeration or physical-success claim.
+- Verified 54 frontend tests, frontend production build, Go tests and six desktop bridge cross-builds. Chromium browser checks invoked stubbed window.print (no hardware), verified two 50×30 mm pages and no editor adornments, invalid copy blocking, popup-blocked feedback, no helper requests with stale pairing, and mobile/tablet layouts without horizontal overflow. Actual native printer lists and hardware output cannot be verified from the cloud environment.

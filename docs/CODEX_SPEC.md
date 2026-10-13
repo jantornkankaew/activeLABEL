@@ -12,7 +12,7 @@ Primary screen: document header with save/undo/redo/print; left object tools/lay
 
 TypeScript frontend (current React/Vite); Go API and background Print Engine; PostgreSQL for hosted accounts/credit ledger; SQLite for hardened local print ledger. Print bridge runs on Windows and macOS Intel/Apple Silicon. Keep low overhead: no bundled Chromium desktop UI, no idle polling loops, bounded queues/jobs/images, measure idle and burst RSS/CPU.
 
-The user explicitly accepts installing a small bridge. They want direct printing via driver, without a PDF step. On macOS when vendor drivers are unavailable, use tested raw-command adapters. LAN comes first; USB is model-specific follow-up. Driver/platform adapters must be distinct from the canonical document and transport adapters.
+The current user requirement rejects installing a connector. The website uses the browser/system print dialog to select installed OS queues, without a separate download or PDF export step. Legacy Go bridge code remains available for development but is not offered or contacted by the website. On macOS when vendor drivers are unavailable, use tested raw-command adapters. LAN comes first; USB is model-specific follow-up. Driver/platform adapters must be distinct from the canonical document and transport adapters.
 
 ## Source of truth and commands
 
