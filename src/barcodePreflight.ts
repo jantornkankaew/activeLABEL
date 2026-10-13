@@ -14,7 +14,11 @@ export function barcodePreflight(doc:LabelDocument,dpi:number){
  else if(Math.abs(dots-Math.round(dots))>.001)warnings.push(`${item.name}: X = ${dots.toFixed(3)} dots/module ที่ ${dpi} DPI ใช้ “ปรับ ratio ให้เหมาะกับ DPI” เพื่อลดความคลาดเคลื่อนจากการ rasterize`);
  if(['code39','code93'].includes(item.symbology)){const minimum=item.symbology==='code39'?Math.max(5,.15*(item.width-(p.quiet.left+p.quiet.right)*x)):Math.max(5.08,.15*item.width);const actual=p.barHeightMm*scale/100;if(actual<minimum-.01)warnings.push(`${item.name}: ความสูงแท่ง ${actual.toFixed(3)} mm ต่ำกว่าคำแนะนำ ${minimum.toFixed(3)} mm ของ ${item.symbology}; เพิ่ม ratio และตรวจข้อกำหนดงานที่ใช้`);}
  const q=[{x:item.x,y:item.y,width:p.quiet.left*x,height:item.height},{x:item.x+item.width-p.quiet.right*x,y:item.y,width:p.quiet.right*x,height:item.height},...(p.quiet.top?[{x:item.x,y:item.y,width:item.width,height:p.quiet.top*x},{x:item.x,y:item.y+item.height-p.quiet.bottom*x,width:item.width,height:p.quiet.bottom*x}]:[])];
- if(doc.objects.some(other=>other.id!==item.id&&q.some(zone=>inkInZone(other,zone))))errors.push(`${item.name}: มีวัตถุอื่นทับพื้นที่ว่างรอบบาร์โค้ด กรุณาย้ายวัตถุก่อนพิมพ์`);
+ // The barcode SVG paints an opaque white background, hiding earlier layers.
+ const above=doc.objects.slice(doc.objects.indexOf(item)+1);
+ const enclosing=(other:LabelObject)=>other.kind==='box'&&other.x<=item.x+1e-7&&other.y<=item.y+1e-7&&other.x+other.width>=item.x+item.width-1e-7&&other.y+other.height>=item.y+item.height-1e-7;
+ if(above.some(other=>enclosing(other)&&q.some(zone=>inkInZone(other,zone))))warnings.push(`${item.name}: กรอบชิดขอบบาร์โค้ด ควรเว้นระยะเพิ่มเพื่อให้สแกนง่าย`);
+ if(above.some(other=>!enclosing(other)&&inkInZone(other,item)))errors.push(`${item.name}: มีวัตถุอื่นทับพื้นที่ว่างรอบบาร์โค้ดหรือตัวรหัส กรุณาย้ายวัตถุก่อนพิมพ์`);
  }
  return {errors,warnings};
 }
