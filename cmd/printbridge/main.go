@@ -11,6 +11,7 @@ import (
 	"labelcraft/internal/bridge"
 	"labelcraft/internal/httpguard"
 	"log"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -164,6 +165,32 @@ func main() {
 		}{pairURL, len(next), message})
 	})
 	server := http.Server{Addr: "127.0.0.1:28171", Handler: httpguard.Loopback(origins, root), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 20 * time.Second, WriteTimeout: 45 * time.Second, IdleTimeout: 30 * time.Second}
+	sessionRoot, sessionErr := os.UserConfigDir()
+	if sessionErr != nil {
+		log.Fatal("Cannot access local pairing directory")
+	}
+	sessionRoot = filepath.Join(sessionRoot, "LabelCraft")
+	if err := os.MkdirAll(sessionRoot, 0700); err != nil {
+		log.Fatal("Cannot create local pairing directory")
+	}
+	sessionPath := filepath.Join(sessionRoot, "printbridge-session.json")
+	listener, listenErr := net.Listen("tcp4", server.Addr)
+	if listenErr != nil {
+		if !*headless {
+			if previous, err := readSessionURL(sessionPath); err == nil && sessionAvailable(previous) {
+				if err := openBrowser(previous); err == nil {
+					log.Print("Opened the running LabelCraft helper for pairing")
+					return
+				}
+			}
+		}
+		log.Fatal("Port 28171 is already in use. Close the previous helper and open LabelCraft again.")
+	}
+	defer listener.Close()
+	setupURL := endpoint + "/setup/" + nonce
+	if err := writeSessionURL(sessionPath, setupURL); err != nil {
+		log.Print("Could not save pairing recovery; keep the setup page open")
+	}
 	if !*headless {
 		go func() {
 			time.Sleep(300 * time.Millisecond)
@@ -174,9 +201,9 @@ func main() {
 	}
 	log.Print("LabelCraft local print helper running on loopback :28171; leave this process open")
 	if *cert != "" {
-		log.Fatal(server.ListenAndServeTLS(*cert, *key))
+		log.Fatal(server.ServeTLS(listener, *cert, *key))
 	} else {
-		log.Fatal(server.ListenAndServe())
+		log.Fatal(server.Serve(listener))
 	}
 }
 func randomSecret() string {

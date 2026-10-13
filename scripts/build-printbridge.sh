@@ -13,12 +13,27 @@ for task_target in windows/amd64 windows/arm64 darwin/amd64 darwin/arm64 linux/a
  if [[ "$task_os" == windows ]]; then task_binary+=.exe; fi
  GOOS="$task_os" GOARCH="$task_arch" go build -trimpath -o "$task_directory/$task_binary" ./cmd/printbridge
  cp docs/NATIVE_PRINT_SETUP.md "$task_directory/README.md"
+ if [[ "$task_os" == windows ]]; then
+  cat > "$task_directory/Start-LabelCraft.cmd" <<'WINDOWS'
+@echo off
+cd /d "%~dp0"
+labelcraft-printbridge.exe
+if errorlevel 1 (
+ echo.
+ echo LabelCraft could not start. Read the message above.
+ pause
+)
+WINDOWS
+ fi
  if [[ "$task_os" == darwin || "$task_os" == linux ]]; then
   cat > "$task_directory/Start-LabelCraft.command" <<'LAUNCHER'
 #!/bin/bash
-set -e
-cd "$(dirname "$0")"
-exec ./labelcraft-printbridge
+cd "$(dirname "$0")" || exit 1
+if ! ./labelcraft-printbridge; then
+ printf '\nLabelCraft could not start. Read the message above.\n'
+ read -r -p 'Press Enter to close.'
+ exit 1
+fi
 LAUNCHER
   chmod 755 "$task_directory/Start-LabelCraft.command" "$task_directory/$task_binary"
  fi
