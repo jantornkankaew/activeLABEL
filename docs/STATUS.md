@@ -189,4 +189,5 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
 
 - All linear symbologies can shorten bars from 10–100% without changing X-dimension or magnification. The top-centre mouse handle keeps the barcode bottom edge and width fixed; the other resize handles retain proportional magnification behavior.
 - Top artwork supports Flat, Wave, Zigzag, Sawtooth and Bubble. Matrix and stacked 2D codes do not expose these controls. Settings persist through autosave, JSON, compressed Share links, SVG export and print rendering.
-- Verification: 68 TypeScript tests, web/ChatGPT production builds and Go tests passed. Chromium exercised top-handle dragging, all four decorative styles, 2D control exclusion and print preview with no console errors.
+- Top-handle dragging uses continuous 0.01% bar-height precision instead of rounding every pointer frame to a whole percent. Width, X-dimension, magnification and the bottom anchor remain fixed throughout the gesture.
+- Verification: 69 TypeScript tests, web/ChatGPT production builds and Go tests passed. Chromium exercised 20 fine-grained drag steps with 20 distinct, monotonically decreasing heights, all four decorative styles, 2D control exclusion and print preview with no console errors.
