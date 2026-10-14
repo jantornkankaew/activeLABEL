@@ -13,7 +13,7 @@ import {printHandoffURL} from './printing';
 import {fontStyles} from './fontStyles';
 import {useEffect, useMemo, useRef, useState} from 'react';
 import {Undo2, Redo2, Type, Barcode, Minus, Square, Sparkles, Send, Download, Check, X, Lock, Unlock, Trash2, Maximize2,Printer,Share2} from 'lucide-react';
-import {apply, object, migrateDocument, restoreRevision, type Command, type Kind, type LabelDocument} from './core';
+import {apply,defaultDocumentSettings,object,migrateDocument,restoreRevision,type Command,type Kind,type LabelDocument} from './core';
 import {changesBarcodePayload, prepareProposal, validateChatGPTDocument, type ChatGPTToolOutput} from './chatgptEngine';
 import {getChatGPTHost, initialChatGPTDocument} from './chatgptHost';
 import {LabelSvg, exportSvg} from './renderer';
@@ -23,12 +23,12 @@ import {readJobs,mergeJobs,newJob} from './jobLibrary';
 import {barcodeTypes,isSquareCode,type Symbology} from './barcodes';
 
 export function ChatGPTWidget() {
-  const {settings:measurements}=useMeasurements();
+  const {settings:measurements,setSettings:setMeasurements}=useMeasurements();
   const host = getChatGPTHost();
   const [jobs,setJobs]=useState(()=>readJobs(host?.widgetState?.documents));
-  const [grid,setGrid]=useState<GridSettings>({visible:true,snap:false,step:1});
   const [sizeOpen,setSizeOpen]=useState(false);const [shareOpen,setShareOpen]=useState(false);
   const [doc, setDoc] = useState(() => initialChatGPTDocument(host));
+  const initialSettings=doc?.settings??defaultDocumentSettings;const [grid,setGrid]=useState<GridSettings>({visible:initialSettings.gridVisible,snap:initialSettings.snapToGrid,step:initialSettings.gridStep});
   const barcodeDrafts=useBarcodeDrafts(doc);const invalidBarcode=barcodeDrafts.invalid;
   const [output, setOutput] = useState<ChatGPTToolOutput | null>(() => host?.toolOutput ?? null);
   const [resolved, setResolved] = useState<string[]>(() => host?.widgetState?.resolvedProposals ?? []);
@@ -66,6 +66,7 @@ export function ChatGPTWidget() {
     const documents=mergeJobs(jobs,doc);setJobs(documents);
     void host.setWidgetState({document: doc, documents, resolvedProposals: resolved}).catch(() => setNotice('บันทึกสถานะใน ChatGPT ไม่สำเร็จ ดาวน์โหลด JSON เพื่อเก็บงาน'));
   }, [doc, resolved]);
+  useEffect(()=>{if(!doc)return;const settings=doc.settings??defaultDocumentSettings;setMeasurements({unit:settings.unit,dpi:settings.dpi});setGrid({visible:settings.gridVisible,snap:settings.snapToGrid,step:settings.gridStep});},[doc?.id,doc?.settings?.unit,doc?.settings?.dpi,doc?.settings?.gridVisible,doc?.settings?.snapToGrid,doc?.settings?.gridStep]);
   const proposal = output?.proposal;
   const active = proposal && typeof proposal.id === 'string' && Array.isArray(proposal.commands) && !resolved.includes(proposal.id) ? proposal : undefined;
   const reviewed = useMemo(() => {
@@ -79,7 +80,7 @@ export function ChatGPTWidget() {
   if (!host || !doc) return <div className="cg-unavailable"><h1>LabelCraft in ChatGPT</h1><p>เปิดแอปนี้จากเครื่องมือ LabelCraft ใน ChatGPT เพื่อออกแบบฉลากและให้ ChatGPT ช่วยแก้ไข</p><p>หน้านี้ไม่มีการเชื่อมต่อ ChatGPT เมื่อเปิดเป็นเว็บเดี่ยว</p></div>;
   const current = doc;
   const documents=mergeJobs(jobs,current);
-  function openJob(next:LabelDocument){if(active)return;setJobs(mergeJobs(jobs,current));setDoc(next);setOutput(null);setPast([]);setFuture([]);setSelected(null);setAddingBarcode(false);}
+  function openJob(next:LabelDocument){if(active)return;const settings=next.settings??defaultDocumentSettings;setJobs(mergeJobs(jobs,current));setMeasurements({unit:settings.unit,dpi:settings.dpi});setGrid({visible:settings.gridVisible,snap:settings.snapToGrid,step:settings.gridStep});setDoc(next);setOutput(null);setPast([]);setFuture([]);setSelected(null);setAddingBarcode(false);}
   function createJob(){if(documents.length>=50){setNotice('Maximum 50 jobs');return;}openJob(newJob(documents.length+1));}
   const display = reviewed?.previewDocument ?? interaction.preview ?? current;
   const item = current.objects.find(value => value.id === selected);
@@ -94,6 +95,8 @@ export function ChatGPTWidget() {
     if (commit([{op: 'add', object: next}])) setSelected(next.id);
   }
   function update(changes: Partial<typeof current.objects[number]>) { if(changes.x!==undefined)changes.x=snapCoordinate(changes.x,grid.step,grid.snap);if(changes.y!==undefined)changes.y=snapCoordinate(changes.y,grid.step,grid.snap);if (item) return commit([{op: 'update', id: item.id, changes}]); }
+  function updateGrid(next:GridSettings){setGrid(next);const settings=current.settings??defaultDocumentSettings;commit([{op:'setDocumentSettings',settings:{...settings,gridVisible:next.visible,snapToGrid:next.snap,gridStep:next.step}}]);}
+  function updateMeasurements(next:{unit:'mm'|'cm'|'inch'|'dot';dpi:number}){const settings=current.settings??defaultDocumentSettings;commit([{op:'setDocumentSettings',settings:{...settings,unit:next.unit,dpi:next.dpi as 203|300|600}}]);}
   function alignSelected(alignment:Alignment){if(!item)return;try{commit(alignmentCommands(current,[item.id],alignment));}catch(error){setNotice((error as Error).message);}}
   async function askChatGPT() {
     if (!prompt.trim() || sending || active) return;
@@ -127,12 +130,12 @@ export function ChatGPTWidget() {
         {item.kind==='text'&&<FontPicker item={item} disabled={Boolean(active)||item.locked} onUpdate={update}/>}
         {item.kind === 'text' && <div className="cg-fields"><MeasurementInput label="Font" ariaLabel="Font size" value={item.fontSize} minMm={.5} maxMm={30} stepMm={.1} disabled={Boolean(active)||item.locked} onChange={mm=>update({fontSize:mm})}/><label>Style<button aria-label="Bold style" disabled={Boolean(active) || item.locked} aria-pressed={item.bold} onClick={() => update({bold: !item.bold})}><b>B</b> Bold</button></label></div>}
         <AlignmentControls disabled={Boolean(active)||item.locked} onAlign={alignSelected}/><button className="cg-danger" disabled={Boolean(active) || item.locked} onClick={deletion.request}><Trash2 size={14}/> ลบวัตถุ</button></section>}
-    </aside><main className="cg-canvas"><div className="cg-canvas-title"><span>{current.title}</span><small>{displayMeasurement(display.width,measurements)} × {displayMeasurement(display.height,measurements)} {measurements.unit}</small></div><DesignSurface onBlankPointerDown={()=>setSelected(null)} doc={display} paperRef={paper} grid={grid} onGrid={setGrid} onSize={()=>{if(!active){setSelected(null);setSizeOpen(true);}}} onPointerMove={interaction.onPointerMove} onPointerUp={interaction.onPointerUp} onPointerCancel={interaction.onPointerCancel}><LabelSvg fonts={fontStyles} doc={display} selectedId={selected} grid={grid.visible} gridStep={grid.step} onObjectDoubleClick={id=>{setSelected(id);requestAnimationFrame(()=>document.querySelector('.object-properties')?.scrollIntoView({block:'nearest'}));}} onPointerDown={interaction.onPointerDown} onResizeStart={active?undefined:interaction.onResizeStart}/></DesignSurface><footer>revision {current.revision}{reviewed && ' · กำลังแสดงตัวอย่าง ยังไม่ได้ใช้การแก้ไข'}</footer></main></div>
+    </aside><main className="cg-canvas"><div className="cg-canvas-title"><span>{current.title}</span><small>{displayMeasurement(display.width,measurements)} × {displayMeasurement(display.height,measurements)} {measurements.unit}</small></div><DesignSurface onBlankPointerDown={()=>setSelected(null)} doc={display} paperRef={paper} grid={grid} onGrid={updateGrid} onMeasurement={updateMeasurements} onSize={()=>{if(!active){setSelected(null);setSizeOpen(true);}}} onPointerMove={interaction.onPointerMove} onPointerUp={interaction.onPointerUp} onPointerCancel={interaction.onPointerCancel}><LabelSvg fonts={fontStyles} doc={display} selectedId={selected} grid={grid.visible} gridStep={grid.step} onObjectDoubleClick={id=>{setSelected(id);requestAnimationFrame(()=>document.querySelector('.object-properties')?.scrollIntoView({block:'nearest'}));}} onPointerDown={interaction.onPointerDown} onResizeStart={active?undefined:interaction.onResizeStart}/></DesignSurface><footer>revision {current.revision}{reviewed && ' · กำลังแสดงตัวอย่าง ยังไม่ได้ใช้การแก้ไข'}</footer></main></div>
     <input hidden ref={importFile} type="file" accept="application/json,.json" onChange={async event=>{const input=event.currentTarget;try{const file=input.files?.[0];if(!file)return;if(file.size>200_000)throw Error('Maximum 200 KB in ChatGPT');const next=migrateDocument(JSON.parse(await file.text()));validateChatGPTDocument(next);if(documents.length>=50)throw Error('Maximum 50 jobs');if(documents.some(d=>d.id===next.id))next.id=crypto.randomUUID();openJob(next);}catch(error){setNotice((error as Error).message);}input.value='';}}/>
     {shareOpen&&<ShareDialog doc={current} onClose={()=>setShareOpen(false)}/>}
     {sizeOpen&&<LabelSizeDialog doc={current} onResize={(width,height)=>commit([{op:'resize',width,height}])} onClose={()=>setSizeOpen(false)}/>}
     {active && <section className="cg-proposal"><div><Sparkles size={19}/><div><h3>{reviewed ? 'ข้อเสนอจาก ChatGPT' : 'ข้อเสนอนี้ใช้ไม่ได้กับ revision ปัจจุบัน'}</h3><p>{reviewed ? `${active.commands.length} การแก้ไข · ตรวจดูตัวอย่างก่อนใช้` : 'ข้อมูลฉลากเปลี่ยนแล้ว กรุณาขอข้อเสนอใหม่'}</p></div></div>
-      <ul>{active.commands.map((command, index) => <li key={index}>{command.op === 'update' ? `แก้ ${current.objects.find(value => value.id === command.id)?.name ?? command.id}: ${JSON.stringify(command.changes)}` : command.op === 'add' ? `เพิ่ม ${command.object.name}: ${command.object.content || command.object.kind}` : command.op === 'remove' ? `ลบ ${command.id}` : command.op==='resize'?`ขนาด ${command.width} × ${command.height} mm`:'Variables'}</li>)}</ul>
+      <ul>{active.commands.map((command, index) => <li key={index}>{command.op === 'update' ? `แก้ ${current.objects.find(value => value.id===command.id)?.name??command.id}: ${JSON.stringify(command.changes)}` : command.op==='add'?`เพิ่ม ${command.object.name}: ${command.object.content||command.object.kind}`:command.op==='remove'?`ลบ ${command.id}`:command.op==='resize'?`ขนาด ${command.width} × ${command.height} mm`:command.op==='setVariables'?'Variables':'Document settings'}</li>)}</ul>
       {barcodeChange && <label className="cg-barcode-confirm"><input type="checkbox" checked={allowBarcode} onChange={event => setAllowBarcode(event.target.checked)}/> ยืนยันการเปลี่ยนข้อมูลบาร์โค้ดตามข้อเสนอนี้</label>}
       <div className="cg-proposal-actions"><button onClick={() => {setResolved(previous => [...previous.slice(-19), active.id]); setAllowBarcode(false);}}><X size={16}/> ไม่ใช้</button><button className="cg-primary" disabled={!reviewed || (barcodeChange && !allowBarcode)} onClick={() => {if (reviewed && commit(reviewed.commands, active.baseRevision)) {setResolved(previous => [...previous.slice(-19), active.id]); setAllowBarcode(false);}}}><Check size={16}/> ใช้การแก้ไข</button></div>
     </section>}

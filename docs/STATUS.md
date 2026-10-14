@@ -178,3 +178,9 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
 - Properties is reorganized into Content, Position & size, Typography and label-alignment sections with a compact object-type header, consistent spacing and a wider scrollable panel.
 - Font size is an editable point-size control backed by 22 common presets from 6–96 pt. Font families increased from 9 to 19 and are grouped into bundled, deterministic print fonts and familiar system fonts. System choices retain explicit bundled fallbacks when unavailable.
 - Chromium verified all sections, 19 options in two groups, preset/custom point input, rendered family/size updates and responsive desktop/mobile layout. Bundled font export remains filtered to families actually used.
+
+## Self-contained portable design files
+
+- LabelDocument now owns variables, remembered print values, unit, DPI, grid visibility, snap and physical grid spacing alongside objects and typography. These settings are validated, revisioned, undoable and included in JSON, compressed Share links, browser autosave and ChatGPT widget state.
+- Opening or switching labels restores that label's own settings. New labels receive clean defaults; legacy files are migrated with the same defaults. AI connection details and credentials remain application state and never enter a design file.
+- Verification: 65 TypeScript tests and production build passed. Chromium exported a configured label, opened it in a fresh browser context, verified variables/settings, checked isolation between two open label tabs and confirmed autosave after reload.

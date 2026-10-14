@@ -33,6 +33,8 @@ Barcode type/data changes apply automatically when valid. Invalid drafts remain 
 
 The **File** menu provides New label, Open file, Export JSON and Export SVG. Open labels appear as stable tabs below the header. The standalone website saves jobs in this browser; the embedded app uses ChatGPT widget state. Download JSON as a portable backup. Clearing browser data or losing widget state can remove saved jobs; this is not shared cloud account storage.
 
+Each label file is self-contained. Objects, fonts, variables and remembered print values, unit, DPI, grid visibility, snap and grid spacing autosave with that document and travel in JSON and Share links. Opening another label restores its own settings. Application concerns such as AI connections and credentials remain outside label files.
+
 For actual local printing, use **Print → Print…**, then select the installed queue in Chrome. See [Windows/macOS local printing](docs/LOCAL_PRINTING.md) for driver/media setup. The website does not connect to a local helper or require one. In ChatGPT, Print opens the standalone website with the current label and print preview.
 
 ## Frontend development

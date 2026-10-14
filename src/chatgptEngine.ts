@@ -10,7 +10,7 @@ function keys(value: unknown, allowed: Set<string>) {
   if (!value || typeof value !== 'object' || Array.isArray(value) || Object.keys(value).some(key => !allowed.has(key))) throw Error('Unsupported input properties');
 }
 export function validateChatGPTDocument(doc: LabelDocument) {
-  keys(doc, new Set(['schemaVersion', 'id', 'revision', 'title', 'width', 'height', 'objects', 'variables']));
+  keys(doc, new Set(['schemaVersion', 'id', 'revision', 'title', 'width', 'height', 'objects', 'variables','settings']));
   validate(doc);
   for (const item of doc.objects) keys(item, objectKeys);
   if (doc.objects.some(item => item.kind === 'image')) throw Error('This ChatGPT app version supports text, barcodes, lines and boxes; image uploads remain in the standalone editor');
@@ -34,7 +34,7 @@ export function prepareProposal(input: ProposalInput): ChatGPTToolOutput {
       return {...command, object: object(command.object.kind, command.object)};
     } else if (command.op === 'remove') keys(command, new Set(['op', 'id']));
     else if (command.op === 'resize') keys(command, new Set(['op', 'width', 'height']));
-    else if (command.op === 'setVariables') throw Error('AI cannot change variables');
+    else if (command.op === 'setVariables'||command.op==='setDocumentSettings') throw Error('AI cannot change document settings');
     else throw Error('Unsupported operation');
     return command;
   });
