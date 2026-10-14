@@ -160,3 +160,9 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
 - Variables use compact cards with a display name, default value, technical key and print-prompt toggle. The empty state creates the first variable directly.
 - Text and Barcode Properties now expose a Value source selector. A variable can be linked without writing template syntax, with editable Prefix and Suffix fields and a live preview. Fixed values and multi-variable advanced formulas remain available.
 - Verification: 63 TypeScript tests and the production build passed. Chromium checked creation, text and barcode binding, prefix/suffix updates, changed defaults, live previews and desktop/mobile layouts.
+
+## Required variable questions in Print
+
+- Print presents every used variable marked **Ask before print** as a numbered question above the label preview. Display names become the question labels, defaults remain editable and changes update the preview immediately.
+- Required values show an inline error and keep Print disabled until completed. The section stacks cleanly on mobile and remains keyboard accessible.
+- Chromium verified default values, empty-value blocking, live text resolution, re-enabling Print and desktop/mobile layouts. Native print was not invoked in this UI check.
