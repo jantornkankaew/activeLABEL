@@ -6,8 +6,8 @@ import {shareURL,documentFromShareHash} from '../src/sharing';
 test('compressed sharing reduces a real label link by at least 60% and opens legacy links',()=>{
  const doc=seed();doc.title='ฉลากสินค้า';const old='#share='+encodeURIComponent(JSON.stringify(doc));const url=shareURL(doc);assert(url.length<old.length*.4);assert.match(new URL(url).hash,/^#share=z2\.[A-Za-z0-9_-]+$/);assert.deepEqual(documentFromShareHash(new URL(url).hash),doc);assert.deepEqual(documentFromShareHash(old),doc);
 });
-test('compressed sharing preserves fonts, freeform endpoints, barcode scale and overflow',()=>{
- const doc={...seed(),objects:[object('line',{line:{startX:0,startY:5,endX:10,endY:0},width:10,height:5}),object('barcode',{symbology:'qrcode',content:'ภาษาไทย ABC',barcodeScale:300,x:-5,y:20})]};assert.deepEqual(documentFromShareHash(new URL(shareURL(doc)).hash),doc);
+test('compressed sharing preserves fonts, freeform endpoints, barcode scale, bar styling and overflow',()=>{
+ const doc={...seed(),height:60,objects:[object('line',{line:{startX:0,startY:5,endX:10,endY:0},width:10,height:5}),object('barcode',{symbology:'qrcode',content:'ภาษาไทย ABC',barcodeScale:300,x:-5,y:20}),object('barcode',{symbology:'code128',content:'STYLE',barcodeScale:50,barHeightScale:60,barTopStyle:'wave',x:2,y:45})]};assert.deepEqual(documentFromShareHash(new URL(shareURL(doc)).hash),doc);
 });
 test('malformed, unknown and oversized share data fail without opening a document',()=>{
  for(const hash of ['#print=x','#share=z1.','#share=z1.%20','#share=z1.A','#share=z1.ABCD','#share=z2.ABCD','#share=%7Bbroken','#share='+ 'A'.repeat(16001)])assert.equal(documentFromShareHash(hash),null);

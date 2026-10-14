@@ -20,7 +20,7 @@ export function useCanvasInteraction(doc:LabelDocument|null,select:(id:string)=>
 
   previewRef.current=next;setPreview(next);
  }
- function finish(){const current=drag.current;const next=previewRef.current;if(doc&&current&&next&&current.documentId===doc.id){const item=next.objects.find(o=>o.id===current.item.id)!;const changes=current.mode==='move'?{x:item.x,y:item.y}:{x:item.x,y:item.y,width:item.width,height:item.height,...(item.line?{line:item.line}:{}),...(item.kind==='barcode'?{barcodeScale:item.barcodeScale}:{}),...(item.kind==='text'?{fontSize:item.fontSize}:{})};if(Object.entries(changes).some(([key,value])=>current.item[key as keyof LabelObject]!==value))commit([{op:'update',id:item.id,changes}],doc.revision);}drag.current=null;previewRef.current=null;setPreview(null);}
+ function finish(){const current=drag.current;const next=previewRef.current;if(doc&&current&&next&&current.documentId===doc.id){const item=next.objects.find(o=>o.id===current.item.id)!;const changes=current.mode==='move'?{x:item.x,y:item.y}:{x:item.x,y:item.y,width:item.width,height:item.height,...(item.line?{line:item.line}:{}),...(item.kind==='barcode'?{barcodeScale:item.barcodeScale,barHeightScale:item.barHeightScale}:{}),...(item.kind==='text'?{fontSize:item.fontSize}:{})};if(Object.entries(changes).some(([key,value])=>current.item[key as keyof LabelObject]!==value))commit([{op:'update',id:item.id,changes}],doc.revision);}drag.current=null;previewRef.current=null;setPreview(null);}
  function cancel(){drag.current=null;previewRef.current=null;setPreview(null);}
  return {preview,onPointerDown:(e:PointerEvent<SVGGElement>)=>start(e,'move'),onResizeStart:(e:PointerEvent<SVGRectElement>)=>start(e,'resize'),onPointerMove:move,onPointerUp:finish,onPointerCancel:cancel};
 }

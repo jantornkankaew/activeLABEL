@@ -2,6 +2,8 @@ import bwipjs from 'bwip-js/browser';
 export const barcodeTypes = [{value:'code128',name:'Code 128'},{value:'code39',name:'Code 39'},{value:'code93',name:'Code 93'},{value:'ean13',name:'EAN-13'},{value:'ean8',name:'EAN-8'},{value:'upca',name:'UPC-A'},{value:'upce',name:'UPC-E'},{value:'interleaved2of5',name:'Interleaved 2 of 5'},{value:'qrcode',name:'QR Code'},{value:'datamatrix',name:'Data Matrix'},{value:'pdf417',name:'PDF417'}] as const;
 export type Symbology=typeof barcodeTypes[number]['value'];
 export const isSquareCode=(type:Symbology)=>type==='qrcode'||type==='datamatrix';
+export const isLinearBarcode=(type:Symbology)=>!isSquareCode(type)&&type!=='pdf417';
+export type BarTopStyle='flat'|'wave'|'zigzag'|'sawtooth'|'bubble';
 export const retailBarcode=(type:Symbology)=>['ean13','ean8','upca','upce'].includes(type);
 export type BarcodeProfile={svg:string;width:number;height:number;moduleMm:number;barHeightMm:number;quiet:{left:number;right:number;top:number;bottom:number};wideRatio?:number;rowHeightX?:number;reference:string};
 const profileCache=new Map<string,BarcodeProfile>();
@@ -31,6 +33,7 @@ export function barcodeProfile(symbology:Symbology,content:string):BarcodeProfil
 }
 export function encodeBarcode(symbology:Symbology,content:string){return barcodeProfile(symbology,content).svg;}
 export function barcodeMagnification(item:{symbology:Symbology;content:string;width:number}){return item.width/barcodeProfile(item.symbology,item.content).width*100;}
+export function barcodeHeight(item:{symbology:Symbology;content:string;width:number;barHeightScale?:number}){const profile=barcodeProfile(item.symbology,item.content),scale=barcodeMagnification(item)/100;if(!isLinearBarcode(item.symbology))return profile.height*scale;return (profile.height-profile.barHeightMm*(1-(item.barHeightScale??100)/100))*scale;}
 export function barcodeScaleLimits(type:Symbology){return retailBarcode(type)?{min:80,max:200}:{min:10,max:1000};}
 export function barcodeDeviceScale(item:{symbology:Symbology;content:string;width:number},dpi:number){
  if(![203,300,600].includes(dpi))throw Error('Unsupported printer DPI');const limits=barcodeScaleLimits(item.symbology);const currentX=barcodeMagnification(item)/100*X;const minDots=Math.max(1,Math.ceil(limits.min/100*X*dpi/25.4-1e-9));const maxDots=Math.floor(limits.max/100*X*dpi/25.4+1e-9);const dots=Math.max(minDots,Math.min(maxDots,Math.round(currentX*dpi/25.4)));return dots*25.4/dpi/X*100;
@@ -48,7 +51,7 @@ export function barcodeRatio(symbology:Symbology,content:string):number {const p
 export function fitBarcodeBox<T extends {kind:string;symbology:Symbology;content:string;width:number;height:number;barcodeScale?:number}>(item:T,legacy=false):T {
  if(item.kind!=='barcode'||!item.content)return item;const p=barcodeProfile(item.symbology,item.content);const limits=barcodeScaleLimits(item.symbology);
  const scale=item.barcodeScale??Math.min(item.width/p.width,item.height/p.height)*100;const chosen=legacy||item.barcodeScale!==undefined?scale:Math.max(limits.min,Math.min(limits.max,scale));
- return {...item,width:p.width*chosen/100,height:p.height*chosen/100,...(!legacy||item.barcodeScale!==undefined?{barcodeScale:chosen}:{})};
+ const next={...item,width:p.width*chosen/100,...(!legacy||item.barcodeScale!==undefined?{barcodeScale:chosen}:{})};return {...next,height:barcodeHeight(next)};
 }
 export function barcodeSuggestion(symbology:Symbology,content:string):{value:string;label:string}|undefined {
  const lengths:Partial<Record<Symbology,number>>={ean13:13,ean8:8,upca:12};const length=lengths[symbology];

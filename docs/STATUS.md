@@ -184,3 +184,9 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
 - LabelDocument now owns variables, remembered print values, unit, DPI, grid visibility, snap and physical grid spacing alongside objects and typography. These settings are validated, revisioned, undoable and included in JSON, compressed Share links, browser autosave and ChatGPT widget state.
 - Opening or switching labels restores that label's own settings. New labels receive clean defaults; legacy files are migrated with the same defaults. AI connection details and credentials remain application state and never enter a design file.
 - Verification: 65 TypeScript tests and production build passed. Chromium exported a configured label, opened it in a fresh browser context, verified variables/settings, checked isolation between two open label tabs and confirmed autosave after reload.
+
+## Independent 1D bar height and top shapes
+
+- All linear symbologies can shorten bars from 10–100% without changing X-dimension or magnification. The top-centre mouse handle keeps the barcode bottom edge and width fixed; the other resize handles retain proportional magnification behavior.
+- Top artwork supports Flat, Wave, Zigzag, Sawtooth and Bubble. Matrix and stacked 2D codes do not expose these controls. Settings persist through autosave, JSON, compressed Share links, SVG export and print rendering.
+- Verification: 68 TypeScript tests, web/ChatGPT production builds and Go tests passed. Chromium exercised top-handle dragging, all four decorative styles, 2D control exclusion and print preview with no console errors.

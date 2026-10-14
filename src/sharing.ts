@@ -4,9 +4,10 @@ import {standaloneURL} from './printing';
 const maxURL=16000,maxDocumentBytes=200_000;
 
 const legacyObjectFields=['id','name','kind','x','y','width','height','content','fontSize','bold','locked','symbology','fontName','line','barcodeScale'] as const;
-const objectFields=[...legacyObjectFields,'template','italic','underline','autoSize','textAlign'] as const;
+const textObjectFields=[...legacyObjectFields,'template','italic','underline','autoSize','textAlign'] as const;
+const objectFields=[...textObjectFields,'barHeightScale','barTopStyle'] as const;
 function compact(doc:LabelDocument){return [doc.id,doc.revision,doc.title,doc.width,doc.height,doc.objects.map(o=>objectFields.map(key=>o[key]??null)),doc.variables??null,doc.settings??null];}
-function expand(value:unknown):LabelDocument{if(!Array.isArray(value)||![6,7,8].includes(value.length)||!Array.isArray(value[5]))throw Error('Invalid snapshot');const [id,revision,title,width,height,rows,variables,settings]=value;return {schemaVersion:1,id,revision,title,width,height,objects:rows.map((row:unknown)=>{if(!Array.isArray(row)||(row.length!==legacyObjectFields.length&&row.length!==objectFields.length))throw Error('Invalid object');const fields=row.length===legacyObjectFields.length?legacyObjectFields:objectFields;return Object.fromEntries(fields.flatMap((key,i)=>row[i]===null?[]:[[key,row[i]]]));}),...(variables?{variables}:{}),...(settings?{settings}:{})} as LabelDocument;}
+function expand(value:unknown):LabelDocument{if(!Array.isArray(value)||![6,7,8].includes(value.length)||!Array.isArray(value[5]))throw Error('Invalid snapshot');const [id,revision,title,width,height,rows,variables,settings]=value;return {schemaVersion:1,id,revision,title,width,height,objects:rows.map((row:unknown)=>{if(!Array.isArray(row)||row.length!==legacyObjectFields.length&&row.length!==textObjectFields.length&&row.length!==objectFields.length)throw Error('Invalid object');const fields=row.length===legacyObjectFields.length?legacyObjectFields:row.length===textObjectFields.length?textObjectFields:objectFields;return Object.fromEntries(fields.flatMap((key,i)=>row[i]===null?[]:[[key,row[i]]]));}),...(variables?{variables}:{}),...(settings?{settings}:{})} as LabelDocument;}
 
 export function shareURL(doc:LabelDocument){
  validate(doc);const bytes=strToU8(JSON.stringify(doc));if(bytes.length>maxDocumentBytes)throw Error('ฉลากใหญ่เกินลิงก์ แชร์เป็นไฟล์ JSON แทน');

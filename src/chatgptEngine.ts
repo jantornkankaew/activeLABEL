@@ -4,7 +4,7 @@ export type LabelProposal = {id: string; documentId: string; baseRevision: numbe
 export type ChatGPTToolOutput = {status: 'opened' | 'proposal_pending'; document: LabelDocument; proposal?: LabelProposal};
 type OpenInput = {title?: string; widthMm?: number; heightMm?: number};
 type ProposalInput = {document: LabelDocument; baseRevision: number; commands: Command[]};
-const objectKeys = new Set(['id', 'name', 'kind', 'x', 'y', 'width', 'height', 'content', 'template', 'fontSize', 'fontName', 'bold', 'italic', 'underline', 'autoSize', 'textAlign', 'locked', 'symbology', 'line', 'barcodeScale']);
+const objectKeys = new Set(['id', 'name', 'kind', 'x', 'y', 'width', 'height', 'content', 'template', 'fontSize', 'fontName', 'bold', 'italic', 'underline', 'autoSize', 'textAlign', 'locked', 'symbology', 'line', 'barcodeScale','barHeightScale','barTopStyle']);
 const aiUpdateKeys = new Set(['name', 'x', 'y', 'width', 'height', 'content', 'template', 'fontSize', 'fontName', 'bold', 'italic', 'underline', 'autoSize', 'textAlign', 'symbology', 'line', 'barcodeScale']);
 function keys(value: unknown, allowed: Set<string>) {
   if (!value || typeof value !== 'object' || Array.isArray(value) || Object.keys(value).some(key => !allowed.has(key))) throw Error('Unsupported input properties');
