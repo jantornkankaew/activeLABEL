@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {apply,object,seed,validate} from '../src/core';
-import {resolveDocument,renderTemplate,usedVariables} from '../src/variables';
+import {resolveDocument,renderTemplate,simpleVariableBinding,usedVariables,variableTemplate} from '../src/variables';
 import {resizeObject} from '../src/resizeObject';
 import {vectorObject} from '../src/renderer';
 import {documentFromShareHash,shareURL} from '../src/sharing';
@@ -21,6 +21,10 @@ test('templates safely concatenate variables for text and barcode without changi
  const resolved=resolveDocument(doc,{lot:'009',prefix:'ITEM'});assert.equal(resolved.objects[0].content,'LOT 009 / 2026');assert.equal(resolved.objects[1].content,'ITEM-009');assert.equal(resolved.objects[1].template,'{{prefix}}-{{lot}}');assert.equal(doc.objects[1].content,'SKU-001');
  assert.throws(()=>resolveDocument({...doc,objects:[{...text,template:'{{missing}}'}]}),/missing/);
  const opened=documentFromShareHash(new URL(shareURL(doc)).hash)!;assert.deepEqual(opened,doc);
+});
+
+test('simple variable bindings preserve editable prefix and suffix',()=>{
+ const binding=simpleVariableBinding('LOT-{{lot}}-TH');assert.deepEqual(binding,{prefix:'LOT-',name:'lot',suffix:'-TH'});assert.equal(variableTemplate({...binding!,prefix:'BATCH '}),'BATCH {{lot}}-TH');assert.equal(simpleVariableBinding('{{lot}}{{lot}}'),null);assert.equal(simpleVariableBinding('{{lot}}/{{date}}'),null);
 });
 
 test('barcode formulas are revalidated with print values',()=>{

@@ -2,8 +2,11 @@ import {barcodeMagnification,barcodeProfile,barcodeScaleLimits,validateBarcode} 
 import {sizeText,type LabelDocument,type LabelVariable} from './core';
 
 export const variableNamePattern=/^[A-Za-z_][A-Za-z0-9_]{0,31}$/;
+export type SimpleVariableBinding={name:string;prefix:string;suffix:string};
 export function variableNames(template:string){return [...new Set([...template.matchAll(/\{\{\s*([A-Za-z_][A-Za-z0-9_]*)\s*\}\}/g)].map(match=>match[1]))];}
 export function renderTemplate(template:string,values:Record<string,string>){return template.replace(/\{\{\s*([A-Za-z_][A-Za-z0-9_]*)\s*\}\}/g,(_,name)=>values[name]??'');}
+export function simpleVariableBinding(template:string|undefined):SimpleVariableBinding|null {if(!template)return null;const tokens=[...template.matchAll(/\{\{\s*([A-Za-z_][A-Za-z0-9_]*)\s*\}\}/g)];if(tokens.length!==1)return null;const token=tokens[0];return {prefix:template.slice(0,token.index),name:token[1],suffix:template.slice(token.index!+token[0].length)};}
+export function variableTemplate(binding:SimpleVariableBinding){return `${binding.prefix}{{${binding.name}}}${binding.suffix}`;}
 export function variableValues(variables:LabelVariable[]=[],overrides:Record<string,string>={}){return Object.fromEntries(variables.map(variable=>[variable.name,overrides[variable.name]??variable.value]));}
 export function usedVariables(doc:LabelDocument){const names=new Set(doc.objects.flatMap(item=>variableNames(item.template??'')));return (doc.variables??[]).filter(variable=>names.has(variable.name));}
 export function resolveDocument(doc:LabelDocument,overrides:Record<string,string>={}):LabelDocument{

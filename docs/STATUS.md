@@ -154,3 +154,9 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
 - Documents can define named variables with defaults and an optional print prompt. Text and barcode formulas concatenate variables with `{{name}}`, preserve their source through JSON/share snapshots and resolve defaults in the editor.
 - Print asks only for prompted variables that the label uses, renders the resolved preview and revalidates resolved barcode data before opening Chrome's print dialog.
 - Verification: 62 TypeScript tests and both production builds passed. Chromium exercised variable creation, formulas, fixed text frames/styles, pre-print overrides, resolved text/barcode SVG output, keyboard fields and responsive desktop/mobile layouts. Native printing was intercepted; no hardware job was sent.
+
+## Variable workflow redesign
+
+- Variables use compact cards with a display name, default value, technical key and print-prompt toggle. The empty state creates the first variable directly.
+- Text and Barcode Properties now expose a Value source selector. A variable can be linked without writing template syntax, with editable Prefix and Suffix fields and a live preview. Fixed values and multi-variable advanced formulas remain available.
+- Verification: 63 TypeScript tests and the production build passed. Chromium checked creation, text and barcode binding, prefix/suffix updates, changed defaults, live previews and desktop/mobile layouts.
