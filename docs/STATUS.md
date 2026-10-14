@@ -172,3 +172,9 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
 - Each print question and input now share one horizontal row on desktop and mobile.
 - Leaving a print-value field stores that value as the variable's new document default, refreshes every linked Text and Barcode object on the design canvas, and persists through the existing autosave. Reopening Print starts with the remembered value. Linked locked objects also refresh without unlocking them.
 - Verification: 64 TypeScript tests and the production build passed. Chromium checked horizontal alignment, required-value gating, live preview, remembered canvas content, reopening Print and responsive desktop/mobile layouts.
+
+## Professional Properties and expanded typography
+
+- Properties is reorganized into Content, Position & size, Typography and label-alignment sections with a compact object-type header, consistent spacing and a wider scrollable panel.
+- Font size is an editable point-size control backed by 22 common presets from 6–96 pt. Font families increased from 9 to 19 and are grouped into bundled, deterministic print fonts and familiar system fonts. System choices retain explicit bundled fallbacks when unavailable.
+- Chromium verified all sections, 19 options in two groups, preset/custom point input, rendered family/size updates and responsive desktop/mobile layout. Bundled font export remains filtered to families actually used.

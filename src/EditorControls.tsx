@@ -9,9 +9,10 @@ import type {LabelDocument,LabelObject} from './core';
 import './editor-controls.css';
 
 export function FontPicker({item,disabled,onUpdate}:{item:LabelObject;disabled?:boolean;onUpdate:(changes:Partial<LabelObject>)=>void}) {
- const {settings}=useMeasurements();
- return <><label>Font name<select aria-label="Font name" value={item.fontName??'Noto Sans'} disabled={disabled} onChange={e=>onUpdate({fontName:e.target.value as FontName})}>{fontNames.map(name=><option key={name}>{name}</option>)}</select></label><p className="automatic-size">ขนาดข้อความอัตโนมัติ: {displayMeasurement(item.width,settings)} × {displayMeasurement(item.height,settings)} {settings.unit}</p></>;
+ return <label>Font family<select aria-label="Font name" value={item.fontName??'Noto Sans'} disabled={disabled} onChange={e=>onUpdate({fontName:e.target.value as FontName})}><optgroup label="Bundled · consistent print">{fontNames.slice(0,9).map(name=><option key={name}>{name}</option>)}</optgroup><optgroup label="System fonts">{fontNames.slice(9).map(name=><option key={name}>{name}</option>)}</optgroup></select></label>;
 }
+const fontPointSizes=[6,7,8,9,10,11,12,14,16,18,20,22,24,26,28,32,36,40,48,60,72,96];
+export function FontSizePicker({item,disabled,onUpdate}:{item:LabelObject;disabled?:boolean;onUpdate:(changes:Partial<LabelObject>)=>void}){const points=Number((item.fontSize*72/25.4).toFixed(1));return <label>Size (pt)<input aria-label="Font size" type="number" list="font-size-presets" min="1" max="850" step="0.5" value={points} disabled={disabled} onChange={e=>{const value=Number(e.target.value);if(Number.isFinite(value)&&value>0)onUpdate({fontSize:value*25.4/72});}}/><datalist id="font-size-presets">{fontPointSizes.map(size=><option key={size} value={size}/>)}</datalist></label>;}
 export function BarcodeEditor({item,doc,disabled,onUpdate,draft,onDraftChange}:{item:LabelObject;doc:LabelDocument;disabled?:boolean;onUpdate:(changes:Partial<LabelObject>)=>boolean|void;draft?:BarcodeDraft;onDraftChange?:(draft:BarcodeDraft)=>void}) {
  const {settings,setSettings}=useMeasurements();const profile=barcodeProfile(item.symbology,item.content);const scale=barcodeMagnification(item);const limits=barcodeScaleLimits(item.symbology);
  const [sizeError,setSizeError]=useState('');const [scaleDraft,setScaleDraft]=useState(String(Number(scale.toFixed(2))));

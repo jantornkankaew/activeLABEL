@@ -16,8 +16,8 @@ test('Suggested checksum corrections are valid but never mutate existing payload
  for(const [type,data,expected] of [['ean13','4006381333932','4006381333931'],['ean8','9638507','96385074'],['upca','036000291453','036000291452'],['code39','sku001','SKU001'],['interleaved2of5','123','0123']] as const){const suggestion=barcodeSuggestion(type,data)!;assert.equal(suggestion.value,expected);validateBarcode(type,suggestion.value);}
  assert.match(barcodeSuggestion('ean13','SKU001')!.label,/ตัวอย่าง/);
 });
-test('All nine bundled font choices compute Thai and Latin bounds',()=>{
- assert.equal(fontNames.length,9);for(const name of fontNames){for(const bold of [false,true]){const size=textMetrics('Coffee กาแฟ',3,name,bold);assert(size.width>0&&Number.isFinite(size.width));assert(size.height>=3);}}
+test('Bundled and system font choices compute Thai and Latin bounds',()=>{
+ assert.equal(fontNames.length,19);for(const name of fontNames){for(const bold of [false,true]){const size=textMetrics('Coffee กาแฟ',3,name,bold);assert(size.width>0&&Number.isFinite(size.width));assert(size.height>=3);}}
 });
 test('Saving and opening files preserves tab order',()=>{const a=seed();const b=newJob(2);assert.deepEqual(mergeJobs([a,b],{...a,title:'Updated'}).map(d=>d.id),[a.id,b.id]);});
 test('Print requests use mm page size and an encoded fragment, without credentials or page scale',()=>{

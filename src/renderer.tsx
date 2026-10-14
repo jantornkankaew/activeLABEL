@@ -30,7 +30,7 @@ function InlineText({item,maxWidth,pixelScale,onChange,onEnd}:{item:LabelObject;
 export function exportSvg(doc:LabelDocument,markup:string):string {
  const parsed=new DOMParser().parseFromString(markup,'image/svg+xml');const svg=parsed.documentElement;svg.style.overflow='hidden';svg.setAttribute('width',`${doc.width}mm`);svg.setAttribute('height',`${doc.height}mm`);
  svg.querySelectorAll('[data-editor-only], g > rect[fill="transparent"]').forEach(n=>n.remove());
- const neededFonts=new Set(doc.objects.filter(o=>o.kind==='text').flatMap(o=>fontStack(o.fontName).split(',').map(name=>name.trim()+':'+(o.bold?700:400))));
+ const neededFonts=new Set(doc.objects.filter(o=>o.kind==='text').flatMap(o=>fontStack(o.fontName).split(',').map(name=>name.trim().replace(/^"|"$/g,'')+':'+(o.bold?700:400))));
  svg.querySelectorAll('defs style').forEach(style=>{style.textContent=(style.textContent?.match(/@font-face\{[^}]+\}/g)??[]).filter(face=>{const family=/font-family:"([^"]+)"/.exec(face)?.[1];const weight=/font-weight:(\d+)/.exec(face)?.[1];return neededFonts.has(family+':'+weight);}).join('\n');});
  return new XMLSerializer().serializeToString(svg);
 }
