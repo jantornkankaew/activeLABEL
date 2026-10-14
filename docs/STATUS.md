@@ -166,3 +166,9 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
 - Print presents every used variable marked **Ask before print** as a numbered question above the label preview. Display names become the question labels, defaults remain editable and changes update the preview immediately.
 - Required values show an inline error and keep Print disabled until completed. The section stacks cleanly on mobile and remains keyboard accessible.
 - Chromium verified default values, empty-value blocking, live text resolution, re-enabling Print and desktop/mobile layouts. Native print was not invoked in this UI check.
+
+## Remembered print variables
+
+- Each print question and input now share one horizontal row on desktop and mobile.
+- Leaving a print-value field stores that value as the variable's new document default, refreshes every linked Text and Barcode object on the design canvas, and persists through the existing autosave. Reopening Print starts with the remembered value. Linked locked objects also refresh without unlocking them.
+- Verification: 64 TypeScript tests and the production build passed. Chromium checked horizontal alignment, required-value gating, live preview, remembered canvas content, reopening Print and responsive desktop/mobile layouts.

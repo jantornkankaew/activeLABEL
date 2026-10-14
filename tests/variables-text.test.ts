@@ -27,6 +27,11 @@ test('simple variable bindings preserve editable prefix and suffix',()=>{
  const binding=simpleVariableBinding('LOT-{{lot}}-TH');assert.deepEqual(binding,{prefix:'LOT-',name:'lot',suffix:'-TH'});assert.equal(variableTemplate({...binding!,prefix:'BATCH '}),'BATCH {{lot}}-TH');assert.equal(simpleVariableBinding('{{lot}}{{lot}}'),null);assert.equal(simpleVariableBinding('{{lot}}/{{date}}'),null);
 });
 
+test('remembering variables updates linked design objects including locked objects',()=>{
+ const text=object('text',{id:'t',template:'Price {{price}} THB',content:'Price 100 THB',locked:true});const barcode=object('barcode',{id:'b',template:'P{{price}}',content:'P100',locked:true,x:3,y:15});const doc={...seed(),width:100,height:60,variables:[{name:'price',label:'Price',value:'100',prompt:true}],objects:[text,barcode]};
+ const remembered=apply(doc,[{op:'setVariables',variables:[{name:'price',label:'Price',value:'250',prompt:true}]}]);assert.equal(remembered.variables?.[0].value,'250');assert.equal(remembered.objects[0].content,'Price 250 THB');assert.equal(remembered.objects[1].content,'P250');assert.equal(remembered.objects[0].locked,true);
+});
+
 test('barcode formulas are revalidated with print values',()=>{
  const code=object('barcode',{id:'ean',symbology:'ean13',content:'4006381333931',template:'{{ean}}',barcodeScale:100});const doc={...seed(),width:100,height:60,variables:[{name:'ean',label:'EAN',value:'4006381333931',prompt:true}],objects:[code]};
  assert.equal(resolveDocument(doc,{ean:'5901234123457'}).objects[0].content,'5901234123457');assert.throws(()=>resolveDocument(doc,{ean:'123'}),/13 digits/);
