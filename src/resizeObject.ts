@@ -7,7 +7,7 @@ export function resizeObject(original:LabelObject,handle:ResizeHandle,dx:number,
  const o={...original};const sx=handle.includes('w')?-1:handle.includes('e')?1:0,sy=handle.includes('n')?-1:handle.includes('s')?1:0;
  const anchorX=o.x+o.width*(sx<0?1:sx>0?0:.5),anchorY=o.y+o.height*(sy<0?1:sy>0?0:.5);
  let width=Math.max(.1,o.width+sx*dx),height=Math.max(.1,o.height+sy*dy);
- if(o.kind==='box'){
+ if(o.kind==='box'||(o.kind==='text'&&o.autoSize===false)){
   if(sx)width=Math.max(.1,Math.abs(snapCoordinate(anchorX+sx*width,step,snap)-anchorX));
   if(sy)height=Math.max(.1,Math.abs(snapCoordinate(anchorY+sy*height,step,snap)-anchorY));
   if(sx)width=Math.min(width,sx<0?anchorX:doc.width-anchorX);if(sy)height=Math.min(height,sy<0?anchorY:doc.height-anchorY);

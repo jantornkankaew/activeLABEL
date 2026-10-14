@@ -3,9 +3,10 @@ import {migrateDocument,validate,type LabelDocument} from './core';
 import {standaloneURL} from './printing';
 const maxURL=16000,maxDocumentBytes=200_000;
 
-const objectFields=['id','name','kind','x','y','width','height','content','fontSize','bold','locked','symbology','fontName','line','barcodeScale'] as const;
-function compact(doc:LabelDocument){return [doc.id,doc.revision,doc.title,doc.width,doc.height,doc.objects.map(o=>objectFields.map(key=>o[key]??null))];}
-function expand(value:unknown):LabelDocument{if(!Array.isArray(value)||value.length!==6||!Array.isArray(value[5]))throw Error('Invalid snapshot');const [id,revision,title,width,height,rows]=value;return {schemaVersion:1,id,revision,title,width,height,objects:rows.map((row:unknown)=>{if(!Array.isArray(row)||row.length!==objectFields.length)throw Error('Invalid object');return Object.fromEntries(objectFields.flatMap((key,i)=>row[i]===null?[]:[[key,row[i]]]));})} as LabelDocument;}
+const legacyObjectFields=['id','name','kind','x','y','width','height','content','fontSize','bold','locked','symbology','fontName','line','barcodeScale'] as const;
+const objectFields=[...legacyObjectFields,'template','italic','underline','autoSize','textAlign'] as const;
+function compact(doc:LabelDocument){return [doc.id,doc.revision,doc.title,doc.width,doc.height,doc.objects.map(o=>objectFields.map(key=>o[key]??null)),doc.variables??null];}
+function expand(value:unknown):LabelDocument{if(!Array.isArray(value)||(value.length!==6&&value.length!==7)||!Array.isArray(value[5]))throw Error('Invalid snapshot');const [id,revision,title,width,height,rows,variables]=value;return {schemaVersion:1,id,revision,title,width,height,objects:rows.map((row:unknown)=>{if(!Array.isArray(row)||(row.length!==legacyObjectFields.length&&row.length!==objectFields.length))throw Error('Invalid object');const fields=row.length===legacyObjectFields.length?legacyObjectFields:objectFields;return Object.fromEntries(fields.flatMap((key,i)=>row[i]===null?[]:[[key,row[i]]]));}),...(variables?{variables}:{})} as LabelDocument;}
 
 export function shareURL(doc:LabelDocument){
  validate(doc);const bytes=strToU8(JSON.stringify(doc));if(bytes.length>maxDocumentBytes)throw Error('ฉลากใหญ่เกินลิงก์ แชร์เป็นไฟล์ JSON แทน');
