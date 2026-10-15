@@ -269,6 +269,22 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
   - Added on-canvas visual zigzag spring coils (`springPath` in `src/renderer.tsx`) and circular anchor perimeter nodes on the selected object, strictly marked with `data-editor-only="true"` so they never bleed into SVG export or physical printing.
 - Verification: 84 TypeScript unit tests passing, production build passing, 25 Go unit tests passing with full race detection.
 
+## 2026-10-15 — Canvas Drag & Drop Anchor Connections and Pixel-Scaled Delicate Nodes
+
+- Re-engineered canvas anchor handles and connection mechanics:
+  - Replaced fixed-mm anchor handles with screen-pixel-scaled delicate handles (`3.2 / pixelScale`), keeping dots tiny, sharp (3.2px radius), and non-intrusive at every zoom level (25%–1600%).
+  - Added an invisible generous hit circle (`7.5 / pixelScale`) with `cursor: crosshair` for effortless pointer interaction without visual clutter.
+  - Sized constraint line endpoints (`sx, sy`, `tx, ty`) and margin badges inversely with zoom (`vectorEffect="non-scaling-stroke"`).
+  - Implemented interactive drag-and-drop anchor connections:
+    - Dragging from any perimeter handle (Top, Bottom, Left, Right) draws an active rubberband wire in real time following the pointer.
+    - Proximity to any other object automatically detects the closest edge, highlights the target object with a glowing dashed box and bold snap edge, and displays a floating pill badge (`Snap to [Object] (Edge)`).
+    - Proximity to label boundary highlights the parent edge with a dashed line and snap badge (`Snap to Label (Edge)`).
+    - Dropping commits the constraint with `calculateCurrentMargin` so the view maintains its exact placement without jumping.
+    - A simple click without dragging continues to toggle the constraint (links to parent or disconnects).
+  - Elevated the Blueprint Widget in `src/atelier.css` with an authentic Android Studio architectural blueprint grid (`radial-gradient`), rounded cards, and elevated margin pills.
+- Verification: 84 TypeScript unit tests passing, production build passing, 25 Go unit tests passing, and 3 cross-compilations passing.
+
+
 
 
 

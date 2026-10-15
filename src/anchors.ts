@@ -302,3 +302,71 @@ export function calculateCurrentMargin(side: AnchorSide, target: AnchorTarget, t
   }
   return 0;
 }
+
+export function getAnchorPoint(item: LabelObject, side: AnchorSide): { x: number; y: number } {
+  switch (side) {
+    case 'top': return { x: item.x + item.width / 2, y: item.y };
+    case 'bottom': return { x: item.x + item.width / 2, y: item.y + item.height };
+    case 'left': return { x: item.x, y: item.y + item.height / 2 };
+    case 'right': return { x: item.x + item.width, y: item.y + item.height / 2 };
+  }
+}
+
+export interface CandidateTarget {
+  targetId: string | 'parent';
+  targetEdge: AnchorSide;
+  targetName: string;
+  snapX: number;
+  snapY: number;
+}
+
+export function findCandidateAnchorTarget(
+  sourceSide: AnchorSide,
+  docX: number,
+  docY: number,
+  sourceItem: LabelObject,
+  doc: Pick<LabelDocument, 'width' | 'height' | 'objects'>
+): CandidateTarget {
+  const otherObjects = doc.objects.filter(o => o.id !== sourceItem.id);
+  const snapPadding = 3.5;
+  for (const o of otherObjects) {
+    if (
+      docX >= o.x - snapPadding &&
+      docX <= o.x + o.width + snapPadding &&
+      docY >= o.y - snapPadding &&
+      docY <= o.y + o.height + snapPadding
+    ) {
+      if (sourceSide === 'top' || sourceSide === 'bottom') {
+        const targetEdge: AnchorSide = docY < o.y + o.height / 2 ? 'top' : 'bottom';
+        return {
+          targetId: o.id,
+          targetEdge,
+          targetName: o.name || o.kind,
+          snapX: o.x + o.width / 2,
+          snapY: targetEdge === 'top' ? o.y : o.y + o.height
+        };
+      } else {
+        const targetEdge: AnchorSide = docX < o.x + o.width / 2 ? 'left' : 'right';
+        return {
+          targetId: o.id,
+          targetEdge,
+          targetName: o.name || o.kind,
+          snapX: targetEdge === 'left' ? o.x : o.x + o.width,
+          snapY: o.y + o.height / 2
+        };
+      }
+    }
+  }
+
+  if (sourceSide === 'top') {
+    return { targetId: 'parent', targetEdge: 'top', targetName: 'Label (Top)', snapX: sourceItem.x + sourceItem.width / 2, snapY: 0 };
+  }
+  if (sourceSide === 'bottom') {
+    return { targetId: 'parent', targetEdge: 'bottom', targetName: 'Label (Bottom)', snapX: sourceItem.x + sourceItem.width / 2, snapY: doc.height };
+  }
+  if (sourceSide === 'left') {
+    return { targetId: 'parent', targetEdge: 'left', targetName: 'Label (Left)', snapX: 0, snapY: sourceItem.y + sourceItem.height / 2 };
+  }
+  return { targetId: 'parent', targetEdge: 'right', targetName: 'Label (Right)', snapX: doc.width, snapY: sourceItem.y + sourceItem.height / 2 };
+}
+
