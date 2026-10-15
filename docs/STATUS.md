@@ -489,3 +489,17 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
   - Production build passing (`npm run build`).
   - 25 Go unit tests passing (`go test ./...`).
   - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
+
+## 2026-10-15 — Strict Precision Hit Bounds for Connection Handles (ปรับพื้นที่ตรวจจับเมาส์ของจุดเชื่อมต่อให้ตรงกับขนาดจุดจริง)
+
+- **Eliminated Oversized Phantom Hit Area**:
+  - Identified root cause: `hitR` previously had an oversized minimum clamp `Math.max(2.5, 12 / pixelScale)` which in millimeter document units created a 2.5mm radius circle (25 to 50+ screen pixels wide). This caused mouse interactions (`crosshair`/`grab` cursor and dragging) to trigger prematurely when the mouse was still far away from the connection point.
+  - Replaced `hitR` with screen-scaled pixel dimensions strictly matching visual circles:
+    - Perimeter object handles: hit radius set to exact visual circle radius `r={hr}` (`3.8 / pixelScale` ≈ 7.6px diameter).
+    - Arrow target handles: hit radius set to exact visual circle radius `r={hr * 1.15}` (`4.37 / pixelScale` ≈ 8.7px diameter).
+  - Hover highlights and drag interactions now activate only when the mouse cursor is directly over the connection point.
+- **Verification**:
+  - 88 TypeScript unit tests passing (`npm test`).
+  - Production build passing (`npm run build`).
+  - 25 Go unit tests passing (`go test ./...`).
+  - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.

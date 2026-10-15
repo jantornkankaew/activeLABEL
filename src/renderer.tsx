@@ -123,10 +123,9 @@ function AnchorVisuals({
  const isVCentered = Boolean(anchors.top && anchors.bottom);
  const sides = ['top','bottom','left','right'] as const;
 
- // Compact, refined Android Studio handles
- const hr = Math.max(0.3, 2.4 / pixelScale);
- const hitR = Math.max(2.5, 12 / pixelScale);
- const strokeW = Math.max(0.08, 1 / pixelScale);
+ // Compact, refined Android Studio handles strictly scaled to screen pixels
+ const hr = 3.8 / pixelScale;
+ const strokeW = 1.2;
 
  // 1. Render established anchor lines and badges
  for(const side of sides){
@@ -240,7 +239,7 @@ function AnchorVisuals({
      <circle
       cx={tx}
       cy={ty}
-      r={hitR}
+      r={hr * 1.15}
       data-id={item.id}
       data-side={side}
       fill="transparent"
@@ -313,7 +312,7 @@ function AnchorVisuals({
       <circle
        cx={cx}
        cy={cy}
-       r={hitR}
+       r={hr}
        data-id={item.id}
        fill="transparent"
        pointerEvents="all"
