@@ -317,7 +317,21 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
     - Generous invisible hit zone (`7.5 / pixelScale`) with reliable element ID resolution on pointer down.
   - **Live Floating HUD Tooltip**:
     - Dynamic floating badge above cursor displaying target name, edge, and live margin (`Target • 8.0mm`).
-- Verification: 87 TypeScript unit tests passing (including `getAnchorPoint`, `findCandidateAnchorTarget`, `bezierWirePath`), production build passing, 25 Go unit tests passing, and 3 cross-compilations (windows/amd64, darwin/arm64, darwin/amd64) passing.
+## 2026-10-15 — Edge-Line Resize Handles (Border Grab for Height/Width Adjustment)
+
+- Resolved conflict between constraint linking nodes at midpoints and height/width resizing:
+  - **Full Border-Line Grab Handles (เส้นขอบเป็นจุดจับปรับขนาด)**:
+    - Replaced overlapping middle square handles with active border edge lines:
+      - **Top Edge (เส้นขอบบน)**: Spans `o.x` to `o.x + o.width` with cursor `ns-resize`, dragging increases/decreases height from top (`handle="n"`).
+      - **Bottom Edge (เส้นขอบล่าง)**: Spans `o.x` to `o.x + o.width` with cursor `ns-resize`, dragging increases/decreases height from bottom (`handle="s"`). For linear barcodes, shortens/restores bar height.
+      - **Left Edge (เส้นขอบซ้าย)**: Spans `o.y` to `o.y + o.height` with cursor `ew-resize`, dragging adjusts width (`handle="w"`).
+      - **Right Edge (เส้นขอบขวา)**: Spans `o.y` to `o.y + o.height` with cursor `ew-resize`, dragging adjusts width (`handle="e"`).
+    - Added subtle hover highlight (`.canvas-edge-resize:hover`, `.canvas-edge-resize-ew:hover`) indicating resizable edges with `ns-resize`/`ew-resize` cursors.
+  - **Separation of Concerns matching Android Studio**:
+    - Border edges are used to grab and resize dimensions (height and width).
+    - Center circular nodes (`3.8 / pixelScale` compact hit radius) are dedicated constraint handles for linking (`crosshair` cursor).
+    - 4 corner squares (`nw`, `ne`, `se`, `sw`) remain available for proportional/diagonal resizing.
+- Verification: 87 TypeScript unit tests passing, production build passing, 25 Go unit tests passing, and 3 cross-compilations passing.
 
 
 

@@ -166,7 +166,7 @@ export function useCanvasInteraction(doc:LabelDocument|null,select:(id:string)=>
   guidelines,
   activeAnchorDrag,
   onPointerDown:(e:PointerEvent<SVGGElement>)=>start(e,'move'),
-  onResizeStart:(e:PointerEvent<SVGRectElement>)=>start(e,'resize'),
+  onResizeStart:(e:PointerEvent<SVGElement>)=>start(e,'resize'),
   onAnchorStart:(e:PointerEvent<SVGElement>,side:AnchorSide)=>startAnchor(e,side),
   onPointerMove:move,
   onPointerUp:finish,
