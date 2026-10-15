@@ -464,5 +464,15 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
   - 25 Go unit tests passing (`go test ./...`).
   - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
 
+## 2026-10-15 — Thin Crisp Edge Resize Hover Indicator (ปรับเส้นปรับความสูง/ความกว้างที่ขอบให้บางลง คมชัด ไม่หนาเกินไป)
 
-
+- **Thin Non-Scaling Visual Edge Indicator**:
+  - Replaced the thick 1.5mm–2mm edge resize line (`strokeWidth={Math.max(1.5, 6/pixelScale)}` without `vectorEffect`, which rendered as an oversized 15–22px blue band on screen) with a sleek, crisp 1.8px non-scaling vector indicator (`.canvas-edge-indicator` with `vectorEffect="non-scaling-stroke"`).
+  - Maintained an ample transparent hit zone (`pointerEvents="stroke"`, 8 screen pixels) so users can easily grab the edge without requiring pixel-perfect mouse precision.
+  - Hovering over any edge (top, bottom, left, right) highlights the edge with a clean, modern royal blue line (`#2563eb`) with smooth 0.12s transition.
+  - Retained all existing resize functionality (`n`, `s`, `w`, `e`, `nw`, `ne`, `se`, `sw`) and clean SVG export stripping.
+- **Verification**:
+  - 88 TypeScript unit tests passing (`npm test`).
+  - Production build passing (`npm run build`).
+  - 25 Go unit tests passing (`go test ./...`).
+  - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.

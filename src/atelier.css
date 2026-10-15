@@ -106,10 +106,13 @@
 .canvas-anchor-target-handle{cursor:grab}
 .canvas-anchor-target-handle:hover circle[stroke]{stroke:#1565C0;stroke-width:2.5px}
 .canvas-anchor-target-handle:active{cursor:grabbing}
-.canvas-edge-resize{stroke:transparent;pointer-events:stroke;cursor:ns-resize;transition:stroke .15s ease}
-.canvas-edge-resize:hover{stroke:rgba(50,132,255,0.45)}
-.canvas-edge-resize-ew{stroke:transparent;pointer-events:stroke;cursor:ew-resize;transition:stroke .15s ease}
-.canvas-edge-resize-ew:hover{stroke:rgba(50,132,255,0.45)}
+.canvas-edge-resize-wrap{cursor:ns-resize}
+.canvas-edge-resize-wrap-ew{cursor:ew-resize}
+.canvas-edge-indicator{stroke:transparent;transition:stroke .12s ease}
+.canvas-edge-resize-wrap:hover .canvas-edge-indicator,
+.canvas-edge-resize-wrap-ew:hover .canvas-edge-indicator{stroke:#2563eb}
+.canvas-edge-resize{stroke:transparent;pointer-events:stroke;cursor:ns-resize}
+.canvas-edge-resize-ew{stroke:transparent;pointer-events:stroke;cursor:ew-resize}
 .as-constraint-panel{display:flex;flex-direction:column;gap:8px;margin-top:2px;background:#fafaf8;color:#202124;border:1px solid #e5e4df;border-radius:8px;padding:12px;box-sizing:border-box}
 .as-constraint-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px}
 .as-constraint-header h4{margin:0!important;font-size:12px!important;font-weight:600!important;letter-spacing:normal!important;text-transform:none!important;color:#202124!important}
