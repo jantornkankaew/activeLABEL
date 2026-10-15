@@ -142,19 +142,23 @@
 .as-blue-plus-btn{width:18px!important;height:18px!important;min-width:18px!important;min-height:18px!important;max-width:18px!important;max-height:18px!important;border-radius:50%!important;background:#3871e0!important;color:#fff!important;border:none!important;cursor:pointer;display:inline-flex!important;align-items:center!important;justify-content:center!important;box-shadow:0 1px 3px rgba(0,0,0,.35)!important;transition:transform .15s,background .15s;padding:0!important;box-sizing:border-box!important;flex-shrink:0!important;line-height:1!important}
 .as-blue-plus-btn:hover{background:#4682f4!important;transform:scale(1.15)!important}
 .as-blue-plus-btn svg{display:block;pointer-events:none}
-.as-solid-connector{background:#5f6368}
-.as-v-conn{width:1.5px;height:10px}
-.as-h-conn{height:1.5px;width:10px}
+.as-solid-connector{background:#5f6368;transition:background .15s}
+.as-v-conn{width:2px;height:10px}
+.as-h-conn{height:2px;width:10px}
 .as-dotted-connector{pointer-events:none}
 .as-v-dotted{width:0;height:12px;border-left:1.5px dotted #606672}
 .as-h-dotted{height:0;width:12px;border-top:1.5px dotted #606672}
-.as-anchor-dot.linked{width:8px;height:8px;border-radius:50%;background:#6c707e;border:1px solid #4e5157;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;z-index:3}
-.as-anchor-dot.linked:hover{background:#ef4444;border-color:#ef4444;transform:scale(1.25)}
-.as-top-slot .as-anchor-dot.linked{margin-bottom:-4px}
-.as-bottom-slot .as-anchor-dot.linked{margin-top:-4px}
-.as-left-slot .as-anchor-dot.linked{margin-right:-4px}
-.as-right-slot .as-anchor-dot.linked{margin-left:-4px}
-.as-dot-inner{width:3px;height:3px;border-radius:50%;background:#dfe1e5}
+.as-anchor-dot.linked{position:relative;width:18px!important;height:18px!important;min-width:18px!important;min-height:18px!important;max-width:18px!important;max-height:18px!important;border-radius:50%!important;background:#3871e0!important;border:2px solid #ffffff!important;box-shadow:0 1px 4px rgba(0,0,0,.35)!important;cursor:pointer;display:inline-flex!important;align-items:center!important;justify-content:center!important;transition:transform .15s ease,background .15s ease,border-color .15s ease,box-shadow .15s ease;flex-shrink:0!important;z-index:4!important;padding:0!important;box-sizing:border-box!important;line-height:1!important}
+.as-anchor-dot.linked::before{content:"";position:absolute;top:-5px;left:-5px;right:-5px;bottom:-5px;border-radius:50%}
+.as-anchor-dot.linked:hover{background:#ef4444!important;border-color:#ffffff!important;transform:scale(1.15)!important;box-shadow:0 2px 8px rgba(239,68,68,.6)!important}
+.as-top-slot .as-anchor-dot.linked{margin-bottom:-9px!important}
+.as-bottom-slot .as-anchor-dot.linked{margin-top:-9px!important}
+.as-left-slot .as-anchor-dot.linked{margin-right:-9px!important}
+.as-right-slot .as-anchor-dot.linked{margin-left:-9px!important}
+.as-dot-normal{width:5px;height:5px;border-radius:50%;background:#ffffff;display:block;pointer-events:none;transition:opacity .12s}
+.as-dot-hover-x{display:none!important;color:#ffffff;pointer-events:none}
+.as-anchor-dot.linked:hover .as-dot-normal{display:none!important}
+.as-anchor-dot.linked:hover .as-dot-hover-x{display:block!important}
 .as-box-glyph-svg{position:absolute;width:100%;height:100%;pointer-events:none;opacity:.6}
 .as-spring-svg{position:absolute;pointer-events:none}
 .as-h-spring{top:50%;left:0;right:0;transform:translateY(-50%);width:100%;height:8px}

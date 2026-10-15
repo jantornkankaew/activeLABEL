@@ -312,13 +312,17 @@ export function AnchorControls({item, doc, disabled, onUpdate}: AnchorControlsPr
             )}
 
             {hasTop && (
-              <div
+              <button
+                type="button"
                 className="as-anchor-dot linked"
                 title="Top constrained. Click to remove."
+                aria-label="Remove top constraint"
+                disabled={disabled}
                 onClick={() => toggleAnchorNode('top')}
               >
-                <div className="as-dot-inner"/>
-              </div>
+                <span className="as-dot-normal" />
+                <X className="as-dot-hover-x" size={10} strokeWidth={2.8} />
+              </button>
             )}
           </div>
 
@@ -353,13 +357,17 @@ export function AnchorControls({item, doc, disabled, onUpdate}: AnchorControlsPr
             )}
 
             {hasLeft && (
-              <div
+              <button
+                type="button"
                 className="as-anchor-dot linked"
                 title="Left constrained. Click to remove."
+                aria-label="Remove left constraint"
+                disabled={disabled}
                 onClick={() => toggleAnchorNode('left')}
               >
-                <div className="as-dot-inner"/>
-              </div>
+                <span className="as-dot-normal" />
+                <X className="as-dot-hover-x" size={10} strokeWidth={2.8} />
+              </button>
             )}
           </div>
 
@@ -401,13 +409,17 @@ export function AnchorControls({item, doc, disabled, onUpdate}: AnchorControlsPr
           {/* Right Slot (Row 2, Col 3) */}
           <div className="as-right-slot">
             {hasRight && (
-              <div
+              <button
+                type="button"
                 className="as-anchor-dot linked"
                 title="Right constrained. Click to remove."
+                aria-label="Remove right constraint"
+                disabled={disabled}
                 onClick={() => toggleAnchorNode('right')}
               >
-                <div className="as-dot-inner"/>
-              </div>
+                <span className="as-dot-normal" />
+                <X className="as-dot-hover-x" size={10} strokeWidth={2.8} />
+              </button>
             )}
 
             {hasRight ? (
@@ -442,13 +454,17 @@ export function AnchorControls({item, doc, disabled, onUpdate}: AnchorControlsPr
           {/* Bottom Slot (Row 3, Col 2) */}
           <div className="as-bottom-slot">
             {hasBottom && (
-              <div
+              <button
+                type="button"
                 className="as-anchor-dot linked"
                 title="Bottom constrained. Click to remove."
+                aria-label="Remove bottom constraint"
+                disabled={disabled}
                 onClick={() => toggleAnchorNode('bottom')}
               >
-                <div className="as-dot-inner"/>
-              </div>
+                <span className="as-dot-normal" />
+                <X className="as-dot-hover-x" size={10} strokeWidth={2.8} />
+              </button>
             )}
 
             {hasBottom ? (
