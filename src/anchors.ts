@@ -14,6 +14,8 @@ export interface ObjectAnchors {
   bottom?: AnchorConstraint;
   left?: AnchorConstraint;
   right?: AnchorConstraint;
+  horizontalBias?: number;
+  verticalBias?: number;
 }
 
 export function validateAnchors(anchors: unknown, docObjects: LabelObject[], selfId: string): void {
@@ -24,6 +26,12 @@ export function validateAnchors(anchors: unknown, docObjects: LabelObject[], sel
   const obj = anchors as Record<string, unknown>;
   const validSides: AnchorSide[] = ['top', 'bottom', 'left', 'right'];
   for (const [key, value] of Object.entries(obj)) {
+    if (key === 'horizontalBias' || key === 'verticalBias') {
+      if (typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > 1) {
+        throw Error(`${key} must be a number between 0 and 1`);
+      }
+      continue;
+    }
     if (!validSides.includes(key as AnchorSide)) {
       throw Error(`Invalid anchor side: ${key}`);
     }
@@ -64,6 +72,8 @@ export function computeAnchoredPosition(item: LabelObject, doc: Pick<LabelDocume
   const aR = item.anchors.right;
   const aT = item.anchors.top;
   const aB = item.anchors.bottom;
+  const hBias = item.anchors.horizontalBias ?? 0.5;
+  const vBias = item.anchors.verticalBias ?? 0.5;
 
   // Resolve Horizontal (X)
   let targetXL: number | null = null;
@@ -92,16 +102,16 @@ export function computeAnchoredPosition(item: LabelObject, doc: Pick<LabelDocume
 
   if (targetXL !== null && targetXR !== null) {
     if (aL!.margin === 'auto' && aR!.margin === 'auto') {
-      newX = targetXL + (targetXR - targetXL - w) / 2;
+      newX = targetXL + (targetXR - targetXL - w) * hBias;
     } else if (typeof aL!.margin === 'number' && typeof aR!.margin === 'number') {
       const available = (targetXR - targetXL) - aL!.margin - aR!.margin;
-      newX = targetXL + aL!.margin + (available - w) / 2;
+      newX = targetXL + aL!.margin + (available - w) * hBias;
     } else if (typeof aL!.margin === 'number') {
       newX = targetXL + aL!.margin;
     } else if (typeof aR!.margin === 'number') {
       newX = targetXR - w - aR!.margin;
     } else {
-      newX = targetXL + (targetXR - targetXL - w) / 2;
+      newX = targetXL + (targetXR - targetXL - w) * hBias;
     }
   } else if (targetXL !== null) {
     const m = aL!.margin === 'auto' ? 0 : aL!.margin;
@@ -138,16 +148,16 @@ export function computeAnchoredPosition(item: LabelObject, doc: Pick<LabelDocume
 
   if (targetYT !== null && targetYB !== null) {
     if (aT!.margin === 'auto' && aB!.margin === 'auto') {
-      newY = targetYT + (targetYB - targetYT - h) / 2;
+      newY = targetYT + (targetYB - targetYT - h) * vBias;
     } else if (typeof aT!.margin === 'number' && typeof aB!.margin === 'number') {
       const available = (targetYB - targetYT) - aT!.margin - aB!.margin;
-      newY = targetYT + aT!.margin + (available - h) / 2;
+      newY = targetYT + aT!.margin + (available - h) * vBias;
     } else if (typeof aT!.margin === 'number') {
       newY = targetYT + aT!.margin;
     } else if (typeof aB!.margin === 'number') {
       newY = targetYB - h - aB!.margin;
     } else {
-      newY = targetYT + (targetYB - targetYT - h) / 2;
+      newY = targetYT + (targetYB - targetYT - h) * vBias;
     }
   } else if (targetYT !== null) {
     const m = aT!.margin === 'auto' ? 0 : aT!.margin;

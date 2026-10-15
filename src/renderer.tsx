@@ -16,20 +16,31 @@ function BarcodeVector({item,color}:{item:LabelObject;color?:string}){let source
 export function vectorObject(o:LabelObject){switch(o.kind){case 'text':{const align=o.textAlign??'left';return <text x={align==='center'?o.x+o.width/2:align==='right'?o.x+o.width:o.x} y={o.y+textMetrics(o.content,o.fontSize,o.fontName,o.bold).baseline} textAnchor={align==='center'?'middle':align==='right'?'end':'start'} fontSize={o.fontSize} fontFamily={fontStack(o.fontName)} style={{fontKerning:'none',fontVariantLigatures:'none'}} fontWeight={o.bold?700:400} fontStyle={o.italic?'italic':'normal'} textDecoration={o.underline?'underline':'none'}>{o.content}</text>;}case 'barcode':return <BarcodeVector item={o}/>;case 'image':return <image x={o.x} y={o.y} width={o.width} height={o.height} href={o.content} preserveAspectRatio="xMidYMid meet"/>;case 'box':return <rect x={o.x} y={o.y} width={o.width} height={o.height} fill="none" stroke="black" strokeWidth="0.2"/>;case 'line':{const p=linePoints(o);return <line x1={p.startX} y1={p.startY} x2={p.endX} y2={p.endY} stroke="black" strokeWidth="0.2"/>;}}}
 import type {AlignmentGuideline} from './guidelines';
 
-function springPath(x1: number, y1: number, x2: number, y2: number, isCentered = false): string {
+function springPath(x1: number, y1: number, x2: number, y2: number, isCentered = false): { path: string; arrowD?: string } {
  const dx = x2 - x1;
  const dy = y2 - y1;
  const dist = Math.hypot(dx, dy);
- if (dist < 4 || !isCentered) return `M ${x1} ${y1} L ${x2} ${y2}`;
+ if (dist < 1) return { path: `M ${x1} ${y1} L ${x2} ${y2}` };
  const ux = dx / dist;
  const uy = dy / dist;
  const px = -uy;
  const py = ux;
- const lead = Math.min(2, dist * 0.15);
- const span = dist - lead * 2;
- const coils = Math.max(3, Math.min(8, Math.floor(span / 2)));
+ const arrowLen = Math.min(1.4, dist * 0.25);
+ const arrowW = Math.min(1.0, dist * 0.2);
+
+ const ax = x2 - ux * arrowLen;
+ const ay = y2 - uy * arrowLen;
+ const arrowD = `M ${ax + px * arrowW} ${ay + py * arrowW} L ${x2} ${y2} L ${ax - px * arrowW} ${ay - py * arrowW}`;
+
+ if (!isCentered || dist < 3) {
+  return { path: `M ${x1} ${y1} L ${ax} ${ay}`, arrowD };
+ }
+
+ const lead = Math.min(1.5, dist * 0.1);
+ const span = dist - lead - arrowLen;
+ const coils = Math.max(4, Math.floor(span / 0.65));
  const step = span / (coils * 2);
- const amp = 0.8;
+ const amp = 0.55;
 
  let d = `M ${x1} ${y1} L ${x1 + ux * lead} ${y1 + uy * lead}`;
  let cx = x1 + ux * lead;
@@ -40,8 +51,8 @@ function springPath(x1: number, y1: number, x2: number, y2: number, isCentered =
   cy += uy * step;
   d += ` L ${cx + px * amp * sign} ${cy + py * amp * sign}`;
  }
- d += ` L ${x2 - ux * lead} ${y2 - uy * lead} L ${x2} ${y2}`;
- return d;
+ d += ` L ${ax} ${ay}`;
+ return { path: d, arrowD };
 }
 
 function AnchorVisuals({
@@ -112,21 +123,30 @@ function AnchorVisuals({
   const midY = (sy + ty) / 2;
   const label = a.margin === 'auto' ? 'auto' : `${a.margin}mm`;
   const isCentered = (side==='left'||side==='right') ? isHCentered : isVCentered;
-  const pathD = springPath(sx, sy, tx, ty, isCentered);
+  const {path: pathD, arrowD} = springPath(sx, sy, tx, ty, isCentered);
 
   visuals.push(
    <g key={`anchor-${side}`} data-editor-only="true" pointerEvents="none">
-    <path d={pathD} className={`canvas-anchor-line ${isCentered ? 'spring' : ''}`} fill="none" strokeWidth={strokeW} vectorEffect="non-scaling-stroke"/>
-    <circle cx={sx} cy={sy} r={Math.max(0.2, 2.2 / pixelScale)} fill="#00866c"/>
-    <circle cx={tx} cy={ty} r={Math.max(0.25, 2.8 / pixelScale)} fill="#fff" stroke="#00866c" strokeWidth={strokeW} vectorEffect="non-scaling-stroke"/>
-    {Math.hypot(tx-sx, ty-sy) > 2.5 && (
-     <text x={midX} y={midY + (side==='left'||side==='right'?-0.6:0.5)} className="canvas-anchor-badge" fontSize={Math.max(0.8, 8 / pixelScale)}>{label}</text>
+    <path d={pathD} className={`canvas-anchor-line ${isCentered ? 'spring' : ''}`} fill="none" stroke="#2196F3" strokeWidth={1.2 / pixelScale} vectorEffect="non-scaling-stroke"/>
+    {arrowD && <path d={arrowD} fill="none" stroke="#2196F3" strokeWidth={1.3 / pixelScale} strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke"/>}
+    <circle cx={sx} cy={sy} r={Math.max(0.2, 2.2 / pixelScale)} fill="#2196F3"/>
+    <circle cx={tx} cy={ty} r={Math.max(0.25, 2.6 / pixelScale)} fill="#fff" stroke="#2196F3" strokeWidth={strokeW} vectorEffect="non-scaling-stroke"/>
+    {Math.hypot(tx-sx, ty-sy) > 2 && (
+     <text
+      x={midX + (side==='top'||side==='bottom' ? 3 / pixelScale : 0)}
+      y={midY + (side==='left'||side==='right' ? -3 / pixelScale : 0.4)}
+      className="canvas-anchor-badge"
+      fontSize={Math.max(0.8, 8.5 / pixelScale)}
+      fill="#2196F3"
+     >
+      {label}
+     </text>
     )}
    </g>
   );
  }
 
- // 4 Android Studio circular constraint handles on the object perimeter (pixel-scaled, draggable)
+ // 4 Android Studio circular constraint handles on the object perimeter (pixel-scaled, solid blue handles)
  const handleDefs = [
   {side:'top' as const, cx:x+w/2, cy:y},
   {side:'bottom' as const, cx:x+w/2, cy:y+h},
@@ -156,7 +176,7 @@ function AnchorVisuals({
         cy={cy}
         r={hr * 1.8}
         fill="none"
-        stroke="#00866c"
+        stroke="#2196F3"
         strokeWidth={strokeW}
         strokeOpacity={0.6}
         strokeDasharray="2 1"
@@ -166,13 +186,13 @@ function AnchorVisuals({
       )}
       {isLinked ? (
        <g pointerEvents="none">
-        <circle cx={cx} cy={cy} r={hr} fill="#00866c" stroke="#fff" strokeWidth={strokeW} vectorEffect="non-scaling-stroke"/>
-        <circle cx={cx} cy={cy} r={hr * 0.42} fill="#fff"/>
+        <circle cx={cx} cy={cy} r={hr} fill="#2196F3" stroke="#fff" strokeWidth={strokeW} vectorEffect="non-scaling-stroke"/>
+        <circle cx={cx} cy={cy} r={hr * 0.45} fill="#fff"/>
        </g>
       ) : (
        <g pointerEvents="none">
-        <circle cx={cx} cy={cy} r={hr} fill="#fff" stroke="#00866c" strokeWidth={strokeW} vectorEffect="non-scaling-stroke"/>
-        <circle cx={cx} cy={cy} r={hr * 0.35} fill="#00866c"/>
+        <circle cx={cx} cy={cy} r={hr} fill="#fff" stroke="#2196F3" strokeWidth={strokeW} vectorEffect="non-scaling-stroke"/>
+        <circle cx={cx} cy={cy} r={hr * 0.35} fill="#2196F3"/>
        </g>
       )}
      </g>
@@ -195,7 +215,7 @@ function AnchorVisuals({
       y1={activeAnchorDrag.targetEdge === 'bottom' ? doc.height : 0}
       x2={activeAnchorDrag.targetEdge === 'left' ? 0 : doc.width}
       y2={activeAnchorDrag.targetEdge === 'top' ? 0 : doc.height}
-      stroke="#00866c"
+      stroke="#2196F3"
       strokeWidth={2.8 / pixelScale}
       strokeDasharray="4 2"
       vectorEffect="non-scaling-stroke"
@@ -209,8 +229,8 @@ function AnchorVisuals({
        y={targetObj.y - 0.5}
        width={targetObj.width + 1}
        height={targetObj.height + 1}
-       fill="rgba(0, 134, 108, 0.08)"
-       stroke="#00866c"
+       fill="rgba(33, 150, 243, 0.08)"
+       stroke="#2196F3"
        strokeWidth={1.5 / pixelScale}
        strokeDasharray="3 2"
        rx={1}
@@ -221,7 +241,7 @@ function AnchorVisuals({
        y1={activeAnchorDrag.targetEdge === 'bottom' ? targetObj.y + targetObj.height : targetObj.y}
        x2={activeAnchorDrag.targetEdge === 'left' ? targetObj.x : targetObj.x + targetObj.width}
        y2={activeAnchorDrag.targetEdge === 'top' ? targetObj.y : targetObj.y + targetObj.height}
-       stroke="#00866c"
+       stroke="#2196F3"
        strokeWidth={3.2 / pixelScale}
        vectorEffect="non-scaling-stroke"
       />
@@ -233,7 +253,7 @@ function AnchorVisuals({
      y1={activeAnchorDrag.startY}
      x2={activeAnchorDrag.snapX}
      y2={activeAnchorDrag.snapY}
-     stroke="#00866c"
+     stroke="#2196F3"
      strokeWidth={1.6 / pixelScale}
      strokeDasharray="3 1.5"
      vectorEffect="non-scaling-stroke"
@@ -243,7 +263,7 @@ function AnchorVisuals({
      cx={activeAnchorDrag.snapX}
      cy={activeAnchorDrag.snapY}
      r={4 / pixelScale}
-     fill="#00866c"
+     fill="#2196F3"
      stroke="#fff"
      strokeWidth={1.5 / pixelScale}
      vectorEffect="non-scaling-stroke"
@@ -279,6 +299,7 @@ function AnchorVisuals({
 
  return <>{visuals}</>;
 }
+
 
 export function LabelSvg({doc,selectedId,guidelines=[],activeAnchorDrag,onAnchorStart,onPointerDown,onResizeStart,onObjectDoubleClick,onTextChange,grid=false,gridStep=1,fonts=''}:{doc:LabelDocument;fonts?:string;selectedId?:string|null;guidelines?:AlignmentGuideline[];activeAnchorDrag?:import('./useCanvasInteraction').ActiveAnchorDrag|null;onAnchorStart?:(e:React.PointerEvent<SVGElement>,side:import('./anchors').AnchorSide)=>void;grid?:boolean;gridStep?:number;onPointerDown?:PointerEventHandler<SVGGElement>;onResizeStart?:PointerEventHandler<SVGRectElement>;onObjectDoubleClick?:(id:string)=>void;onTextChange?:(id:string,content:string)=>boolean}){
  const [editing,setEditing]=useState<string|null>(null);useEffect(()=>{setEditing(null);},[doc.id,selectedId]);const edited=doc.objects.find(o=>o.id===editing&&o.kind==='text'&&!o.locked);

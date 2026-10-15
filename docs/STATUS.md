@@ -284,6 +284,23 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
   - Elevated the Blueprint Widget in `src/atelier.css` with an authentic Android Studio architectural blueprint grid (`radial-gradient`), rounded cards, and elevated margin pills.
 - Verification: 84 TypeScript unit tests passing, production build passing, 25 Go unit tests passing, and 3 cross-compilations passing.
 
+## 2026-10-15 — Authentic Android Studio Layout Inspector Constraint Widget Replication
+
+- Replicated Android Studio Layout Inspector Constraint Widget matching the user's reference screenshot:
+  - In the Inspector:
+    - Dark slate theme (`#2b2d30` widget stage with `#313438` center view and `#4e5157` borders).
+    - Split margin dropdown pills `[ margin | ▾ ]` with solid connector lines for active constraints.
+    - Iconic Android Studio blue circular plus buttons `(+)` (`#3871e0`) connected via dotted lines for unconstrained edges (e.g. bottom).
+    - Inner dimension glyphs inside the center view: horizontal and vertical fixed-dimension I-beams (`|———|`).
+    - Horizontal Bias slider with circular thumb badge displaying `(50)` (or current percentage 0–100), smoothly adjusting horizontal position across available width.
+    - Collapsible `> Constraints (N)` section with target, edge, and margin inputs.
+  - On the Canvas:
+    - Dense zigzag tension springs in vibrant Android Studio blue (`#2196F3`) ending with arrowheads at the parent/target boundaries (`|<` and `>|`).
+    - Solid blue perimeter anchor nodes `(●)` with thin white centers on the selected view.
+    - Floating margin distance numbers placed directly alongside the constraint lines.
+- Verification: 84 TypeScript unit tests passing, production build passing, 25 Go unit tests passing, and 3 cross-compilations passing.
+
+
 
 
 
