@@ -700,3 +700,27 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
   - Production build passing (`npm run build`).
   - 25 Go unit tests passing (`go test ./...`).
   - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
+
+## 2026-10-15 — Ultra-Minimal LEGO Formula Builder (มินิมอล ใช้งานง่าย คลีนสบายตา)
+
+- **Removed Heavy Sidebars & Noisy Backgrounds**:
+  - Eliminated the cluttered 290px left sidebar and dizzying blueprint dot grid in favor of a sleek, centered, single-flow canvas (`max-width: 620px`).
+  - Removed pseudo-stud dashes in favor of clean modern cards with subtle colored category left borders.
+- **Single-Line Natural Sentence Blocks**:
+  - Converted block parameter forms into concise, single-line natural Thai sentences (e.g., `บวกเพิ่ม: [ 30 ] วัน • รูปแบบ: [ 15/10/2026 (DD/MM/YYYY) ⌄ ]`).
+  - Integrated intermediate result pills directly into the brick header (`➔ 14/11/2026`).
+- **Inline Action Bar (`+ ต่อบล็อกเพิ่ม`)**:
+  - Replaced the multi-tier sidebar with a clean floating category action row right under the block chain:
+    - `[ + 📅 วันที่ / วันหมดอายุ ▾ ]`
+    - `[ + 🔤 ข้อความ / คำนำหน้า ▾ ]`
+    - `[ + 🔢 ตัวเลขและลำดับ ▾ ]`
+    - `[ + 🔀 เงื่อนไข IF ]`
+  - Clicking any category opens a sleek popover menu to add that block in 1 click.
+- **Streamlined Top Bar & Presets**:
+  - Clean browser-style formula tabs (`[ 🧩 วันหมดอายุ ] [ + ]`).
+  - Compact live result pill (`ผลลัพธ์: 14/11/2026`) and 1-click recipe pills (`[ ⚡ วันหมดอายุ 30 วัน ] [ ⚡ Lot วันนี้ ] ...`).
+- **Verification**:
+  - 95 TypeScript unit tests passing (`npm test`).
+  - Production build passing (`npm run build`).
+  - 25 Go unit tests passing (`go test ./...`).
+  - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.

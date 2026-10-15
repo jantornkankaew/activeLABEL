@@ -1,23 +1,17 @@
-import {useState, useEffect, useMemo} from 'react';
+import {useState, useMemo} from 'react';
 import {
   Plus,
   Trash2,
   X,
   ChevronUp,
   ChevronDown,
-  Play,
-  Sparkles,
   Zap,
-  ArrowDown,
-  Wand2,
   Calendar,
   Type,
   Hash,
   GitBranch,
-  Repeat,
-  Layers,
-  ArrowRight,
-  Info,
+  ArrowDown,
+  Check,
 } from 'lucide-react';
 import type {LabelVariable} from './core';
 import {
@@ -32,8 +26,6 @@ import './formula.css';
 type PresetRecipe = {
   id: string;
   name: string;
-  badge: string;
-  color: string;
   blocks: FormulaBlock[];
 };
 
@@ -41,8 +33,6 @@ const PRESET_RECIPES: PresetRecipe[] = [
   {
     id: 'exp_30_days',
     name: 'วันหมดอายุ (+30 วัน)',
-    badge: '⚡ วันที่',
-    color: '#3b82f6',
     blocks: [
       {
         id: 'b1',
@@ -55,8 +45,6 @@ const PRESET_RECIPES: PresetRecipe[] = [
   {
     id: 'exp_1_year',
     name: 'วันหมดอายุ (+1 ปี)',
-    badge: '⚡ วันที่',
-    color: '#3b82f6',
     blocks: [
       {
         id: 'b1',
@@ -69,8 +57,6 @@ const PRESET_RECIPES: PresetRecipe[] = [
   {
     id: 'lot_today',
     name: 'Lot วันนี้ (LOT-YYYYMMDD)',
-    badge: '⚡ รหัสสินค้า',
-    color: '#10b981',
     blocks: [
       {
         id: 'b1',
@@ -89,8 +75,6 @@ const PRESET_RECIPES: PresetRecipe[] = [
   {
     id: 'seq_counter',
     name: 'รหัสลำดับ (SEQ-0001)',
-    badge: '⚡ ตัวเลข',
-    color: '#8b5cf6',
     blocks: [
       {
         id: 'b1',
@@ -108,190 +92,13 @@ const PRESET_RECIPES: PresetRecipe[] = [
   },
   {
     id: 'uppercase_text',
-    name: 'แปลงพิมพ์ใหญ่ (UPPERCASE)',
-    badge: '⚡ ข้อความ',
-    color: '#f59e0b',
+    name: 'ตัวพิมพ์ใหญ่ (UPPERCASE)',
     blocks: [
       {
         id: 'b1',
         category: 'string',
         functionName: 'uppercase',
         params: {},
-      },
-    ],
-  },
-];
-
-type LegoPieceItem = {
-  name: string;
-  title: string;
-  desc: string;
-  defaultParams: Record<string, any>;
-};
-
-const LEGO_PALETTE_CATEGORIES: {
-  category: FunctionCategory;
-  label: string;
-  icon: any;
-  color: string;
-  lightBg: string;
-  pieces: LegoPieceItem[];
-}[] = [
-  {
-    category: 'datetime',
-    label: 'วันที่และเวลา',
-    icon: Calendar,
-    color: '#2563eb',
-    lightBg: '#eff6ff',
-    pieces: [
-      {
-        name: 'now',
-        title: 'วันที่ปัจจุบัน (NOW)',
-        desc: 'ดึงวันและเวลาปัจจุบัน',
-        defaultParams: {format: 'DD/MM/YYYY'},
-      },
-      {
-        name: 'add_days',
-        title: 'บวก/ลบวัน (วันหมดอายุ)',
-        desc: 'เพิ่มหรือลดวันสำหรับคิดวันหมดอายุ',
-        defaultParams: {days: 30, format: 'DD/MM/YYYY'},
-      },
-      {
-        name: 'add_months',
-        title: 'บวก/ลบเดือน (+Months)',
-        desc: 'เพิ่มหรือลดเดือน',
-        defaultParams: {months: 1, format: 'DD/MM/YYYY'},
-      },
-      {
-        name: 'add_years',
-        title: 'บวก/ลบปี (+Years)',
-        desc: 'เพิ่มหรือลดปี',
-        defaultParams: {years: 1, format: 'DD/MM/YYYY'},
-      },
-      {
-        name: 'format_date',
-        title: 'เปลี่ยนรูปแบบวันที่ (Format)',
-        desc: 'เปลี่ยนรูปแบบการแสดงผลวันที่',
-        defaultParams: {format: 'DD/MM/YYYY'},
-      },
-      {
-        name: 'date_part',
-        title: 'ดึงเฉพาะส่วน (ปี/เดือน/วัน)',
-        desc: 'ดึงเฉพาะปี เดือน หรือวัน',
-        defaultParams: {part: 'YYYY'},
-      },
-    ],
-  },
-  {
-    category: 'string',
-    label: 'ข้อความและตัวอักษร',
-    icon: Type,
-    color: '#059669',
-    lightBg: '#ecfdf5',
-    pieces: [
-      {
-        name: 'concat',
-        title: 'เติมคำนำหน้า / ต่อท้าย',
-        desc: 'ใส่ข้อความนำหน้าหรือต่อท้ายค่าปัจจุบัน',
-        defaultParams: {prefix: '', append: ''},
-      },
-      {
-        name: 'uppercase',
-        title: 'แปลงเป็นตัวพิมพ์ใหญ่',
-        desc: 'แปลงภาษาอังกฤษเป็น UPPERCASE',
-        defaultParams: {},
-      },
-      {
-        name: 'lowercase',
-        title: 'แปลงเป็นตัวพิมพ์เล็ก',
-        desc: 'แปลงภาษาอังกฤษเป็น lowercase',
-        defaultParams: {},
-      },
-      {
-        name: 'pad_start',
-        title: 'เติมเลข 0 ด้านหน้า (Pad)',
-        desc: 'เติมเลขศูนย์ด้านหน้าให้ครบหลัก เช่น 0001',
-        defaultParams: {length: 4, char: '0'},
-      },
-      {
-        name: 'substring',
-        title: 'ตัดข้อความบางส่วน',
-        desc: 'ตัดเอาเฉพาะช่วงตัวอักษรที่ต้องการ',
-        defaultParams: {start: 0, length: 5},
-      },
-      {
-        name: 'replace',
-        title: 'ค้นหาและแทนที่คำ',
-        desc: 'เปลี่ยนคำเดิมเป็นคำใหม่',
-        defaultParams: {search: '', replace: ''},
-      },
-      {
-        name: 'trim',
-        title: 'ตัดช่องว่างหน้า-หลัง',
-        desc: 'ลบ space ส่วนเกินที่หัวและท้าย',
-        defaultParams: {},
-      },
-    ],
-  },
-  {
-    category: 'numeric',
-    label: 'ตัวเลขและลำดับ',
-    icon: Hash,
-    color: '#7c3aed',
-    lightBg: '#f5f3ff',
-    pieces: [
-      {
-        name: 'counter',
-        title: 'รันลำดับตัวเลขอัตโนมัติ',
-        desc: 'สร้างตัวเลขนับลำดับต่อเนื่อง เช่น 0001, 0002',
-        defaultParams: {start: 1, padZeros: 4},
-      },
-      {
-        name: 'math_op',
-        title: 'คำนวณเลข (+, -, *, /)',
-        desc: 'บวก ลบ คูณ หรือหารตัวเลข',
-        defaultParams: {op: 'add', value: 10},
-      },
-      {
-        name: 'round',
-        title: 'ปัดเศษทศนิยม',
-        desc: 'กำหนดจำนวนหลักทศนิยม',
-        defaultParams: {decimals: 2},
-      },
-    ],
-  },
-  {
-    category: 'if',
-    label: 'เงื่อนไข (IF / ELSE)',
-    icon: GitBranch,
-    color: '#d97706',
-    lightBg: '#fffbeb',
-    pieces: [
-      {
-        name: 'if_else',
-        title: 'ถ้า... ให้แสดง...',
-        desc: 'ตรวจสอบเงื่อนไข หากจริงแสดง A ไม่จริงแสดง B',
-        defaultParams: {
-          operator: 'is_not_empty',
-          target: '',
-          thenValue: 'พร้อมจำหน่าย',
-          elseValue: 'สินค้าหมด',
-        },
-      },
-    ],
-  },
-  {
-    category: 'loop',
-    label: 'ทำซ้ำ (Repeat)',
-    icon: Repeat,
-    color: '#db2777',
-    lightBg: '#fdf2f8',
-    pieces: [
-      {
-        name: 'repeat',
-        title: 'ทำซ้ำข้อความ N ครั้ง',
-        desc: 'พิมพ์ข้อความหรือเครื่องหมายซ้ำๆ',
-        defaultParams: {text: '*', times: 5, separator: ''},
       },
     ],
   },
@@ -337,7 +144,7 @@ export function FormulaBuilderDialog({
     return list[0]?.id || 'formula_1';
   });
 
-  const [activeCategory, setActiveCategory] = useState<FunctionCategory>('datetime');
+  const [showAddMenu, setShowAddMenu] = useState<FunctionCategory | null>(null);
 
   const activeFormula = list.find((f) => f.id === activeId) || list[0];
 
@@ -380,13 +187,13 @@ export function FormulaBuilderDialog({
     const newId = `formula_${list.length + 1}`;
     const newFormula: LabelFormula = {
       id: newId,
-      name: `สูตรใหม่ ${list.length + 1}`,
+      name: `สูตรที่ ${list.length + 1}`,
       blocks: [
         {
           id: `blk_${Date.now()}`,
           category: 'datetime',
-          functionName: 'now',
-          params: {format: 'DD/MM/YYYY'},
+          functionName: 'add_days',
+          params: {days: 30, format: 'DD/MM/YYYY'},
         },
       ],
     };
@@ -425,6 +232,7 @@ export function FormulaBuilderDialog({
     updateActiveFormula({
       blocks: [...activeFormula.blocks, newBlock],
     });
+    setShowAddMenu(null);
   }
 
   function updateBlock(blockId: string, paramChanges: Record<string, any>) {
@@ -460,713 +268,679 @@ export function FormulaBuilderDialog({
     onSave(list);
   }
 
-  const selectedCategoryDef =
-    LEGO_PALETTE_CATEGORIES.find((c) => c.category === activeCategory) || LEGO_PALETTE_CATEGORIES[0];
-
   return (
     <div className="modal-backdrop">
-      <div className="modal lego-formula-modal" role="dialog" aria-modal="true" aria-labelledby="formula-title">
-        {/* ================= TOP APP BAR ================= */}
-        <div className="lego-header-bar">
-          <div className="lego-title-group">
-            <span className="lego-logo-badge">🧱 LEGO Formula</span>
-            <div className="formula-select-wrapper">
-              <select
-                className="lego-formula-dropdown"
-                value={activeId}
-                onChange={(e) => setActiveId(e.target.value)}
-              >
-                {list.map((f) => (
-                  <option key={f.id} value={f.id}>
-                    🧩 {f.name || 'Untitled'} ({f.blocks.length} บล็อก)
-                  </option>
-                ))}
-              </select>
-
+      <div className="modal minimal-formula-modal" role="dialog" aria-modal="true" aria-labelledby="formula-title">
+        {/* ================= HEADER ================= */}
+        <header className="min-header">
+          <div className="min-header-left">
+            <span className="min-lego-icon">🧱</span>
+            <div className="min-formula-tabs">
+              {list.map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  className={`min-tab-pill ${f.id === activeId ? 'active' : ''}`}
+                  onClick={() => setActiveId(f.id)}
+                >
+                  {f.name || 'Untitled'}
+                </button>
+              ))}
               <button
                 type="button"
-                className="lego-btn-add-formula"
+                className="min-add-tab-btn"
                 title="สร้างสูตรใหม่"
                 onClick={addFormula}
               >
-                <Plus size={13} strokeWidth={2.5} /> เพิ่มสูตรใหม่
+                <Plus size={13} strokeWidth={2.5} />
               </button>
             </div>
+          </div>
 
+          <div className="min-header-right">
+            {/* Live Result Pill */}
+            <div className="min-live-result">
+              <span className="live-label">ผลลัพธ์:</span>
+              <strong className="live-val">{finalResult || '—'}</strong>
+            </div>
+
+            <button
+              type="button"
+              className="min-close-btn"
+              aria-label="Close dialog"
+              onClick={onClose}
+            >
+              <X size={18} />
+            </button>
+          </div>
+        </header>
+
+        {/* Formula Name & Quick Recipes Bar */}
+        <div className="min-subbar">
+          <div className="min-name-edit">
+            <span className="subbar-label">ชื่อสูตร:</span>
             <input
               type="text"
-              className="lego-formula-name-input"
+              className="min-name-input"
               value={activeFormula?.name ?? ''}
               placeholder="ตั้งชื่อสูตร..."
-              title="แก้ไขชื่อสูตรนี้"
               onChange={(e) => updateActiveFormula({name: e.target.value})}
             />
-
             {list.length > 1 && (
               <button
                 type="button"
-                className="lego-btn-delete-formula"
+                className="min-del-formula-btn"
                 title="ลบสูตรนี้"
                 onClick={() => removeFormula(activeId)}
               >
-                <Trash2 size={14} />
+                <Trash2 size={13} />
               </button>
             )}
           </div>
 
-          {/* Prominent Live Final Result Banner */}
-          <div className="lego-final-result-card">
-            <span className="result-tag">🎯 ผลลัพธ์สุดท้าย:</span>
-            <span className="result-val">{finalResult || '—'}</span>
+          {/* 1-Click Minimal Recipes */}
+          <div className="min-presets-row">
+            <span className="presets-title"><Zap size={12} fill="#eab308" color="#eab308" /> แม่แบบ:</span>
+            {PRESET_RECIPES.map((r) => (
+              <button
+                key={r.id}
+                type="button"
+                className="min-preset-pill"
+                onClick={() => applyPreset(r)}
+              >
+                {r.name}
+              </button>
+            ))}
           </div>
-
-          <button
-            type="button"
-            className="lego-btn-close-modal"
-            aria-label="Close dialog"
-            onClick={onClose}
-          >
-            <X size={18} />
-          </button>
         </div>
 
-        {/* ================= 2-COLUMN MAIN WORKSPACE ================= */}
-        <div className="lego-workspace-grid">
-          {/* ----- LEFT SIDEBAR: TOOLBOX OF LEGO PIECES ----- */}
-          <aside className="lego-toolbox-sidebar">
-            {/* Quick Recipes Section */}
-            <div className="toolbox-section">
-              <div className="section-label">
-                <Zap size={13} fill="#f59e0b" color="#f59e0b" />
-                <span>สูตรสำเร็จรูป (คลิกเดียวต่อให้เสร็จ)</span>
+        {/* ================= MINIMAL LEGO CANVAS ================= */}
+        <main className="min-canvas-area">
+          <div className="min-canvas-container">
+            {/* Bricks Stack */}
+            {!activeFormula || activeFormula.blocks.length === 0 ? (
+              <div className="min-empty-state">
+                <p>ยังไม่มีบล็อกในสูตรนี้ เลือกแม่แบบด้านบน หรือกดปุ่มด้านล่างเพื่อเริ่มต่อบล็อก</p>
               </div>
-              <div className="recipes-grid">
-                {PRESET_RECIPES.map((r) => (
-                  <button
-                    key={r.id}
-                    type="button"
-                    className="recipe-card-chip"
-                    onClick={() => applyPreset(r)}
-                  >
-                    <span className="recipe-badge" style={{color: r.color}}>{r.badge}</span>
-                    <span className="recipe-title">{r.name}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
+            ) : (
+              activeFormula.blocks.map((block, index) => {
+                const isFirst = index === 0;
+                const isLast = index === activeFormula.blocks.length - 1;
+                const stepVal = stepOutputs[index] ?? '';
 
-            {/* Category Tabs */}
-            <div className="toolbox-section" style={{flex: 1, display: 'flex', flexDirection: 'column'}}>
-              <div className="section-label">
-                <Layers size={13} color="#2563eb" />
-                <span>กล่องชิ้นส่วนเลโก้ (คลิกเพื่อต่อบล็อก)</span>
-              </div>
+                return (
+                  <div key={block.id} className="min-step-wrapper">
+                    {/* Inter-block connector arrow */}
+                    {index > 0 && (
+                      <div className="min-flow-arrow">
+                        <ArrowDown size={13} strokeWidth={2.5} />
+                      </div>
+                    )}
 
-              {/* Category selector chips */}
-              <div className="category-chips-row">
-                {LEGO_PALETTE_CATEGORIES.map((cat) => {
-                  const Icon = cat.icon;
-                  const isActive = activeCategory === cat.category;
-                  return (
-                    <button
-                      key={cat.category}
-                      type="button"
-                      className={`cat-pill-btn ${isActive ? 'active' : ''}`}
-                      style={{
-                        borderColor: isActive ? cat.color : '#e2e8f0',
-                        color: isActive ? '#ffffff' : '#475569',
-                        backgroundColor: isActive ? cat.color : '#ffffff',
-                      }}
-                      onClick={() => setActiveCategory(cat.category)}
-                    >
-                      <Icon size={12} strokeWidth={2.2} />
-                      <span>{cat.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Pieces list in active category */}
-              <div className="pieces-list-scroll">
-                {selectedCategoryDef.pieces.map((piece) => (
-                  <button
-                    key={piece.name}
-                    type="button"
-                    className="lego-piece-card"
-                    style={{borderLeftColor: selectedCategoryDef.color}}
-                    onClick={() => addBlock(selectedCategoryDef.category, piece.name, piece.defaultParams)}
-                  >
-                    <div className="piece-card-header">
-                      <strong className="piece-title">{piece.title}</strong>
-                      <span className="piece-add-action" style={{backgroundColor: selectedCategoryDef.lightBg, color: selectedCategoryDef.color}}>
-                        <Plus size={13} strokeWidth={3} /> เพิ่มชิ้นนี้
-                      </span>
-                    </div>
-                    <p className="piece-desc">{piece.desc}</p>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </aside>
-
-          {/* ----- RIGHT MAIN: LEGO CANVAS WORKSPACE ----- */}
-          <main className="lego-canvas-board">
-            <div className="canvas-top-info">
-              <div className="chain-stats">
-                <strong>สายพานต่อเลโก้</strong>
-                <span className="stats-pill">{activeFormula?.blocks.length ?? 0} ชิ้นต่อกัน</span>
-              </div>
-              <span className="canvas-guide-text">
-                <Info size={13} color="#64748b" /> ผลลัพธ์จะถูกประมวลผลและส่งต่อจากบนลงล่างทีละขั้นตอน
-              </span>
-            </div>
-
-            {/* Scrollable list of LEGO bricks */}
-            <div className="lego-bricks-chain-scroll">
-              {!activeFormula || activeFormula.blocks.length === 0 ? (
-                <div className="lego-empty-board">
-                  <div className="empty-lego-icon">🧱</div>
-                  <h3>ยังไม่มีชิ้นส่วนเลโก้ในสูตรนี้</h3>
-                  <p>คลิกเลือกชิ้นส่วนจากแถบด้านซ้าย เพื่อนำมาต่อบนสายพานนี้</p>
-                  <div className="empty-quick-buttons">
-                    <button type="button" onClick={() => applyPreset(PRESET_RECIPES[0])}>
-                      ⚡ วันหมดอายุ (+30 วัน)
-                    </button>
-                    <button type="button" onClick={() => applyPreset(PRESET_RECIPES[2])}>
-                      ⚡ รหัส Lot วันนี้
-                    </button>
-                    <button type="button" onClick={() => applyPreset(PRESET_RECIPES[3])}>
-                      ⚡ รหัสลำดับ 0001
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                activeFormula.blocks.map((block, index) => {
-                  const isFirst = index === 0;
-                  const isLast = index === activeFormula.blocks.length - 1;
-                  const stepResult = stepOutputs[index] ?? '';
-
-                  return (
-                    <div key={block.id} className="lego-brick-step">
-                      {/* Flow Connector Arrow between blocks */}
-                      {index > 0 && (
-                        <div className="lego-flow-snap">
-                          <div className="snap-line"></div>
-                          <div className="snap-pill">
-                            <ArrowDown size={12} strokeWidth={2.5} />
-                            <span>ส่งผลลัพธ์ไปยังชิ้นถัดไป</span>
-                          </div>
-                          <div className="snap-line"></div>
-                        </div>
-                      )}
-
-                      {/* Realistic LEGO Brick Card */}
-                      <div className={`lego-brick cat-${block.category}`}>
-                        {/* 3D LEGO Top Studs */}
-                        <div className="brick-studs-bar">
-                          <span className="stud" />
-                          <span className="stud" />
-                          <span className="stud" />
-                          <span className="stud" />
-                          <span className="stud" />
-                          <span className="stud" />
+                    {/* Minimal LEGO Brick Card */}
+                    <div className={`min-brick cat-${block.category}`}>
+                      {/* Brick Header Bar */}
+                      <div className="min-brick-top">
+                        <div className="min-brick-left">
+                          <span className="min-step-num">{index + 1}</span>
+                          <span className={`min-cat-badge cat-${block.category}`}>
+                            {block.category === 'datetime' && '📅 วันที่'}
+                            {block.category === 'string' && '🔤 ข้อความ'}
+                            {block.category === 'numeric' && '🔢 ตัวเลข'}
+                            {block.category === 'if' && '🔀 เงื่อนไข'}
+                            {block.category === 'loop' && '🔁 ทำซ้ำ'}
+                          </span>
+                          <strong className="min-brick-title">
+                            {block.functionName === 'now' && 'วันที่ปัจจุบัน (NOW)'}
+                            {block.functionName === 'add_days' && 'บวก/ลบวัน (วันหมดอายุ)'}
+                            {block.functionName === 'add_months' && 'บวก/ลบเดือน'}
+                            {block.functionName === 'add_years' && 'บวก/ลบปี'}
+                            {block.functionName === 'format_date' && 'แปลงรูปแบบวันที่'}
+                            {block.functionName === 'date_part' && 'ดึงส่วนวันที่'}
+                            {block.functionName === 'concat' && 'ต่อข้อความ / คำนำหน้า'}
+                            {block.functionName === 'pad_start' && 'เติมเลข 0 ด้านหน้า'}
+                            {block.functionName === 'pad_end' && 'เติมตัวอักษรด้านหลัง'}
+                            {block.functionName === 'substring' && 'ตัดข้อความบางส่วน'}
+                            {block.functionName === 'uppercase' && 'แปลงเป็นตัวพิมพ์ใหญ่'}
+                            {block.functionName === 'lowercase' && 'แปลงเป็นตัวพิมพ์เล็ก'}
+                            {block.functionName === 'replace' && 'ค้นหาและแทนที่คำ'}
+                            {block.functionName === 'trim' && 'ตัดช่องว่างหน้า-หลัง'}
+                            {block.functionName === 'counter' && 'รันเลขลำดับอัตโนมัติ'}
+                            {block.functionName === 'math_op' && 'คำนวณตัวเลข (+ - × ÷)'}
+                            {block.functionName === 'round' && 'ปัดเศษทศนิยม'}
+                            {block.functionName === 'if_else' && 'เงื่อนไข (IF/ELSE)'}
+                            {block.functionName === 'repeat' && 'ทำซ้ำข้อความ'}
+                          </strong>
                         </div>
 
-                        {/* Brick Header */}
-                        <div className="brick-header">
-                          <div className="brick-title-area">
-                            <span className="step-circle">{index + 1}</span>
-                            <span className={`brick-cat-badge cat-${block.category}`}>
-                              {block.category === 'datetime' && '📅 วันที่'}
-                              {block.category === 'string' && '🔤 ข้อความ'}
-                              {block.category === 'numeric' && '🔢 ตัวเลข'}
-                              {block.category === 'if' && '🔀 เงื่อนไข'}
-                              {block.category === 'loop' && '🔁 ทำซ้ำ'}
-                            </span>
-                            <strong className="brick-function-name">
-                              {block.functionName === 'now' && 'วันที่และเวลาปัจจุบัน (NOW)'}
-                              {block.functionName === 'add_days' && 'บวก/ลบวัน (Add Days - วันหมดอายุ)'}
-                              {block.functionName === 'add_months' && 'บวก/ลบเดือน (+Months)'}
-                              {block.functionName === 'add_years' && 'บวก/ลบปี (+Years)'}
-                              {block.functionName === 'format_date' && 'แปลงรูปแบบวันที่ (Format)'}
-                              {block.functionName === 'date_part' && 'ดึงเฉพาะส่วนวันที่ (Part)'}
-                              {block.functionName === 'concat' && 'ต่อข้อความ / คำนำหน้า (Concat)'}
-                              {block.functionName === 'pad_start' && 'เติมเลข 0 ด้านหน้า (Pad Start)'}
-                              {block.functionName === 'pad_end' && 'เติมตัวอักษรด้านหลัง (Pad End)'}
-                              {block.functionName === 'substring' && 'ตัดข้อความบางส่วน (Substring)'}
-                              {block.functionName === 'uppercase' && 'แปลงเป็นตัวพิมพ์ใหญ่ (UPPERCASE)'}
-                              {block.functionName === 'lowercase' && 'แปลงเป็นตัวพิมพ์เล็ก (lowercase)'}
-                              {block.functionName === 'replace' && 'ค้นหาและแทนที่คำ (Replace)'}
-                              {block.functionName === 'trim' && 'ตัดช่องว่างหน้า-หลัง (Trim)'}
-                              {block.functionName === 'counter' && 'รันเลขลำดับอัตโนมัติ (Auto Counter)'}
-                              {block.functionName === 'math_op' && 'คำนวณคณิตศาสตร์ (+, -, *, /)'}
-                              {block.functionName === 'round' && 'ปัดเศษทศนิยม (Round)'}
-                              {block.functionName === 'if_else' && 'เงื่อนไข (IF / THEN / ELSE)'}
-                              {block.functionName === 'repeat' && 'ทำซ้ำข้อความ (Repeat)'}
-                            </strong>
-                          </div>
+                        {/* Step Result + Action Buttons */}
+                        <div className="min-brick-right">
+                          <span className="min-step-badge" title="ผลลัพธ์ของขั้นตอนนี้">
+                            ➔ {stepVal}
+                          </span>
 
-                          {/* Action Buttons: Up, Down, Delete (with solid high-contrast styling) */}
-                          <div className="brick-controls">
+                          <div className="min-actions">
                             {!isFirst && (
                               <button
                                 type="button"
-                                className="brick-btn-up"
-                                title="เลื่อนชิ้นนี้ขึ้น"
+                                className="min-btn-icon"
+                                title="เลื่อนขึ้น"
                                 onClick={() => moveBlock(block.id, -1)}
                               >
-                                <ChevronUp size={14} strokeWidth={2.5} />
+                                <ChevronUp size={13} strokeWidth={2.5} />
                               </button>
                             )}
                             {!isLast && (
                               <button
                                 type="button"
-                                className="brick-btn-down"
-                                title="เลื่อนชิ้นนี้ลง"
+                                className="min-btn-icon"
+                                title="เลื่อนลง"
                                 onClick={() => moveBlock(block.id, 1)}
                               >
-                                <ChevronDown size={14} strokeWidth={2.5} />
+                                <ChevronDown size={13} strokeWidth={2.5} />
                               </button>
                             )}
                             <button
                               type="button"
-                              className="brick-btn-delete"
-                              title="ลบชิ้นเลโก้นี้"
+                              className="min-btn-del"
+                              title="ลบชิ้นนี้"
                               onClick={() => removeBlock(block.id)}
                             >
-                              <Trash2 size={13} strokeWidth={2.2} />
-                              <span>ลบ</span>
+                              <X size={14} strokeWidth={2.5} />
                             </button>
                           </div>
                         </div>
+                      </div>
 
-                        {/* Brick Body: Natural Thai Sentences with Clean Inputs */}
-                        <div className="brick-body">
-                          {/* now */}
-                          {block.functionName === 'now' && (
-                            <div className="sentence-row">
-                              <span className="sentence-text">แสดงวันที่ในรูปแบบ:</span>
+                      {/* Brick Body: One Natural Sentence Line */}
+                      <div className="min-brick-body">
+                        {/* now */}
+                        {block.functionName === 'now' && (
+                          <div className="min-sentence">
+                            <span>รูปแบบวันที่:</span>
+                            <select
+                              className="min-input-select"
+                              value={block.params.format ?? 'DD/MM/YYYY'}
+                              onChange={(e) => updateBlock(block.id, {format: e.target.value})}
+                            >
+                              <option value="DD/MM/YYYY">15/10/2026 (DD/MM/YYYY)</option>
+                              <option value="YYYY-MM-DD">2026-10-15 (YYYY-MM-DD)</option>
+                              <option value="YYYYMMDD">20261015 (YYYYMMDD)</option>
+                              <option value="DD-MM-YYYY">15-10-2026</option>
+                              <option value="DD/MM/YY">15/10/26</option>
+                            </select>
+                          </div>
+                        )}
+
+                        {/* add_days */}
+                        {block.functionName === 'add_days' && (
+                          <div className="min-sentence">
+                            <span>บวกเพิ่ม:</span>
+                            <input
+                              type="number"
+                              className="min-input-num"
+                              value={block.params.days ?? 30}
+                              onChange={(e) => updateBlock(block.id, {days: Number(e.target.value)})}
+                            />
+                            <span>วัน</span>
+                            <span className="dot-sep">•</span>
+                            <span>รูปแบบ:</span>
+                            <select
+                              className="min-input-select"
+                              value={block.params.format ?? 'DD/MM/YYYY'}
+                              onChange={(e) => updateBlock(block.id, {format: e.target.value})}
+                            >
+                              <option value="DD/MM/YYYY">15/10/2026 (DD/MM/YYYY)</option>
+                              <option value="YYYY-MM-DD">2026-10-15 (YYYY-MM-DD)</option>
+                              <option value="YYYYMMDD">20261015 (YYYYMMDD)</option>
+                              <option value="DD/MM/YY">15/10/26</option>
+                            </select>
+                          </div>
+                        )}
+
+                        {/* add_months */}
+                        {block.functionName === 'add_months' && (
+                          <div className="min-sentence">
+                            <span>บวกเพิ่ม:</span>
+                            <input
+                              type="number"
+                              className="min-input-num"
+                              value={block.params.months ?? 1}
+                              onChange={(e) => updateBlock(block.id, {months: Number(e.target.value)})}
+                            />
+                            <span>เดือน</span>
+                            <span className="dot-sep">•</span>
+                            <span>รูปแบบ:</span>
+                            <select
+                              className="min-input-select"
+                              value={block.params.format ?? 'DD/MM/YYYY'}
+                              onChange={(e) => updateBlock(block.id, {format: e.target.value})}
+                            >
+                              <option value="DD/MM/YYYY">15/10/2026 (DD/MM/YYYY)</option>
+                              <option value="YYYY-MM-DD">2026-10-15 (YYYY-MM-DD)</option>
+                              <option value="YYYYMMDD">20261015 (YYYYMMDD)</option>
+                            </select>
+                          </div>
+                        )}
+
+                        {/* add_years */}
+                        {block.functionName === 'add_years' && (
+                          <div className="min-sentence">
+                            <span>บวกเพิ่ม:</span>
+                            <input
+                              type="number"
+                              className="min-input-num"
+                              value={block.params.years ?? 1}
+                              onChange={(e) => updateBlock(block.id, {years: Number(e.target.value)})}
+                            />
+                            <span>ปี</span>
+                            <span className="dot-sep">•</span>
+                            <span>รูปแบบ:</span>
+                            <select
+                              className="min-input-select"
+                              value={block.params.format ?? 'DD/MM/YYYY'}
+                              onChange={(e) => updateBlock(block.id, {format: e.target.value})}
+                            >
+                              <option value="DD/MM/YYYY">15/10/2026 (DD/MM/YYYY)</option>
+                              <option value="YYYY-MM-DD">2026-10-15 (YYYY-MM-DD)</option>
+                              <option value="YYYYMMDD">20261015 (YYYYMMDD)</option>
+                            </select>
+                          </div>
+                        )}
+
+                        {/* format_date */}
+                        {block.functionName === 'format_date' && (
+                          <div className="min-sentence">
+                            <span>เปลี่ยนรูปแบบเป็น:</span>
+                            <input
+                              type="text"
+                              className="min-input-text"
+                              style={{width: 130}}
+                              value={block.params.format ?? 'DD/MM/YYYY'}
+                              onChange={(e) => updateBlock(block.id, {format: e.target.value})}
+                            />
+                            <span className="hint-text">(เช่น DD/MM/YYYY, YYYY-MM-DD)</span>
+                          </div>
+                        )}
+
+                        {/* date_part */}
+                        {block.functionName === 'date_part' && (
+                          <div className="min-sentence">
+                            <span>ดึงเฉพาะ:</span>
+                            <select
+                              className="min-input-select"
+                              value={block.params.part ?? 'YYYY'}
+                              onChange={(e) => updateBlock(block.id, {part: e.target.value})}
+                            >
+                              <option value="YYYY">ปี 4 หลัก (YYYY)</option>
+                              <option value="YY">ปี 2 หลัก (YY)</option>
+                              <option value="MM">เดือน (MM)</option>
+                              <option value="DD">วัน (DD)</option>
+                            </select>
+                          </div>
+                        )}
+
+                        {/* concat */}
+                        {block.functionName === 'concat' && (
+                          <div className="min-sentence">
+                            <span>นำหน้า:</span>
+                            <input
+                              type="text"
+                              className="min-input-text"
+                              style={{width: 100}}
+                              placeholder="เช่น LOT-"
+                              value={block.params.prefix ?? ''}
+                              onChange={(e) => updateBlock(block.id, {prefix: e.target.value})}
+                            />
+                            <span className="dot-sep">•</span>
+                            <span>ต่อท้าย:</span>
+                            <input
+                              type="text"
+                              className="min-input-text"
+                              style={{width: 100}}
+                              placeholder="เช่น -TH"
+                              value={block.params.append ?? ''}
+                              onChange={(e) => updateBlock(block.id, {append: e.target.value})}
+                            />
+                          </div>
+                        )}
+
+                        {/* pad_start */}
+                        {block.functionName === 'pad_start' && (
+                          <div className="min-sentence">
+                            <span>เติมตัวอักษร:</span>
+                            <input
+                              type="text"
+                              className="min-input-mini"
+                              value={block.params.char ?? '0'}
+                              onChange={(e) => updateBlock(block.id, {char: e.target.value})}
+                            />
+                            <span>ด้านหน้าให้ครบ:</span>
+                            <input
+                              type="number"
+                              className="min-input-num"
+                              value={block.params.length ?? 4}
+                              onChange={(e) => updateBlock(block.id, {length: Number(e.target.value)})}
+                            />
+                            <span>หลัก (เช่น 0001)</span>
+                          </div>
+                        )}
+
+                        {/* substring */}
+                        {block.functionName === 'substring' && (
+                          <div className="min-sentence">
+                            <span>ตัดเริ่มตัวที่:</span>
+                            <input
+                              type="number"
+                              className="min-input-num"
+                              value={block.params.start ?? 0}
+                              onChange={(e) => updateBlock(block.id, {start: Number(e.target.value)})}
+                            />
+                            <span className="dot-sep">•</span>
+                            <span>ความยาว:</span>
+                            <input
+                              type="number"
+                              className="min-input-num"
+                              value={block.params.length ?? 5}
+                              onChange={(e) => updateBlock(block.id, {length: Number(e.target.value)})}
+                            />
+                            <span>ตัวอักษร</span>
+                          </div>
+                        )}
+
+                        {/* uppercase / lowercase / trim */}
+                        {block.functionName === 'uppercase' && (
+                          <div className="min-sentence">
+                            <span className="accent-note">✓ แปลงภาษาอังกฤษทั้งหมดเป็นตัวพิมพ์ใหญ่ (UPPERCASE)</span>
+                          </div>
+                        )}
+                        {block.functionName === 'lowercase' && (
+                          <div className="min-sentence">
+                            <span className="accent-note">✓ แปลงภาษาอังกฤษทั้งหมดเป็นตัวพิมพ์เล็ก (lowercase)</span>
+                          </div>
+                        )}
+                        {block.functionName === 'trim' && (
+                          <div className="min-sentence">
+                            <span className="accent-note">✓ ตัดช่องว่างด้านหน้าและด้านหลังข้อความออก</span>
+                          </div>
+                        )}
+
+                        {/* replace */}
+                        {block.functionName === 'replace' && (
+                          <div className="min-sentence">
+                            <span>ค้นหาคำว่า:</span>
+                            <input
+                              type="text"
+                              className="min-input-text"
+                              style={{width: 100}}
+                              value={block.params.search ?? ''}
+                              onChange={(e) => updateBlock(block.id, {search: e.target.value})}
+                            />
+                            <span>แทนที่ด้วย:</span>
+                            <input
+                              type="text"
+                              className="min-input-text"
+                              style={{width: 100}}
+                              value={block.params.replace ?? ''}
+                              onChange={(e) => updateBlock(block.id, {replace: e.target.value})}
+                            />
+                          </div>
+                        )}
+
+                        {/* counter */}
+                        {block.functionName === 'counter' && (
+                          <div className="min-sentence">
+                            <span>เริ่มนับที่เลข:</span>
+                            <input
+                              type="number"
+                              className="min-input-num"
+                              value={block.params.start ?? 1}
+                              onChange={(e) => updateBlock(block.id, {start: Number(e.target.value)})}
+                            />
+                            <span className="dot-sep">•</span>
+                            <span>เติมเลข 0 ให้ครบ:</span>
+                            <input
+                              type="number"
+                              className="min-input-num"
+                              value={block.params.padZeros ?? 4}
+                              onChange={(e) => updateBlock(block.id, {padZeros: Number(e.target.value)})}
+                            />
+                            <span>หลัก (เช่น 0001)</span>
+                          </div>
+                        )}
+
+                        {/* math_op */}
+                        {block.functionName === 'math_op' && (
+                          <div className="min-sentence">
+                            <span>คำนวณ:</span>
+                            <select
+                              className="min-input-select"
+                              value={block.params.op ?? 'add'}
+                              onChange={(e) => updateBlock(block.id, {op: e.target.value})}
+                            >
+                              <option value="add">บวก (+)</option>
+                              <option value="subtract">ลบ (-)</option>
+                              <option value="multiply">คูณ (×)</option>
+                              <option value="divide">หาร (÷)</option>
+                            </select>
+                            <span>ด้วยเลข:</span>
+                            <input
+                              type="number"
+                              className="min-input-num"
+                              value={block.params.value ?? 10}
+                              onChange={(e) => updateBlock(block.id, {value: Number(e.target.value)})}
+                            />
+                          </div>
+                        )}
+
+                        {/* round */}
+                        {block.functionName === 'round' && (
+                          <div className="min-sentence">
+                            <span>ปัดเศษทศนิยม:</span>
+                            <input
+                              type="number"
+                              className="min-input-num"
+                              value={block.params.decimals ?? 2}
+                              min={0}
+                              max={6}
+                              onChange={(e) => updateBlock(block.id, {decimals: Number(e.target.value)})}
+                            />
+                            <span>ตำแหน่ง</span>
+                          </div>
+                        )}
+
+                        {/* if_else */}
+                        {block.functionName === 'if_else' && (
+                          <div className="min-sentence-stack">
+                            <div className="min-sentence">
+                              <span>ถ้าข้อมูล:</span>
                               <select
-                                className="brick-select"
-                                value={block.params.format ?? 'DD/MM/YYYY'}
-                                onChange={(e) => updateBlock(block.id, {format: e.target.value})}
+                                className="min-input-select"
+                                value={block.params.operator ?? 'is_not_empty'}
+                                onChange={(e) => updateBlock(block.id, {operator: e.target.value})}
                               >
-                                <option value="DD/MM/YYYY">15/10/2026 (DD/MM/YYYY)</option>
-                                <option value="YYYY-MM-DD">2026-10-15 (YYYY-MM-DD)</option>
-                                <option value="YYYYMMDD">20261015 (YYYYMMDD)</option>
-                                <option value="DD-MM-YYYY">15-10-2026</option>
-                                <option value="DD/MM/YY">15/10/26 (ปี 2 หลัก)</option>
-                                <option value="HH:mm:ss">HH:mm:ss (เวลา)</option>
+                                <option value="is_not_empty">มีค่า (ไม่ว่าง)</option>
+                                <option value="is_empty">ไม่มีค่า (ว่างเปล่า)</option>
+                                <option value="equals">เท่ากับ (=)</option>
+                                <option value="not_equals">ไม่เท่ากับ (!=)</option>
+                                <option value="contains">มีคำว่า...</option>
                               </select>
-                            </div>
-                          )}
-
-                          {/* add_days */}
-                          {block.functionName === 'add_days' && (
-                            <div className="sentence-row">
-                              <span className="sentence-text">บวกเพิ่ม:</span>
-                              <input
-                                type="number"
-                                className="brick-num-input"
-                                value={block.params.days ?? 30}
-                                onChange={(e) => updateBlock(block.id, {days: Number(e.target.value)})}
-                              />
-                              <span className="sentence-unit">วัน</span>
-                              <span className="sentence-text">ในรูปแบบ:</span>
-                              <select
-                                className="brick-select"
-                                value={block.params.format ?? 'DD/MM/YYYY'}
-                                onChange={(e) => updateBlock(block.id, {format: e.target.value})}
-                              >
-                                <option value="DD/MM/YYYY">15/10/2026 (DD/MM/YYYY)</option>
-                                <option value="YYYY-MM-DD">2026-10-15 (YYYY-MM-DD)</option>
-                                <option value="YYYYMMDD">20261015 (YYYYMMDD)</option>
-                                <option value="DD/MM/YY">15/10/26 (DD/MM/YY)</option>
-                              </select>
-                            </div>
-                          )}
-
-                          {/* add_months */}
-                          {block.functionName === 'add_months' && (
-                            <div className="sentence-row">
-                              <span className="sentence-text">บวกเพิ่ม:</span>
-                              <input
-                                type="number"
-                                className="brick-num-input"
-                                value={block.params.months ?? 1}
-                                onChange={(e) => updateBlock(block.id, {months: Number(e.target.value)})}
-                              />
-                              <span className="sentence-unit">เดือน</span>
-                              <span className="sentence-text">ในรูปแบบ:</span>
-                              <select
-                                className="brick-select"
-                                value={block.params.format ?? 'DD/MM/YYYY'}
-                                onChange={(e) => updateBlock(block.id, {format: e.target.value})}
-                              >
-                                <option value="DD/MM/YYYY">15/10/2026 (DD/MM/YYYY)</option>
-                                <option value="YYYY-MM-DD">2026-10-15 (YYYY-MM-DD)</option>
-                                <option value="YYYYMMDD">20261015 (YYYYMMDD)</option>
-                              </select>
-                            </div>
-                          )}
-
-                          {/* add_years */}
-                          {block.functionName === 'add_years' && (
-                            <div className="sentence-row">
-                              <span className="sentence-text">บวกเพิ่ม:</span>
-                              <input
-                                type="number"
-                                className="brick-num-input"
-                                value={block.params.years ?? 1}
-                                onChange={(e) => updateBlock(block.id, {years: Number(e.target.value)})}
-                              />
-                              <span className="sentence-unit">ปี</span>
-                              <span className="sentence-text">ในรูปแบบ:</span>
-                              <select
-                                className="brick-select"
-                                value={block.params.format ?? 'DD/MM/YYYY'}
-                                onChange={(e) => updateBlock(block.id, {format: e.target.value})}
-                              >
-                                <option value="DD/MM/YYYY">15/10/2026 (DD/MM/YYYY)</option>
-                                <option value="YYYY-MM-DD">2026-10-15 (YYYY-MM-DD)</option>
-                                <option value="YYYYMMDD">20261015 (YYYYMMDD)</option>
-                              </select>
-                            </div>
-                          )}
-
-                          {/* format_date */}
-                          {block.functionName === 'format_date' && (
-                            <div className="sentence-row">
-                              <span className="sentence-text">เปลี่ยนเป็นรูปแบบ:</span>
-                              <input
-                                type="text"
-                                className="brick-text-input"
-                                style={{width: 150}}
-                                value={block.params.format ?? 'DD/MM/YYYY'}
-                                onChange={(e) => updateBlock(block.id, {format: e.target.value})}
-                              />
-                              <span className="sentence-hint">(เช่น DD/MM/YYYY, YYYY-MM-DD)</span>
-                            </div>
-                          )}
-
-                          {/* date_part */}
-                          {block.functionName === 'date_part' && (
-                            <div className="sentence-row">
-                              <span className="sentence-text">ตัดเอาเฉพาะ:</span>
-                              <select
-                                className="brick-select"
-                                value={block.params.part ?? 'YYYY'}
-                                onChange={(e) => updateBlock(block.id, {part: e.target.value})}
-                              >
-                                <option value="YYYY">ปี 4 หลัก (YYYY)</option>
-                                <option value="YY">ปี 2 หลัก (YY)</option>
-                                <option value="MM">เดือน (MM)</option>
-                                <option value="DD">วัน (DD)</option>
-                              </select>
-                            </div>
-                          )}
-
-                          {/* concat */}
-                          {block.functionName === 'concat' && (
-                            <div className="sentence-row">
-                              <span className="sentence-text">ข้อความนำหน้า:</span>
-                              <input
-                                type="text"
-                                className="brick-text-input"
-                                style={{width: 120}}
-                                placeholder="เช่น LOT- หรือ EXP:"
-                                value={block.params.prefix ?? ''}
-                                onChange={(e) => updateBlock(block.id, {prefix: e.target.value})}
-                              />
-                              <span className="sentence-text">+ (ผลลัพธ์เดิม) +</span>
-                              <span className="sentence-text">ข้อความต่อท้าย:</span>
-                              <input
-                                type="text"
-                                className="brick-text-input"
-                                style={{width: 120}}
-                                placeholder="เช่น -TH หรือ (A)"
-                                value={block.params.append ?? ''}
-                                onChange={(e) => updateBlock(block.id, {append: e.target.value})}
-                              />
-                            </div>
-                          )}
-
-                          {/* pad_start */}
-                          {block.functionName === 'pad_start' && (
-                            <div className="sentence-row">
-                              <span className="sentence-text">เติมตัวอักษร:</span>
-                              <input
-                                type="text"
-                                className="brick-mini-input"
-                                value={block.params.char ?? '0'}
-                                onChange={(e) => updateBlock(block.id, {char: e.target.value})}
-                              />
-                              <span className="sentence-text">ทางด้านหน้า ให้ครบ:</span>
-                              <input
-                                type="number"
-                                className="brick-num-input"
-                                value={block.params.length ?? 4}
-                                onChange={(e) => updateBlock(block.id, {length: Number(e.target.value)})}
-                              />
-                              <span className="sentence-unit">หลัก</span>
-                              <span className="sentence-hint">(เช่น 1 ➔ 0001)</span>
-                            </div>
-                          )}
-
-                          {/* pad_end */}
-                          {block.functionName === 'pad_end' && (
-                            <div className="sentence-row">
-                              <span className="sentence-text">เติมตัวอักษร:</span>
-                              <input
-                                type="text"
-                                className="brick-mini-input"
-                                value={block.params.char ?? ' '}
-                                onChange={(e) => updateBlock(block.id, {char: e.target.value})}
-                              />
-                              <span className="sentence-text">ทางด้านหลัง ให้ครบ:</span>
-                              <input
-                                type="number"
-                                className="brick-num-input"
-                                value={block.params.length ?? 8}
-                                onChange={(e) => updateBlock(block.id, {length: Number(e.target.value)})}
-                              />
-                              <span className="sentence-unit">หลัก</span>
-                            </div>
-                          )}
-
-                          {/* substring */}
-                          {block.functionName === 'substring' && (
-                            <div className="sentence-row">
-                              <span className="sentence-text">ตัดข้อความเริ่มจากตัวที่:</span>
-                              <input
-                                type="number"
-                                className="brick-num-input"
-                                value={block.params.start ?? 0}
-                                onChange={(e) => updateBlock(block.id, {start: Number(e.target.value)})}
-                              />
-                              <span className="sentence-text">ความยาว:</span>
-                              <input
-                                type="number"
-                                className="brick-num-input"
-                                value={block.params.length ?? 5}
-                                onChange={(e) => updateBlock(block.id, {length: Number(e.target.value)})}
-                              />
-                              <span className="sentence-unit">ตัวอักษร</span>
-                            </div>
-                          )}
-
-                          {/* uppercase / lowercase / trim */}
-                          {block.functionName === 'uppercase' && (
-                            <div className="sentence-row">
-                              <span className="sentence-note">✓ แปลงตัวอักษรภาษาอังกฤษทั้งหมดเป็นตัวพิมพ์ใหญ่ (UPPERCASE)</span>
-                            </div>
-                          )}
-                          {block.functionName === 'lowercase' && (
-                            <div className="sentence-row">
-                              <span className="sentence-note">✓ แปลงตัวอักษรภาษาอังกฤษทั้งหมดเป็นตัวพิมพ์เล็ก (lowercase)</span>
-                            </div>
-                          )}
-                          {block.functionName === 'trim' && (
-                            <div className="sentence-row">
-                              <span className="sentence-note">✓ ตัดช่องว่างด้านหน้าและด้านหลังข้อความออก</span>
-                            </div>
-                          )}
-
-                          {/* replace */}
-                          {block.functionName === 'replace' && (
-                            <div className="sentence-row">
-                              <span className="sentence-text">ค้นหาคำว่า:</span>
-                              <input
-                                type="text"
-                                className="brick-text-input"
-                                style={{width: 120}}
-                                value={block.params.search ?? ''}
-                                onChange={(e) => updateBlock(block.id, {search: e.target.value})}
-                              />
-                              <span className="sentence-text">แทนที่ด้วย:</span>
-                              <input
-                                type="text"
-                                className="brick-text-input"
-                                style={{width: 120}}
-                                value={block.params.replace ?? ''}
-                                onChange={(e) => updateBlock(block.id, {replace: e.target.value})}
-                              />
-                            </div>
-                          )}
-
-                          {/* counter */}
-                          {block.functionName === 'counter' && (
-                            <div className="sentence-row">
-                              <span className="sentence-text">เริ่มต้นที่เลข:</span>
-                              <input
-                                type="number"
-                                className="brick-num-input"
-                                value={block.params.start ?? 1}
-                                onChange={(e) => updateBlock(block.id, {start: Number(e.target.value)})}
-                              />
-                              <span className="sentence-text">เติมเลข 0 ให้ครบ:</span>
-                              <input
-                                type="number"
-                                className="brick-num-input"
-                                value={block.params.padZeros ?? 4}
-                                onChange={(e) => updateBlock(block.id, {padZeros: Number(e.target.value)})}
-                              />
-                              <span className="sentence-unit">หลัก</span>
-                              <span className="sentence-hint">(เช่น 1 ➔ 0001)</span>
-                            </div>
-                          )}
-
-                          {/* math_op */}
-                          {block.functionName === 'math_op' && (
-                            <div className="sentence-row">
-                              <span className="sentence-text">คำนวณ:</span>
-                              <select
-                                className="brick-select"
-                                value={block.params.op ?? 'add'}
-                                onChange={(e) => updateBlock(block.id, {op: e.target.value})}
-                              >
-                                <option value="add">บวก (+)</option>
-                                <option value="subtract">ลบ (-)</option>
-                                <option value="multiply">คูณ (×)</option>
-                                <option value="divide">หาร (÷)</option>
-                              </select>
-                              <span className="sentence-text">ด้วยตัวเลข:</span>
-                              <input
-                                type="number"
-                                className="brick-num-input"
-                                value={block.params.value ?? 10}
-                                onChange={(e) => updateBlock(block.id, {value: Number(e.target.value)})}
-                              />
-                            </div>
-                          )}
-
-                          {/* round */}
-                          {block.functionName === 'round' && (
-                            <div className="sentence-row">
-                              <span className="sentence-text">ปัดเศษทศนิยม:</span>
-                              <input
-                                type="number"
-                                className="brick-num-input"
-                                value={block.params.decimals ?? 2}
-                                min={0}
-                                max={6}
-                                onChange={(e) => updateBlock(block.id, {decimals: Number(e.target.value)})}
-                              />
-                              <span className="sentence-unit">ตำแหน่ง</span>
-                            </div>
-                          )}
-
-                          {/* if_else */}
-                          {block.functionName === 'if_else' && (
-                            <div className="sentence-column">
-                              <div className="sentence-row">
-                                <span className="sentence-text">ถ้าข้อมูล:</span>
-                                <select
-                                  className="brick-select"
-                                  value={block.params.operator ?? 'is_not_empty'}
-                                  onChange={(e) => updateBlock(block.id, {operator: e.target.value})}
-                                >
-                                  <option value="is_not_empty">มีค่า (ไม่ว่าง)</option>
-                                  <option value="is_empty">ไม่มีค่า (ว่างเปล่า)</option>
-                                  <option value="equals">เท่ากับ (=)</option>
-                                  <option value="not_equals">ไม่เท่ากับ (!=)</option>
-                                  <option value="contains">มีคำว่า...</option>
-                                </select>
-                                {(block.params.operator === 'equals' ||
-                                  block.params.operator === 'not_equals' ||
-                                  block.params.operator === 'contains') && (
-                                  <input
-                                    type="text"
-                                    className="brick-text-input"
-                                    style={{width: 120}}
-                                    placeholder="คำที่ต้องการเทียบ"
-                                    value={block.params.target ?? ''}
-                                    onChange={(e) => updateBlock(block.id, {target: e.target.value})}
-                                  />
-                                )}
-                              </div>
-                              <div className="sentence-row" style={{marginTop: 6}}>
-                                <span className="sentence-cond-tag true-tag">✓ ถ้าจริง แสดง:</span>
+                              {(block.params.operator === 'equals' ||
+                                block.params.operator === 'not_equals' ||
+                                block.params.operator === 'contains') && (
                                 <input
                                   type="text"
-                                  className="brick-text-input"
-                                  style={{width: 140}}
-                                  value={block.params.thenValue ?? 'พร้อมจำหน่าย'}
-                                  onChange={(e) => updateBlock(block.id, {thenValue: e.target.value})}
+                                  className="min-input-text"
+                                  style={{width: 100}}
+                                  placeholder="คำที่ต้องการเทียบ"
+                                  value={block.params.target ?? ''}
+                                  onChange={(e) => updateBlock(block.id, {target: e.target.value})}
                                 />
-                                <span className="sentence-cond-tag false-tag">✗ ถ้าไม่จริง แสดง:</span>
-                                <input
-                                  type="text"
-                                  className="brick-text-input"
-                                  style={{width: 140}}
-                                  value={block.params.elseValue ?? 'สินค้าหมด'}
-                                  onChange={(e) => updateBlock(block.id, {elseValue: e.target.value})}
-                                />
-                              </div>
+                              )}
                             </div>
-                          )}
-
-                          {/* repeat */}
-                          {block.functionName === 'repeat' && (
-                            <div className="sentence-row">
-                              <span className="sentence-text">ทำซ้ำข้อความ:</span>
+                            <div className="min-sentence" style={{marginTop: 4}}>
+                              <span style={{color: '#16a34a', fontWeight: 600}}>✓ ถ้าจริง:</span>
                               <input
                                 type="text"
-                                className="brick-text-input"
-                                style={{width: 90}}
-                                value={block.params.text ?? '*'}
-                                onChange={(e) => updateBlock(block.id, {text: e.target.value})}
+                                className="min-input-text"
+                                style={{width: 120}}
+                                value={block.params.thenValue ?? 'พร้อมจำหน่าย'}
+                                onChange={(e) => updateBlock(block.id, {thenValue: e.target.value})}
                               />
-                              <span className="sentence-text">จำนวน:</span>
+                              <span style={{color: '#dc2626', fontWeight: 600}}>✗ ถ้าไม่จริง:</span>
                               <input
-                                type="number"
-                                className="brick-num-input"
-                                value={block.params.times ?? 5}
-                                onChange={(e) => updateBlock(block.id, {times: Number(e.target.value)})}
+                                type="text"
+                                className="min-input-text"
+                                style={{width: 120}}
+                                value={block.params.elseValue ?? 'สินค้าหมด'}
+                                onChange={(e) => updateBlock(block.id, {elseValue: e.target.value})}
                               />
-                              <span className="sentence-unit">ครั้ง</span>
                             </div>
-                          )}
-                        </div>
+                          </div>
+                        )}
 
-                        {/* Brick Step Output Preview Footer */}
-                        <div className="brick-step-output-footer">
-                          <span className="step-output-label">✨ ผลลัพธ์ของขั้นตอนนี้:</span>
-                          <strong className="step-output-value">{stepResult}</strong>
-                        </div>
+                        {/* repeat */}
+                        {block.functionName === 'repeat' && (
+                          <div className="min-sentence">
+                            <span>ทำซ้ำ:</span>
+                            <input
+                              type="text"
+                              className="min-input-text"
+                              style={{width: 80}}
+                              value={block.params.text ?? '*'}
+                              onChange={(e) => updateBlock(block.id, {text: e.target.value})}
+                            />
+                            <span>จำนวน:</span>
+                            <input
+                              type="number"
+                              className="min-input-num"
+                              value={block.params.times ?? 5}
+                              onChange={(e) => updateBlock(block.id, {times: Number(e.target.value)})}
+                            />
+                            <span>ครั้ง</span>
+                          </div>
+                        )}
                       </div>
                     </div>
-                  );
-                })
-              )}
+                  </div>
+                );
+              })
+            )}
 
-              {/* Add More Bricks Action at End of Chain */}
-              {activeFormula && activeFormula.blocks.length > 0 && (
-                <div className="chain-end-actions">
-                  <div className="chain-end-line" />
-                  <span className="chain-end-badge">
-                    <Sparkles size={13} color="#2563eb" /> เลือกชิ้นส่วนจากแถบซ้ายมือเพื่อต่อเพิ่ม
-                  </span>
+            {/* ================= MINIMAL ADD BLOCK ACTION BAR ================= */}
+            <div className="min-add-block-row">
+              <span className="add-lead-text">+ ต่อบล็อกเพิ่ม:</span>
+
+              <div className="min-add-category-buttons">
+                {/* 1. Date & Time */}
+                <div className="popover-wrapper">
+                  <button
+                    type="button"
+                    className="min-btn-add-cat cat-datetime"
+                    onClick={() => setShowAddMenu(showAddMenu === 'datetime' ? null : 'datetime')}
+                  >
+                    <Calendar size={13} /> วันที่ / วันหมดอายุ ▾
+                  </button>
+                  {showAddMenu === 'datetime' && (
+                    <div className="min-dropdown-menu">
+                      <button type="button" onClick={() => addBlock('datetime', 'add_days', {days: 30, format: 'DD/MM/YYYY'})}>
+                        📅 บวก/ลบวัน (วันหมดอายุ)
+                      </button>
+                      <button type="button" onClick={() => addBlock('datetime', 'now', {format: 'DD/MM/YYYY'})}>
+                        📅 วันที่ปัจจุบัน (NOW)
+                      </button>
+                      <button type="button" onClick={() => addBlock('datetime', 'add_months', {months: 1, format: 'DD/MM/YYYY'})}>
+                        📅 บวก/ลบเดือน (+Months)
+                      </button>
+                      <button type="button" onClick={() => addBlock('datetime', 'add_years', {years: 1, format: 'DD/MM/YYYY'})}>
+                        📅 บวก/ลบปี (+Years)
+                      </button>
+                      <button type="button" onClick={() => addBlock('datetime', 'format_date', {format: 'DD/MM/YYYY'})}>
+                        📅 แปลงรูปแบบวันที่ (Format)
+                      </button>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          </main>
-        </div>
 
-        {/* ================= BOTTOM ACTION BAR ================= */}
-        <div className="lego-bottom-bar">
-          <div className="bottom-left-tip">
-            <span>💡 ตัวอย่างผลลัพธ์นี้จะถูกส่งไปแสดงบนช่องบาร์โค้ดหรือข้อความบนฉลากของคุณ</span>
+                {/* 2. Text */}
+                <div className="popover-wrapper">
+                  <button
+                    type="button"
+                    className="min-btn-add-cat cat-string"
+                    onClick={() => setShowAddMenu(showAddMenu === 'string' ? null : 'string')}
+                  >
+                    <Type size={13} /> ข้อความ / คำนำหน้า ▾
+                  </button>
+                  {showAddMenu === 'string' && (
+                    <div className="min-dropdown-menu">
+                      <button type="button" onClick={() => addBlock('string', 'concat', {prefix: '', append: ''})}>
+                        🔤 เติมคำนำหน้า / ต่อท้าย
+                      </button>
+                      <button type="button" onClick={() => addBlock('string', 'uppercase', {})}>
+                        🔤 แปลงเป็นตัวพิมพ์ใหญ่ (UPPERCASE)
+                      </button>
+                      <button type="button" onClick={() => addBlock('string', 'pad_start', {length: 4, char: '0'})}>
+                        🔤 เติมเลข 0 ด้านหน้า (เช่น 0001)
+                      </button>
+                      <button type="button" onClick={() => addBlock('string', 'substring', {start: 0, length: 5})}>
+                        🔤 ตัดข้อความบางส่วน
+                      </button>
+                      <button type="button" onClick={() => addBlock('string', 'replace', {search: '', replace: ''})}>
+                        🔤 ค้นหาและแทนที่คำ
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* 3. Numbers */}
+                <div className="popover-wrapper">
+                  <button
+                    type="button"
+                    className="min-btn-add-cat cat-numeric"
+                    onClick={() => setShowAddMenu(showAddMenu === 'numeric' ? null : 'numeric')}
+                  >
+                    <Hash size={13} /> ตัวเลขและลำดับ ▾
+                  </button>
+                  {showAddMenu === 'numeric' && (
+                    <div className="min-dropdown-menu">
+                      <button type="button" onClick={() => addBlock('numeric', 'counter', {start: 1, padZeros: 4})}>
+                        🔢 รันเลขลำดับอัตโนมัติ (Counter)
+                      </button>
+                      <button type="button" onClick={() => addBlock('numeric', 'math_op', {op: 'add', value: 10})}>
+                        🔢 คำนวณเลข (+, -, *, /)
+                      </button>
+                      <button type="button" onClick={() => addBlock('numeric', 'round', {decimals: 2})}>
+                        🔢 ปัดเศษทศนิยม
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* 4. Condition */}
+                <button
+                  type="button"
+                  className="min-btn-add-cat cat-if"
+                  onClick={() => addBlock('if', 'if_else', {operator: 'is_not_empty', target: '', thenValue: 'พร้อมจำหน่าย', elseValue: 'สินค้าหมด'})}
+                >
+                  <GitBranch size={13} /> เงื่อนไข (IF/ELSE)
+                </button>
+              </div>
+            </div>
           </div>
-          <div className="bottom-actions-group">
-            <button type="button" className="lego-btn-cancel" onClick={onClose}>
-              ยกเลิก (Cancel)
+        </main>
+
+        {/* ================= FOOTER ================= */}
+        <footer className="min-footer">
+          <span className="min-footer-hint">ผลลัพธ์จะถูกนำไปแสดงบนฉลากของคุณโดยอัตโนมัติ</span>
+          <div className="min-footer-actions">
+            <button type="button" className="min-btn-cancel" onClick={onClose}>
+              ยกเลิก
             </button>
-            <button type="button" className="lego-btn-save" onClick={handleSave}>
-              ✨ บันทึกการตั้งค่าสูตร (Save Formula)
+            <button type="button" className="min-btn-save" onClick={handleSave}>
+              <Check size={14} strokeWidth={2.5} /> บันทึกสูตร (Save)
             </button>
           </div>
-        </div>
+        </footer>
       </div>
     </div>
   );
