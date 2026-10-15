@@ -805,8 +805,19 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
   - 95 TypeScript unit tests passing (`npm test`).
   - Production build passing (`npm run build`).
   - 25 Go unit tests passing (`go test ./...`).
+## 2026-10-15 — Fix Vertical Scrolling & Auto-Scroll in LEGO® Word Blocks Canvas
+
+- **Root Cause of Canvas Overflow**:
+  - In CSS Flexbox, flex items default to `min-height: auto`. Intermediate flex containers (`.wb-coding-workspace` and `.wb-canvas-scroll`) expanded their height to accommodate long block chains instead of conforming to the dialog viewport.
+  - As a result, when users added multiple function blocks (e.g. 7+ blocks), the stack extended past the screen edge, clipped behind the footer, and mouse/touchpad scrolling was blocked because the scroll container never reached its overflow boundary.
+- **Fix**:
+  - **Flexbox Scroll Constraints**: Added `flex: 1 1 0% !important; min-height: 0 !important; height: 0 !important; max-height: 100% !important; overflow-y: auto !important;` to `.wb-canvas-scroll` and `.wb-palette-blocks-scroll`.
+  - Added `min-height: 0 !important; height: 100% !important;` to `.wb-coding-workspace` and `.wb-palette-sidebar`.
+  - **Visible Custom Scrollbars**: Added styled 10px scrollbars with hover states (`::-webkit-scrollbar` and Firefox `scrollbar-width: thin`) so users can easily see and drag the scrollbar.
+  - **Bottom Breathing Room**: Added `padding-bottom: 80px` to `.wb-blocks-chain-container` so the last block and its step speech bubble have ample clearance above the bottom boundary.
+  - **Auto-Scroll on Block Addition**: Implemented `useEffect` and `canvasScrollRef` on `.wb-canvas-scroll` to smoothly auto-scroll down to the latest block whenever a new block is appended or inserted.
+- **Verification**:
+  - 95 TypeScript unit tests passing (`npm test`).
+  - Production build passing (`npm run build`).
+  - 25 Go unit tests passing (`go test ./...`).
   - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
-
-
-
-

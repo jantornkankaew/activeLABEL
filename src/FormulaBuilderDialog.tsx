@@ -1,4 +1,4 @@
-import {useState, useMemo} from 'react';
+import {useState, useMemo, useRef, useEffect} from 'react';
 import {
   Plus,
   Trash2,
@@ -182,7 +182,24 @@ export function FormulaBuilderDialog({
   const [copied, setCopied] = useState(false);
   const [selectedPaletteTab, setSelectedPaletteTab] = useState<WordBlockCategory>('variable');
 
+  const canvasScrollRef = useRef<HTMLDivElement>(null);
+
   const activeFormula = list.find((f) => f.id === activeId) || list[0];
+
+  const prevBlockCountRef = useRef(activeFormula?.blocks?.length || 0);
+  useEffect(() => {
+    const currentCount = activeFormula?.blocks?.length || 0;
+    if (currentCount > prevBlockCountRef.current && canvasScrollRef.current) {
+      const container = canvasScrollRef.current;
+      setTimeout(() => {
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior: 'smooth',
+        });
+      }, 50);
+    }
+    prevBlockCountRef.current = currentCount;
+  }, [activeFormula?.blocks?.length]);
 
   // Map variables
   const varMap = useMemo(() => {
@@ -862,7 +879,7 @@ export function FormulaBuilderDialog({
             )}
 
             {/* The Stacking Canvas (Interlocking Word Blocks) */}
-            <div className="wb-canvas-scroll">
+            <div className="wb-canvas-scroll" ref={canvasScrollRef}>
               <div className="wb-blocks-chain-container">
                 {/* 1. HAT BLOCK: When Formula Evaluates */}
                 <div className="wb-hat-block">
