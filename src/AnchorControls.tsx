@@ -1,5 +1,5 @@
 import {useState, useEffect} from 'react';
-import {X,ChevronDown,ChevronRight,Plus,AlignHorizontalDistributeCenter,AlignVerticalDistributeCenter} from 'lucide-react';
+import {X,ChevronDown,ChevronRight,Plus} from 'lucide-react';
 import type {LabelDocument, LabelObject} from './core';
 import {type AnchorSide, type AnchorConstraint, type ObjectAnchors, calculateCurrentMargin} from './anchors';
 
@@ -19,6 +19,36 @@ function ConstraintLinkIcon({size = 14, className}: {size?: number; className?: 
       <circle cx="3" cy="13" r="1.5" stroke="currentColor" strokeWidth="1.2" />
       <path d="M4.5 13 C 7.5 13, 8.5 3, 11.5 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
       <circle cx="13" cy="3" r="1.5" stroke="currentColor" strokeWidth="1.2" />
+    </svg>
+  );
+}
+
+function CenterHorizontalIcon({size = 14}: {size?: number}) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" style={{display: 'block'}}>
+      {/* Left and right parent boundaries */}
+      <line x1="1.5" y1="2" x2="1.5" y2="14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <line x1="14.5" y1="2" x2="14.5" y2="14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      {/* Centered box */}
+      <rect x="5.5" y="4" width="5" height="8" rx="1" fill="currentColor" fillOpacity="0.8" />
+      {/* Horizontal connector springs */}
+      <path d="M1.5 8 L3.5 6.5 L4.5 9.5 L5.5 8" stroke="currentColor" strokeWidth="1" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10.5 8 L11.5 6.5 L12.5 9.5 L14.5 8" stroke="currentColor" strokeWidth="1" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function CenterVerticalIcon({size = 14}: {size?: number}) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" style={{display: 'block'}}>
+      {/* Top and bottom parent boundaries */}
+      <line x1="2" y1="1.5" x2="14" y2="1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <line x1="2" y1="14.5" x2="14.5" y2="14.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      {/* Centered box */}
+      <rect x="4" y="5.5" width="8" height="5" rx="1" fill="currentColor" fillOpacity="0.8" />
+      {/* Vertical connector springs */}
+      <path d="M8 1.5 L6.5 3.5 L9.5 4.5 L8 5.5" stroke="currentColor" strokeWidth="1" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8 10.5 L6.5 11.5 L9.5 12.5 L8 14.5" stroke="currentColor" strokeWidth="1" fill="none" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -260,20 +290,22 @@ export function AnchorControls({item, doc, disabled, onUpdate}: AnchorControlsPr
           <button
             type="button"
             className="as-tool-btn"
-            title="Center Horizontally in Parent"
+            title="Center Horizontally in Parent (จัดกึ่งกลางแนวนอน ซ้าย-ขวา)"
+            aria-label="Center Horizontally in Parent"
             disabled={disabled}
             onClick={centerHorizontal}
           >
-            <AlignHorizontalDistributeCenter size={13}/>
+            <CenterHorizontalIcon size={14}/>
           </button>
           <button
             type="button"
             className="as-tool-btn"
-            title="Center Vertically in Parent"
+            title="Center Vertically in Parent (จัดกึ่งกลางแนวตั้ง บน-ล่าง)"
+            aria-label="Center Vertically in Parent"
             disabled={disabled}
             onClick={centerVertical}
           >
-            <AlignVerticalDistributeCenter size={13}/>
+            <CenterVerticalIcon size={14}/>
           </button>
           {activeCount > 0 && (
             <button
