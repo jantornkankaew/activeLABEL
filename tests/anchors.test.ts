@@ -174,12 +174,19 @@ test('findCandidateAnchorTarget snaps to closest handle on another object or par
   assert.equal(cand.targetEdge, 'bottom');
   assert.equal(cand.snapX, brand.x + brand.width / 2);
   assert.equal(cand.snapY, brand.y + brand.height);
+  assert.equal(cand.isSnapped, true);
 
   // Dragging upwards towards parent top boundary
   const candParent = findCandidateAnchorTarget('top', 15, 0.5, brand, doc);
   assert.equal(candParent.targetId, 'parent');
   assert.equal(candParent.targetEdge, 'top');
   assert.equal(candParent.snapY, 0);
+  assert.equal(candParent.isSnapped, true);
+
+  // Dragging in free open space far from candidate edges (> 10mm)
+  const largeDoc = { ...doc, width: 100, height: 100 };
+  const candFar = findCandidateAnchorTarget('top', 50, 50, brand, largeDoc);
+  assert.equal(candFar.isSnapped, false);
 });
 
 test('bezierWirePath creates smooth cubic bezier curves and arrowheads connecting anchors', () => {

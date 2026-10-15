@@ -124,8 +124,8 @@ function AnchorVisuals({
  const sides = ['top','bottom','left','right'] as const;
 
  // Compact, refined Android Studio handles
- const hr = Math.max(0.25, 2.2 / pixelScale);
- const hitR = Math.max(0.6, 3.8 / pixelScale);
+ const hr = Math.max(0.3, 2.4 / pixelScale);
+ const hitR = Math.max(2.5, 12 / pixelScale);
  const strokeW = Math.max(0.08, 1 / pixelScale);
 
  // 1. Render established anchor lines and badges
@@ -253,6 +253,7 @@ function AnchorVisuals({
        r={hitR}
        data-id={item.id}
        fill="transparent"
+       pointerEvents="all"
        style={{cursor:'crosshair'}}
        onPointerDown={e => onAnchorPointerDown?.(e, side)}
        aria-label={`Constraint handle ${side}`}
@@ -356,7 +357,10 @@ function AnchorVisuals({
   );
 
   // 3b. Parent edge guide rail if target is parent
-  if(activeAnchorDrag.targetId === 'parent'){
+  const isTargetParent = activeAnchorDrag.targetId === 'parent';
+  const isSnapped = Boolean(activeAnchorDrag.isSnapped);
+
+  if(isTargetParent){
    visuals.push(
     <g key="parent-edge-rail" data-editor-only="true" pointerEvents="none">
      <line
@@ -365,35 +369,67 @@ function AnchorVisuals({
       x2={activeAnchorDrag.targetEdge === 'left' ? 0 : doc.width}
       y2={activeAnchorDrag.targetEdge === 'top' ? 0 : doc.height}
       stroke="#2196F3"
-      strokeWidth={2.4 / pixelScale}
-      strokeDasharray="4 2"
+      strokeOpacity={isSnapped ? 0.95 : 0.45}
+      strokeWidth={(isSnapped ? 2.4 : 1.6) / pixelScale}
+      strokeDasharray={isSnapped ? '4 2' : '2 2'}
       vectorEffect="non-scaling-stroke"
      />
     </g>
    );
   }
 
-  // 3c. Dynamic dragging wire to target/cursor
+  // 3c. Dynamic dragging wire to target or mouse cursor
+  let endX = activeAnchorDrag.currentX;
+  let endY = activeAnchorDrag.currentY;
+
+  if(isSnapped){
+   if(!isTargetParent){
+    endX = activeAnchorDrag.snapX;
+    endY = activeAnchorDrag.snapY;
+   } else {
+    if(activeAnchorDrag.sourceSide === 'top' || activeAnchorDrag.sourceSide === 'bottom'){
+     endX = activeAnchorDrag.currentX;
+     endY = activeAnchorDrag.snapY;
+    } else {
+     endX = activeAnchorDrag.snapX;
+     endY = activeAnchorDrag.currentY;
+    }
+   }
+  }
+
   let dragWireD = '';
   let dragArrowD: string | undefined;
-  if(activeAnchorDrag.targetId !== 'parent'){
+
+  if(!isTargetParent && isSnapped){
    const res = bezierWirePath(
     activeAnchorDrag.startX,
     activeAnchorDrag.startY,
-    activeAnchorDrag.snapX,
-    activeAnchorDrag.snapY,
+    endX,
+    endY,
     activeAnchorDrag.sourceSide,
     activeAnchorDrag.targetEdge
    );
    dragWireD = res.path;
    dragArrowD = res.arrowD;
-  } else {
+  } else if(isTargetParent && isSnapped){
    const res = springPath(
     activeAnchorDrag.startX,
     activeAnchorDrag.startY,
-    activeAnchorDrag.snapX,
-    activeAnchorDrag.snapY,
+    endX,
+    endY,
     false
+   );
+   dragWireD = res.path;
+   dragArrowD = res.arrowD;
+  } else {
+   const oppSide = activeAnchorDrag.sourceSide === 'top' ? 'bottom' : activeAnchorDrag.sourceSide === 'bottom' ? 'top' : activeAnchorDrag.sourceSide === 'left' ? 'right' : 'left';
+   const res = bezierWirePath(
+    activeAnchorDrag.startX,
+    activeAnchorDrag.startY,
+    endX,
+    endY,
+    activeAnchorDrag.sourceSide,
+    oppSide
    );
    dragWireD = res.path;
    dragArrowD = res.arrowD;
@@ -407,13 +443,15 @@ function AnchorVisuals({
    doc
   );
 
+  const badgeText = isSnapped ? `${activeAnchorDrag.targetName} • ${currentMargin}mm` : `Anchor (${activeAnchorDrag.sourceSide})`;
+
   visuals.push(
    <g key="active-anchor-drag-wire" data-editor-only="true" pointerEvents="none">
     <path
      d={dragWireD}
      stroke="#2196F3"
      strokeWidth={1.5 / pixelScale}
-     strokeDasharray="3 1.5"
+     strokeDasharray={isSnapped ? '3 1.5' : '2 2'}
      fill="none"
      vectorEffect="non-scaling-stroke"
     />
@@ -429,23 +467,23 @@ function AnchorVisuals({
      />
     )}
 
-    {/* Target snap dot */}
+    {/* Target snap dot following cursor or snapped position */}
     <circle
-     cx={activeAnchorDrag.snapX}
-     cy={activeAnchorDrag.snapY}
-     r={hr * 1.4}
+     cx={endX}
+     cy={endY}
+     r={isSnapped ? hr * 1.5 : hr * 1.15}
      fill="#2196F3"
      stroke="#fff"
-     strokeWidth={1.2 / pixelScale}
+     strokeWidth={strokeW * 1.5}
      vectorEffect="non-scaling-stroke"
     />
 
     {/* Floating HUD badge */}
-    <g transform={`translate(${activeAnchorDrag.snapX}, ${activeAnchorDrag.snapY - 8 / pixelScale})`}>
+    <g transform={`translate(${endX}, ${endY - 8 / pixelScale})`}>
      <rect
-      x={-42 / pixelScale}
+      x={-44 / pixelScale}
       y={-15 / pixelScale}
-      width={84 / pixelScale}
+      width={88 / pixelScale}
       height={15 / pixelScale}
       rx={3 / pixelScale}
       fill="#1e293b"
@@ -458,12 +496,12 @@ function AnchorVisuals({
       x={0}
       y={-4.5 / pixelScale}
       textAnchor="middle"
-      fontSize={7.8 / pixelScale}
+      fontSize={7.5 / pixelScale}
       fill="#ffffff"
       fontFamily="ui-sans-serif, system-ui, -apple-system, sans-serif"
       fontWeight="500"
      >
-      {activeAnchorDrag.targetName} • {currentMargin}mm
+      {badgeText}
      </text>
     </g>
    </g>
@@ -479,7 +517,7 @@ export function LabelSvg({doc,selectedId,guidelines=[],activeAnchorDrag,onAnchor
  const svgRef=useRef<SVGSVGElement>(null);const [pixelScale,setPixelScale]=useState(5);useEffect(()=>{if(!svgRef.current)return;const observer=new ResizeObserver(([entry])=>setPixelScale(Math.max(.1,entry.contentRect.width/doc.width)));observer.observe(svgRef.current);return()=>observer.disconnect();},[doc.width]);const handleSize=8/pixelScale;
  const gridId=useId().replaceAll(':','')+'-grid';
  const selectedObj = doc.objects.find(o => o.id === selectedId);
- return <svg ref={svgRef} id="label-svg" xmlns="http://www.w3.org/2000/svg" viewBox={`0 0 ${doc.width} ${doc.height}`} aria-label="Label canvas" style={{width:'100%',height:'100%',overflow:onPointerDown?'visible':undefined}}><defs><style>{fonts}</style>{grid&&<pattern data-editor-only="true" id={gridId} width={gridStep} height={gridStep} patternUnits="userSpaceOnUse"><path d={`M ${gridStep} 0 L 0 0 0 ${gridStep}`} fill="none" stroke="#a8c1c7" strokeWidth=".035"/></pattern>}</defs><rect width={doc.width} height={doc.height} fill="white"/>{grid&&<rect data-editor-only="true" width={doc.width} height={doc.height} fill={`url(#${gridId})`} pointerEvents="none"/>}{doc.objects.map((o,index)=><g key={o.id} data-id={o.id} onPointerDown={onPointerDown} onDoubleClick={e=>{e.stopPropagation();onObjectDoubleClick?.(o.id);if(o.kind==='text'&&!o.locked&&onTextChange)setEditing(o.id);}}>{vectorObject(o)}{onPointerDown&&o.kind==='barcode'&&exceedsLabel(o,doc)&&<g data-editor-only="true" pointerEvents="none" aria-label="Barcode outside label"><defs><mask id={`${gridId}-${index}-overflow`} maskUnits="userSpaceOnUse" x={o.x} y={o.y} width={o.width} height={o.height}><rect x={o.x} y={o.y} width={o.width} height={o.height} fill="white"/><rect width={doc.width} height={doc.height} fill="black"/></mask></defs><g mask={`url(#${gridId}-${index}-overflow)`}><rect x={o.x} y={o.y} width={o.width} height={o.height} fill="#fff0f0"/><image x={o.x} y={o.y} width={o.width} height={o.height} href={'data:image/svg+xml;base64,'+btoa(barcodeOverflowSvg(o))} preserveAspectRatio="xMidYMid meet"/><rect x={o.x} y={o.y} width={o.width} height={o.height} fill="none" stroke="#dc2626" strokeWidth=".15"/></g></g>}{onPointerDown&&o.kind==='line'&&<line data-editor-only="true" x1={linePoints(o).startX} y1={linePoints(o).startY} x2={linePoints(o).endX} y2={linePoints(o).endY} stroke="transparent" strokeWidth="2"/>}{onPointerDown&&<rect data-editor-only="true" x={o.x} y={o.y} width={o.width} height={o.height} fill={o.kind==='line'||o.kind==='box'?'none':'transparent'} pointerEvents={o.kind==='line'?'none':o.kind==='box'?'stroke':'all'} stroke={selectedId===o.id?'#3284ff':o.kind==='box'?'transparent':'none'} strokeWidth="1" vectorEffect="non-scaling-stroke"/>}{onResizeStart&&selectedId===o.id&&o.kind==='barcode'&&<text data-editor-only="true" aria-label="Barcode resize percentage" pointerEvents="none" x={o.x+o.width-.5} y={Math.min(doc.height-.5,o.y+o.height+2)} textAnchor="end" fontSize="1.5" fontFamily="Arial,sans-serif" fill="#08745b" stroke="white" strokeWidth=".45" paintOrder="stroke">{Number(barcodeMagnification(o).toFixed(2))}%</text>}{onResizeStart&&selectedId===o.id&&editing!==o.id&&!o.locked&&(o.kind==='line'?(<rect data-editor-only="true" data-id={o.id} data-handle="se" aria-label="Resize line se" className="canvas-resize-handle canvas-line-resize" style={{cursor:'nwse-resize'}} x={linePoints(o).endX-handleSize/2} y={linePoints(o).endY-handleSize/2} width={handleSize} height={handleSize} fill="white" stroke="#3284ff" strokeWidth="1" vectorEffect="non-scaling-stroke" onPointerDown={onResizeStart}/>):(<g data-editor-only="true"><line data-editor-only="true" data-id={o.id} data-handle="n" aria-label={`Resize ${o.kind} top edge`} className="canvas-edge-resize" x1={o.x} y1={o.y} x2={o.x+o.width} y2={o.y} stroke="transparent" strokeWidth={Math.max(1.5,6/pixelScale)} style={{cursor:'ns-resize'}} onPointerDown={onResizeStart}/><line data-editor-only="true" data-id={o.id} data-handle="s" aria-label={`Resize ${o.kind} bottom edge`} className="canvas-edge-resize" x1={o.x} y1={o.y+o.height} x2={o.x+o.width} y2={o.y+o.height} stroke="transparent" strokeWidth={Math.max(1.5,6/pixelScale)} style={{cursor:'ns-resize'}} onPointerDown={onResizeStart}/><line data-editor-only="true" data-id={o.id} data-handle="w" aria-label={`Resize ${o.kind} left edge`} className="canvas-edge-resize-ew" x1={o.x} y1={o.y} x2={o.x} y2={o.y+o.height} stroke="transparent" strokeWidth={Math.max(1.5,6/pixelScale)} style={{cursor:'ew-resize'}} onPointerDown={onResizeStart}/><line data-editor-only="true" data-id={o.id} data-handle="e" aria-label={`Resize ${o.kind} right edge`} className="canvas-edge-resize-ew" x1={o.x+o.width} y1={o.y} x2={o.x+o.width} y2={o.y+o.height} stroke="transparent" strokeWidth={Math.max(1.5,6/pixelScale)} style={{cursor:'ew-resize'}} onPointerDown={onResizeStart}/>{(['nw','ne','se','sw'] as const).map(handle=><rect key={handle} data-editor-only="true" data-id={o.id} data-handle={handle} aria-label={`Resize ${o.kind} ${handle}`} className="canvas-resize-handle" style={{cursor:handle==='nw'||handle==='se'?'nwse-resize':'nesw-resize'}} x={(handle.includes('w')?o.x:o.x+o.width)-handleSize/2} y={(handle.includes('n')?o.y:o.y+o.height)-handleSize/2} width={handleSize} height={handleSize} fill="white" stroke="#3284ff" strokeWidth="1" vectorEffect="non-scaling-stroke" onPointerDown={onResizeStart}/>)}</g>))}</g>)}{selectedObj && <AnchorVisuals item={selectedObj} doc={doc} pixelScale={pixelScale} activeAnchorDrag={activeAnchorDrag} onAnchorPointerDown={onAnchorStart}/>}{guidelines.map((g,i)=><line key={`guideline-${g.orientation}-${i}-${g.position}`} data-editor-only="true" className="canvas-guideline" pointerEvents="none" x1={g.orientation==='horizontal'?0:g.position} y1={g.orientation==='horizontal'?g.position:0} x2={g.orientation==='horizontal'?doc.width:g.position} y2={g.orientation==='horizontal'?g.position:doc.height} stroke="#8b5cf6" strokeWidth="1" vectorEffect="non-scaling-stroke"/>)}{edited&&onTextChange&&<InlineText key={edited.id} item={edited} maxWidth={doc.width-edited.x} pixelScale={pixelScale} onChange={value=>onTextChange(edited.id,value)} onEnd={()=>setEditing(null)}/>}</svg>;
+ return <svg ref={svgRef} id="label-svg" xmlns="http://www.w3.org/2000/svg" viewBox={`0 0 ${doc.width} ${doc.height}`} aria-label="Label canvas" style={{width:'100%',height:'100%',overflow:onPointerDown?'visible':undefined}}><defs><style>{fonts}</style>{grid&&<pattern data-editor-only="true" id={gridId} width={gridStep} height={gridStep} patternUnits="userSpaceOnUse"><path d={`M ${gridStep} 0 L 0 0 0 ${gridStep}`} fill="none" stroke="#a8c1c7" strokeWidth=".035"/></pattern>}</defs><rect width={doc.width} height={doc.height} fill="white"/>{grid&&<rect data-editor-only="true" width={doc.width} height={doc.height} fill={`url(#${gridId})`} pointerEvents="none"/>}{doc.objects.map((o,index)=><g key={o.id} data-id={o.id} onPointerDown={onPointerDown} onDoubleClick={e=>{e.stopPropagation();onObjectDoubleClick?.(o.id);if(o.kind==='text'&&!o.locked&&onTextChange)setEditing(o.id);}}>{vectorObject(o)}{onPointerDown&&o.kind==='barcode'&&exceedsLabel(o,doc)&&<g data-editor-only="true" pointerEvents="none" aria-label="Barcode outside label"><defs><mask id={`${gridId}-${index}-overflow`} maskUnits="userSpaceOnUse" x={o.x} y={o.y} width={o.width} height={o.height}><rect x={o.x} y={o.y} width={o.width} height={o.height} fill="white"/><rect width={doc.width} height={doc.height} fill="black"/></mask></defs><g mask={`url(#${gridId}-${index}-overflow)`}><rect x={o.x} y={o.y} width={o.width} height={o.height} fill="#fff0f0"/><image x={o.x} y={o.y} width={o.width} height={o.height} href={'data:image/svg+xml;base64,'+btoa(barcodeOverflowSvg(o))} preserveAspectRatio="xMidYMid meet"/><rect x={o.x} y={o.y} width={o.width} height={o.height} fill="none" stroke="#dc2626" strokeWidth=".15"/></g></g>}{onPointerDown&&o.kind==='line'&&<line data-editor-only="true" x1={linePoints(o).startX} y1={linePoints(o).startY} x2={linePoints(o).endX} y2={linePoints(o).endY} stroke="transparent" strokeWidth="2"/>}{onPointerDown&&<rect data-editor-only="true" x={o.x} y={o.y} width={o.width} height={o.height} fill={o.kind==='line'||o.kind==='box'?'none':'transparent'} pointerEvents={o.kind==='line'?'none':o.kind==='box'?'stroke':'all'} stroke={selectedId===o.id?'#3284ff':o.kind==='box'?'transparent':'none'} strokeWidth="1" vectorEffect="non-scaling-stroke"/>}{onResizeStart&&selectedId===o.id&&editing!==o.id&&!o.locked&&(o.kind==='line'?(<rect data-editor-only="true" data-id={o.id} data-handle="se" aria-label="Resize line se" className="canvas-resize-handle canvas-line-resize" style={{cursor:'nwse-resize'}} x={linePoints(o).endX-handleSize/2} y={linePoints(o).endY-handleSize/2} width={handleSize} height={handleSize} fill="white" stroke="#3284ff" strokeWidth="1" vectorEffect="non-scaling-stroke" onPointerDown={onResizeStart}/>):(<g data-editor-only="true"><line data-editor-only="true" data-id={o.id} data-handle="n" aria-label={`Resize ${o.kind} top edge`} className="canvas-edge-resize" x1={o.x} y1={o.y} x2={o.x+o.width} y2={o.y} stroke="transparent" strokeWidth={Math.max(1.5,6/pixelScale)} style={{cursor:'ns-resize'}} onPointerDown={onResizeStart}/><line data-editor-only="true" data-id={o.id} data-handle="s" aria-label={`Resize ${o.kind} bottom edge`} className="canvas-edge-resize" x1={o.x} y1={o.y+o.height} x2={o.x+o.width} y2={o.y+o.height} stroke="transparent" strokeWidth={Math.max(1.5,6/pixelScale)} style={{cursor:'ns-resize'}} onPointerDown={onResizeStart}/><line data-editor-only="true" data-id={o.id} data-handle="w" aria-label={`Resize ${o.kind} left edge`} className="canvas-edge-resize-ew" x1={o.x} y1={o.y} x2={o.x} y2={o.y+o.height} stroke="transparent" strokeWidth={Math.max(1.5,6/pixelScale)} style={{cursor:'ew-resize'}} onPointerDown={onResizeStart}/><line data-editor-only="true" data-id={o.id} data-handle="e" aria-label={`Resize ${o.kind} right edge`} className="canvas-edge-resize-ew" x1={o.x+o.width} y1={o.y} x2={o.x+o.width} y2={o.y+o.height} stroke="transparent" strokeWidth={Math.max(1.5,6/pixelScale)} style={{cursor:'ew-resize'}} onPointerDown={onResizeStart}/>{(['nw','ne','se','sw'] as const).map(handle=><rect key={handle} data-editor-only="true" data-id={o.id} data-handle={handle} aria-label={`Resize ${o.kind} ${handle}`} className="canvas-resize-handle" style={{cursor:handle==='nw'||handle==='se'?'nwse-resize':'nesw-resize'}} x={(handle.includes('w')?o.x:o.x+o.width)-handleSize/2} y={(handle.includes('n')?o.y:o.y+o.height)-handleSize/2} width={handleSize} height={handleSize} fill="white" stroke="#3284ff" strokeWidth="1" vectorEffect="non-scaling-stroke" onPointerDown={onResizeStart}/>)}</g>))}</g>)}{selectedObj && <AnchorVisuals item={selectedObj} doc={doc} pixelScale={pixelScale} activeAnchorDrag={activeAnchorDrag} onAnchorPointerDown={onAnchorStart}/>}{guidelines.map((g,i)=><line key={`guideline-${g.orientation}-${i}-${g.position}`} data-editor-only="true" className="canvas-guideline" pointerEvents="none" x1={g.orientation==='horizontal'?0:g.position} y1={g.orientation==='horizontal'?g.position:0} x2={g.orientation==='horizontal'?doc.width:g.position} y2={g.orientation==='horizontal'?g.position:doc.height} stroke="#8b5cf6" strokeWidth="1" vectorEffect="non-scaling-stroke"/>)}{edited&&onTextChange&&<InlineText key={edited.id} item={edited} maxWidth={doc.width-edited.x} pixelScale={pixelScale} onChange={value=>onTextChange(edited.id,value)} onEnd={()=>setEditing(null)}/>}</svg>;
 }
 
 function InlineText({item,maxWidth,pixelScale,onChange,onEnd}:{item:LabelObject;maxWidth:number;pixelScale:number;onChange:(value:string)=>boolean;onEnd:()=>void}){

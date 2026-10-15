@@ -331,7 +331,68 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
     - Border edges are used to grab and resize dimensions (height and width).
     - Center circular nodes (`3.8 / pixelScale` compact hit radius) are dedicated constraint handles for linking (`crosshair` cursor).
     - 4 corner squares (`nw`, `ne`, `se`, `sw`) remain available for proportional/diagonal resizing.
-- Verification: 87 TypeScript unit tests passing, production build passing, 25 Go unit tests passing, and 3 cross-compilations passing.
+## 2026-10-15 — Constraint Widget Stabilization & Circular Plus Button Styling
+
+- **Rigid 3×3 Grid Layout (ป้องกัน center box เบี้ยว/ขยับเมื่อใส่ค่า margin)**:
+  - Re-architected `.as-widget-frame` into a 3×3 CSS Grid with explicit columns (`1fr 92px 1fr`) and rows (`minmax(34px, auto) 60px minmax(34px, auto)`).
+  - Column 2 is dedicated exclusively to `.as-center-view` (92px wide, centered horizontally and vertically).
+  - Left slot (Col 1) and Right slot (Col 3) are both `1fr` width, guaranteeing that `.as-center-view` remains 100% dead center without any drift, skewing, or distortion when margins (e.g. `8.14`, `3.68`) are assigned or altered.
+  - Connector lines and anchor dots align seamlessly with the center view perimeter.
+- **Crisp Circular Plus Button (`.as-blue-plus-btn`) matching Android Studio**:
+  - Overrode `.atelier button`'s global `min-height: 36px` and `border-radius: 10px` that previously stretched buttons into vertical pills.
+  - Fixed `.as-blue-plus-btn` to a perfect 18px × 18px circle (`border-radius: 50% !important; min-width: 18px !important; min-height: 18px !important; max-width: 18px !important; max-height: 18px !important; line-height: 1 !important;`).
+  - Centered bold plus icon (`<Plus size={10} strokeWidth={2.4}/>`) in Android Studio blue (`#3871e0`) with hover scale.
+  - Reset `.as-margin-pill` and `.as-tool-btn` to their compact 22px design without vertical ballooning.
+## 2026-10-15 — Editable Margin Combobox & Dark-Theme Hover Contrast Fix
+
+- **Direct Typing + Preset Dropdown (`MarginCombobox`)**:
+  - Replaced static margin button pills with an interactive combobox (`as-margin-combobox`) matching Android Studio:
+    - **Editable Input Field (`.as-margin-input`)**: Direct numeric typing (e.g. `8`, `12.5`, `0`, or `auto`) with Enter/blur commits and Escape revert.
+    - **Chevron Dropdown Arrow (`.as-combobox-arrow`)**: Opens preset popover (`Auto`, `0 mm`, `4 mm`, `8 mm`, `16 mm`, `24 mm`, `32 mm`).
+    - **Click-Outside Dismissal**: Added `pointerdown` listener to automatically close open popovers when clicking outside.
+- **Fixed White-on-White Hover Text Invisibility**:
+  - Root cause: `.atelier button:hover { background: #eeede9 }` was overriding dark theme button styles with an off-white background while text color was light gray (`#dfe1e5`), rendering the text invisible on hover.
+  - Solution: Container converted to a scoped `<div>` with explicit `.as-margin-combobox:hover` (`background: #43454a !important; color: #ffffff !important; border-color: #5f6368 !important;`), ensuring high contrast dark-theme readability at all times.
+  - Active focus state highlights in Android Studio blue (`#3871e0`).
+- Verification: 87 TypeScript unit tests passing, production build passing, 25 Go unit tests passing, and 3 print-bridge cross-compilations passing.
+
+## 2026-10-15 — Interactive Canvas Anchor Drag & Drop Fix (การโยงเส้นจุดเชื่อมต่อ)
+
+- **Root Cause Analysis (สาเหตุที่กดแล้วไม่มีเส้นลากออกมา)**:
+  1. **Hit Target Conflict & Inadequate Hit Radius (`hitR`)**:
+     - `hitR` was previously `Math.max(0.6, 3.8 / pixelScale)` (~3.8 to 4 screen pixels radius, 7.6px diameter).
+     - Directly underneath sat the border resize handles (`canvas-edge-resize`, 12px wide) and object move rect (`pointerEvents="all"`).
+     - Mouse clicks almost always missed the 7.6px dot and hit the edge resize line or object body instead.
+  2. **Delayed Visual Feedback in `startAnchor`**:
+     - `setActiveAnchorDrag` was omitted in `startAnchor` on mousedown, delaying wire appearance until after mouse movement occurred.
+  3. **Static Snap Coordinates vs Dynamic Cursor Wire**:
+     - Wire previously rendered only between snapped coordinates (`snapX, snapY`). When moving freely or snapping to parent, the line stayed glued to the border rather than following the mouse pointer.
+  4. **Pointer Capture & React Re-render Event Loss**:
+     - Mouse tracking was bound only to the viewport container element. Rapid movement or React re-renders could lose pointer tracking.
+- **Implemented Fixes**:
+  - **Enlarged Touch/Mouse Hit Radius**:
+    - Increased `hitR` to `Math.max(2.5, 12 / pixelScale)` (minimum 24px diameter screen hit target) with `pointerEvents="all"` and `cursor: crosshair`, ensuring effortless grabbing without competing with edge resize handles.
+    - Preserved crisp visual handle dot (`hr = Math.max(0.3, 2.4 / pixelScale)`).
+  - **Instant Visual Response on Mousedown**:
+    - In `startAnchor`, immediately initializes `setActiveAnchorDrag` with current candidate target so the anchor handle highlights with an active dashed ring, receptive candidate dots light up on all other objects, and the connecting wire appears instantly on click.
+  - **Fluid Cursor-Following Interactive Wire**:
+    - During free drag (when `isSnapped === false`), the wire smoothly follows the mouse pointer (`currentX, currentY`) with an active target circle and HUD badge.
+    - When approaching an anchor dot on another object or a label boundary within snap threshold (10mm), the wire snaps magnetically to that target and highlights the target dot / parent edge.
+  - **Global Window-Level Pointer Tracking**:
+    - Attached window-level `pointermove`, `pointerup`, and `pointercancel` listeners during active dragging, guaranteeing continuous tracking across the entire screen regardless of speed or element boundaries.
+- **Verification**:
+  - 87 TypeScript unit tests passing (`tests/*.test.ts`).
+  - Production build passing (`tsc --noEmit && vite build`).
+  - 25 Go unit tests passing (`go test ./...`).
+  - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
+
+## 2026-10-15 — Remove Barcode Resize Percentage Label Under Barcode (นำตัวเลข % ใต้บาร์โค้ดออก)
+
+- Removed the on-canvas barcode magnification percentage text (`{Number(barcodeMagnification(o).toFixed(2))}%`) previously rendered below selected barcode elements (`aria-label="Barcode resize percentage"`).
+- Canvas workspace remains clean without overlay text clutter under barcodes. Barcode properties and magnification remain fully accessible via the property inspector panel.
+- Verification: 87 TypeScript unit tests passing, production build passing, 25 Go unit tests passing, and 3 print-bridge cross-compilations passing.
+
+
 
 
 

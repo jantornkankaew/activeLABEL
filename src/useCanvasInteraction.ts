@@ -18,6 +18,7 @@ export interface ActiveAnchorDrag {
   targetName?: string;
   snapX: number;
   snapY: number;
+  isSnapped?: boolean;
 }
 
 type Drag={item:LabelObject;mode:'move'|'resize';handle:ResizeHandle;x:number;y:number;rect:DOMRect;pointerId:number;documentId:string};
@@ -40,6 +41,49 @@ export function useCanvasInteraction(doc:LabelDocument|null,select:(id:string)=>
   setActiveAnchorDrag(null);
  },[doc?.id,enabled]);
 
+ useEffect(()=>{
+  if(!activeAnchorDrag)return;
+  function onWindowPointerMove(event:globalThis.PointerEvent){
+   if(!anchorDrag.current||!doc||anchorDrag.current.documentId!==doc.id)return;
+   const current=anchorDrag.current;
+   if(!current.moved&&Math.hypot(event.clientX-current.pointerStartX,event.clientY-current.pointerStartY)>2.5){
+    current.moved=true;
+   }
+   const docX=current.rect.width>0?(event.clientX-current.rect.left)*doc.width/current.rect.width:current.startX;
+   const docY=current.rect.height>0?(event.clientY-current.rect.top)*doc.height/current.rect.height:current.startY;
+   const candidate=findCandidateAnchorTarget(current.side,docX,docY,current.item,doc);
+   current.target=candidate;
+   setActiveAnchorDrag({
+    sourceId:current.item.id,
+    sourceSide:current.side,
+    startX:current.startX,
+    startY:current.startY,
+    currentX:docX,
+    currentY:docY,
+    targetId:candidate.targetId,
+    targetEdge:candidate.targetEdge,
+    targetName:candidate.targetName,
+    snapX:candidate.snapX,
+    snapY:candidate.snapY,
+    isSnapped:candidate.isSnapped
+   });
+  }
+  function onWindowPointerUp(_event:globalThis.PointerEvent){
+   finish();
+  }
+  function onWindowPointerCancel(_event:globalThis.PointerEvent){
+   cancel();
+  }
+  window.addEventListener('pointermove',onWindowPointerMove);
+  window.addEventListener('pointerup',onWindowPointerUp);
+  window.addEventListener('pointercancel',onWindowPointerCancel);
+  return ()=>{
+   window.removeEventListener('pointermove',onWindowPointerMove);
+   window.removeEventListener('pointerup',onWindowPointerUp);
+   window.removeEventListener('pointercancel',onWindowPointerCancel);
+  };
+ },[activeAnchorDrag!==null,doc?.id]);
+
  function start(event:PointerEvent<SVGElement>,mode:'move'|'resize'){
   const id=event.currentTarget.dataset.id??event.currentTarget.parentElement?.dataset.id;if(!doc||!id)return;select(id);const item=doc.objects.find(o=>o.id===id);if(!enabled||!item||item.locked)return;
   const svg=event.currentTarget.ownerSVGElement;if(!svg)return;drag.current={item:structuredClone(item),mode,handle:(event.currentTarget.dataset.handle??'se') as ResizeHandle,x:event.clientX,y:event.clientY,rect:svg.getBoundingClientRect(),pointerId:event.pointerId,documentId:doc.id};event.currentTarget.setPointerCapture(event.pointerId);event.stopPropagation();
@@ -54,6 +98,11 @@ export function useCanvasInteraction(doc:LabelDocument|null,select:(id:string)=>
   const svg=el.ownerSVGElement??(el as unknown as {viewportElement?:SVGSVGElement}).viewportElement??(document.getElementById('label-svg') as SVGSVGElement|null);
   if(!svg)return;
   const pt=getAnchorPoint(item,side);
+  const rect=svg.getBoundingClientRect();
+  const docX=rect.width>0?(event.clientX-rect.left)*doc.width/rect.width:pt.x;
+  const docY=rect.height>0?(event.clientY-rect.top)*doc.height/rect.height:pt.y;
+  const candidate=findCandidateAnchorTarget(side,docX,docY,item,doc);
+
   anchorDrag.current={
    item:structuredClone(item),
    side,
@@ -62,12 +111,29 @@ export function useCanvasInteraction(doc:LabelDocument|null,select:(id:string)=>
    pointerStartX:event.clientX,
    pointerStartY:event.clientY,
    moved:false,
-   target:null,
-   rect:svg.getBoundingClientRect(),
+   target:candidate,
+   rect,
    pointerId:event.pointerId,
    documentId:doc.id
   };
-  event.currentTarget.setPointerCapture(event.pointerId);
+
+  // Immediate responsive feedback on mousedown!
+  setActiveAnchorDrag({
+   sourceId:item.id,
+   sourceSide:side,
+   startX:pt.x,
+   startY:pt.y,
+   currentX:docX,
+   currentY:docY,
+   targetId:candidate.targetId,
+   targetEdge:candidate.targetEdge,
+   targetName:candidate.targetName,
+   snapX:candidate.snapX,
+   snapY:candidate.snapY,
+   isSnapped:candidate.isSnapped
+  });
+
+  try{event.currentTarget.setPointerCapture(event.pointerId);}catch{}
   event.stopPropagation();
  }
 
@@ -92,7 +158,8 @@ export function useCanvasInteraction(doc:LabelDocument|null,select:(id:string)=>
     targetEdge:candidate.targetEdge,
     targetName:candidate.targetName,
     snapX:candidate.snapX,
-    snapY:candidate.snapY
+    snapY:candidate.snapY,
+    isSnapped:candidate.isSnapped
    });
    return;
   }

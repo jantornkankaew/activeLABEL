@@ -328,6 +328,7 @@ export interface CandidateTarget {
   targetName: string;
   snapX: number;
   snapY: number;
+  isSnapped?: boolean;
 }
 
 export function findCandidateAnchorTarget(
@@ -473,6 +474,11 @@ export function findCandidateAnchorTarget(
   }
 
   candidates.sort((a, b) => a.dist - b.dist);
-  return candidates[0].candidate;
+  const best = candidates[0];
+  const isSnapped = best.dist <= 10;
+  return {
+    ...best.candidate,
+    isSnapped
+  };
 }
 
