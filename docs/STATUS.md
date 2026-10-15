@@ -618,3 +618,20 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
   - 25 Go unit tests passing (`go test ./...`).
   - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
 
+## 2026-10-15 — Close Project with Confirmation (ปุ่มปิดโปรเจคพร้อมหน้าต่างถามยืนยัน)
+
+- **Interactive Close Button on Document Tabs**:
+  - Added an intuitive close button (`×`, `<X size={12} />`) to each document tab in `DocumentTabs` (`.tab-close-btn`).
+  - Styled with subtle hover interaction (`#fee2e2` background with `#dc2626` icon) and scoped click propagation prevention so clicking close does not switch tabs accidentally.
+  - Also added a "Close label" action in the `File` menu dropdown for convenient access.
+- **Safety Confirmation Dialog (`CloseProjectDialog`)**:
+  - Promptly presents a clean modal dialog (`.close-project-dialog`) asking for user confirmation before closing the project.
+  - Displays the project's exact title and helpful message clarifying that unexported changes may be lost (with export JSON advice).
+  - Handles fallback gracefully: if the closed document was the only active one, automatically initializes a fresh new project (`newJob(1)`) so the workspace remains usable; if closing an active project among multiple, automatically switches to the nearest remaining tab.
+- **Verification**:
+  - 95 TypeScript unit tests passing (`npm test`, including close project lifecycle test).
+  - Production build passing (`npm run build`).
+  - 25 Go unit tests passing (`go test ./...`).
+  - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
+
+

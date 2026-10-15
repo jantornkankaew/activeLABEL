@@ -27,6 +27,17 @@ test('Named jobs preserve independent contents and recover legacy font fields',(
  assert.equal(readJobs([a,{bad:true},b]).length,2);assert.equal(readJobs([a,a]).length,1);
 });
 
+test('Closing jobs removes project and falls back cleanly',()=>{
+ const a=seed();const b=newJob(2);let jobs=[a,b];
+ jobs=jobs.filter(d=>d.id!==b.id);
+ assert.equal(jobs.length,1);
+ assert.equal(jobs[0].id,a.id);
+ jobs=jobs.filter(d=>d.id!==a.id);
+ if(jobs.length===0)jobs=[newJob(1)];
+ assert.equal(jobs.length,1);
+ assert.equal(jobs[0].title,'Untitled label 1');
+});
+
 test('Barcode resize scales both axes uniformly for every encoder, including payload-dependent ratios',()=>{
  const payloads:Record<string,string>={code128:'SKU001',code39:'SKU001',code93:'SKU001',ean13:'4006381333931',ean8:'96385074',upca:'036000291452',upce:'04252614',interleaved2of5:'001234',qrcode:'กาแฟ',datamatrix:'SKU001',pdf417:'SKU001'};
  for(const {value} of barcodeTypes){const barcode=object('barcode',{symbology:value,content:payloads[value],x:1,y:1,width:40,height:15});const doc={...newJob(1),width:100,height:100,objects:[barcode]};

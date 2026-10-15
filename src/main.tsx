@@ -4,4 +4,5 @@ import App from './App';
 import './style.css';
 import './atelier.css';
 import './formula.css';
+import './close-project.css';
 createRoot(document.getElementById('root')!).render(<MeasurementProvider><App/></MeasurementProvider>);
