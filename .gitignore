@@ -10,3 +10,5 @@ dist-connectors-checksums.txt
 bridge-jobs/
 printers.json
 *.tmp
+.cache/
+*.zip

@@ -203,5 +203,15 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
 - Removed clipped teal focus outline on the zoom percentage input and presets select for clean cursor editing.
 - Verification: 71 TypeScript tests, frontend production build, Go unit tests and printbridge cross-compilations passed.
 
+## 2026-10-15 — Smart alignment guidelines and text character baseline snapping
+
+- Added object-to-object smart alignment guidelines across all 4 edges: top, bottom, left, and right.
+- Text objects strictly measure their bottom edge by font baseline (`o.y + textMetrics(content, fontSize, fontName, bold).baseline`), aligning characters to baseline rather than using the object's bounding box frame.
+- Displays thin purple guidelines (`#8b5cf6`, 1px non-scaling stroke) spanning across the canvas when moving objects into alignment.
+- Snaps smoothly to aligned edges within a responsive threshold (~0.4–0.6 mm, scaled with zoom).
+- Guidelines are active only during drag and disappear immediately upon mouse release (`finish` / `cancel`).
+- Guidelines are marked with `data-editor-only="true"` and are cleanly stripped from SVG export and print output.
+- Verification: 78 TypeScript tests passing, production build passing.
+
 
 
