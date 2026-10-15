@@ -659,3 +659,19 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
   - 25 Go unit tests passing (`go test ./...`).
   - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
 
+## 2026-10-15 — Step-by-Step Formula Wizard (ตัวช่วยสร้างสูตรแบบถาม-ตอบทีละขั้นตอน)
+
+- **Dedicated Formula Wizard Mode (Default)**:
+  - Added a top mode switcher between **🧙‍♂️ ตัวช่วยถาม-ตอบ (Wizard - แนะนำ)** and **🧱 ต่อบล็อก LEGO (โหมดขั้นสูง)**.
+  - Wizard mode removes all visual clutter and block assembling friction, replacing it with a 2-step guided experience:
+    - **ขั้นตอนที่ 1: เลือกประเภทสูตรที่ต้องการ** (การ์ดขนาดใหญ่ 6 หมวดหมู่: วันหมดอายุ/วันที่ล่วงหน้า, วันที่ผลิต/วันปัจจุบัน, เลขอัตโนมัติ/ลำดับรัน, รหัส Lot ผสมวันที่, จัดการข้อความ, เงื่อนไข IF/ELSE)
+    - **ขั้นตอนที่ 2: ตอบคำถาม 1-2 ข้อง่ายๆ** (ปุ่มลัดเลือกค่าที่ใช้บ่อย เช่น `+7 วัน`, `+14 วัน`, `+30 วัน`, `+1 ปี`, ฟอร์แมตวันที่, กำหนดข้อความนำหน้า/ต่อท้าย)
+- **Instant Live Preview & Single-Click Application**:
+  - Step 2 features a sticky summary card displaying the evaluated live result in real time (`EXP: 14/11/2026`).
+  - Single click on `✨ บันทึกและใช้สูตรนี้ทันที` generates the underlying LEGO blocks automatically and applies them to the formula.
+  - Power users can click `🔍 ดูบล็อก LEGO ที่สร้างให้` to inspect and fine-tune individual blocks in advanced mode.
+- **Verification**:
+  - 95 TypeScript unit tests passing (`npm test`).
+  - Production build passing (`npm run build`).
+  - 25 Go unit tests passing (`go test ./...`).
+  - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
