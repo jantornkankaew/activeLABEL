@@ -22,10 +22,74 @@ export function FontSizePicker({item,disabled,onUpdate,hideLabel}:{item:LabelObj
  if(hideLabel)return control;
  return <label>Size (pt){control}</label>;
 }
+export function RatioCombobox({scale,limits,disabled,onResize}:{scale:number;limits:{min:number;max:number};disabled?:boolean;onResize:(percent:number)=>boolean}){
+ const [isOpen,setIsOpen]=useState(false);
+ const [isFocused,setIsFocused]=useState(false);
+ const formatted=String(Math.round(scale));
+ const [draft,setDraft]=useState(formatted);
+ const wrapRef=useRef<HTMLDivElement>(null);
+
+ useEffect(()=>{
+  if(!isFocused){
+   setDraft(String(Math.round(scale)));
+  }
+ },[scale,isFocused]);
+
+ useEffect(()=>{
+  if(!isOpen)return;
+  function handlePointerDown(e:MouseEvent){
+   if(wrapRef.current&&!wrapRef.current.contains(e.target as Node)){
+    setIsOpen(false);
+   }
+  }
+  window.addEventListener('pointerdown',handlePointerDown);
+  return ()=>window.removeEventListener('pointerdown',handlePointerDown);
+ },[isOpen]);
+
+ function commitValue(val:string){
+  const num=parseFloat(val.trim());
+  if(!isNaN(num)&&Number.isFinite(num)){
+   const rounded=Math.round(num);
+   const clamped=Math.max(limits.min,Math.min(limits.max,rounded));
+   const ok=onResize(clamped);
+   if(ok){
+    setDraft(String(clamped));
+   }else{
+    setDraft(formatted);
+   }
+  }else{
+   setDraft(formatted);
+  }
+ }
+
+ const presets=[25,50,75,80,100,125,150,200,300,400,800,1000].filter(v=>v>=limits.min&&v<=limits.max);
+
+ return (
+  <div className="as-ratio-wrap" ref={wrapRef}>
+   <div className={`as-ratio-combobox ${isOpen?'open':''} ${isFocused?'focused':''} ${disabled?'disabled':''}`} title="Barcode magnification (type or choose preset)">
+    <input type="text" className="as-ratio-input" value={isFocused?draft:formatted} disabled={disabled} aria-label="Barcode magnification" onFocus={()=>{setIsFocused(true);setDraft(formatted);}} onChange={e=>setDraft(e.target.value)} onBlur={()=>{setIsFocused(false);commitValue(draft);}} onKeyDown={e=>{if(e.key==='Enter'){(e.target as HTMLInputElement).blur();}else if(e.key==='Escape'){setDraft(formatted);setIsFocused(false);(e.target as HTMLInputElement).blur();}}}/>
+    <span className="as-combobox-divider"/>
+    <button type="button" className="as-combobox-arrow" title="Choose ratio preset" aria-label="Barcode ratio presets" disabled={disabled} tabIndex={-1} onClick={e=>{e.stopPropagation();if(!disabled)setIsOpen(prev=>!prev);}}>
+     <ChevronDown size={11} className="as-chevron"/>
+    </button>
+   </div>
+   {isOpen&&(
+    <div className="as-preset-popover as-ratio-popover">
+     {presets.map(preset=>(
+      <button key={preset} type="button" className={Math.round(scale)===preset?'chosen':''} onClick={()=>{onResize(preset);setIsOpen(false);}}>
+       {preset}%
+      </button>
+     ))}
+    </div>
+   )}
+  </div>
+ );
+}
+
 export function BarcodeEditor({item,doc,disabled,onUpdate,draft,onDraftChange}:{item:LabelObject;doc:LabelDocument;disabled?:boolean;onUpdate:(changes:Partial<LabelObject>)=>boolean|void;draft?:BarcodeDraft;onDraftChange?:(draft:BarcodeDraft)=>void}) {
  const {settings}=useMeasurements();const profile=barcodeProfile(item.symbology,item.content);const scale=barcodeMagnification(item);const limits=barcodeScaleLimits(item.symbology);
- const [sizeError,setSizeError]=useState('');const [scaleDraft,setScaleDraft]=useState(String(Number(scale.toFixed(2))));
- useEffect(()=>{setScaleDraft(String(Number(scale.toFixed(2))));setSizeError('');},[item.id,item.symbology,item.content,scale]);
+ const [sizeError,setSizeError]=useState('');
+ useEffect(()=>{setSizeError('');},[item.id,item.symbology,item.content,scale]);
  function resize(percent:number){if(onUpdate({barcodeScale:percent})===false){setSizeError('Ratio อยู่นอกช่วงที่กำหนด');return false;}setSizeError('');return true;}
  const [content,setContent]=useState(draft?.content??item.content);const [type,setType]=useState<Symbology>(draft?.type??item.symbology);const [error,setError]=useState(draft?.error??'');const signature=JSON.stringify([item.id,item.content,item.symbology]);const lastModel=useRef(signature);
  useEffect(()=>{if(lastModel.current===signature)return;lastModel.current=signature;setContent(item.content);setType(item.symbology);setError('');onDraftChange?.({content:item.content,type:item.symbology,error:''});},[signature]);
@@ -37,7 +101,7 @@ export function BarcodeEditor({item,doc,disabled,onUpdate,draft,onDraftChange}:{
   <label>Type<select aria-label="Barcode type" disabled={disabled} value={type} onChange={e=>change(e.target.value as Symbology,content)}>{barcodeTypes.map(t=><option key={t.value} value={t.value}>{t.name}</option>)}</select></label>
   {error&&<div className="barcode-error" id="barcode-error" role="alert">{error}{suggestion&&<><code>{suggestion.value}</code><button disabled={disabled} onClick={()=>change(type,suggestion.value)}>{suggestion.label}</button></>}<button disabled={disabled} onClick={()=>change(item.symbology,item.content)}>คืนค่า</button></div>}
   <div className="barcode-main-fields">
-    <label>Ratio (%)<span className="editable-preset"><input aria-label="Barcode magnification" type="number" step="1" min={limits.min} max={limits.max} disabled={disabled} value={scaleDraft} onChange={e=>{setScaleDraft(e.target.value);if(e.target.value){const value=Number(e.target.value);if(Number.isFinite(value))resize(Math.round(value));}}}/><select aria-label="Barcode ratio presets" title="Choose ratio" value="" disabled={disabled} onChange={e=>{const value=Number(e.target.value);if(value){setScaleDraft(String(value));resize(value);}}}><option value="" disabled></option>{[25,50,75,80,100,125,150,200,300,400,800,1000].filter(value=>value>=limits.min&&value<=limits.max).map(value=><option key={value} value={value}>{value}%</option>)}</select></span></label>
+    <label>Ratio (%)<RatioCombobox scale={scale} limits={limits} disabled={disabled} onResize={resize}/></label>
     {isLinear&&<label>Bar height (%)<input aria-label="Barcode bar height" type="number" min="10" max="100" step="0.01" disabled={disabled} value={item.barHeightScale??100} onChange={e=>{const value=Number(e.target.value);if(Number.isFinite(value)&&value>=10&&value<=100)onUpdate({barHeightScale:value});}}/></label>}
   </div>
   {isLinear&&<label>Top style<select aria-label="Barcode top style" value={item.barTopStyle??'flat'} disabled={disabled} onChange={e=>onUpdate({barTopStyle:e.target.value as BarTopStyle})}><option value="flat">Flat</option><option value="wave">Wave</option><option value="zigzag">Zigzag</option><option value="sawtooth">Sawtooth</option><option value="bubble">Bubble</option></select></label>}

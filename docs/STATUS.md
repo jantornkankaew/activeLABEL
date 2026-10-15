@@ -533,3 +533,25 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
   - Production build passing (`npm run build`).
   - 25 Go unit tests passing (`go test ./...`).
   - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
+
+## 2026-10-15 — Unified Ratio Combobox for Barcode Inspector (ปรับช่อง Ratio เป็น Combobox Pill สไตล์เดียวกับ Constraint Widget)
+
+- **Unified Combobox Pill Control (`RatioCombobox`)**:
+  - Replaced the side-by-side number input + native `<select>` button with a single cohesive pill combobox, matching the design of `MarginCombobox` in the constraint widget.
+  - Composed of:
+    - Text input with bold numeric ratio value, removing browser default spin buttons (`▲▼`).
+    - Subtle vertical divider line (`|`, `.as-combobox-divider`).
+    - Down chevron trigger (`⌄`, `<ChevronDown size={11} className="as-chevron" />`).
+    - Floating preset popover (`.as-preset-popover.as-ratio-popover`) with clean hover states and active `.chosen` indicator.
+- **Interactions & Validation**:
+  - Direct keyboard entry commits and validates on Enter or Blur, clamping values within symbology limits (`limits.min` – `limits.max`).
+  - Escape key reverts uncommitted draft value.
+  - Click-outside detection automatically closes the preset dropdown popover.
+  - Presets list dynamically filters values according to symbology scale limits.
+  - Maintains full accessibility (`aria-label="Barcode magnification"` and `aria-label="Barcode ratio presets"`).
+  - Responsive styling support for both sidebar inspector (35px height) and quick barcode dock (30px height).
+- **Verification**:
+  - 88 TypeScript unit tests passing (`npm test`).
+  - Production build passing (`npm run build`).
+  - 25 Go unit tests passing (`go test ./...`).
+  - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
