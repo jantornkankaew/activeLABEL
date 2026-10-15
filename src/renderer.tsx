@@ -124,7 +124,8 @@ function AnchorVisuals({
  const sides = ['top','bottom','left','right'] as const;
 
  // Compact, refined Android Studio handles strictly scaled to screen pixels
- const hr = 3.8 / pixelScale;
+ const hr = 4.0 / pixelScale;
+ const targetR = 6.0 / pixelScale;
  const strokeW = 1.2;
 
  // 1. Render established anchor lines and badges
@@ -234,17 +235,17 @@ function AnchorVisuals({
      className="canvas-anchor-target-handle"
      data-id={item.id}
      data-side={side}
-     style={{cursor:'grab'}}
+     style={{cursor:'pointer'}}
     >
      <circle
       cx={tx}
       cy={ty}
-      r={hr * 1.15}
+      r={targetR}
       data-id={item.id}
       data-side={side}
       fill="transparent"
       pointerEvents="all"
-      style={{cursor:'grab'}}
+      style={{cursor:'pointer'}}
       onPointerDown={e => {
        e.stopPropagation();
        onAnchorPointerDown?.(e, side);
@@ -254,11 +255,18 @@ function AnchorVisuals({
      <circle
       cx={tx}
       cy={ty}
-      r={hr * 1.15}
+      r={targetR}
       fill="#2196F3"
       stroke="#fff"
-      strokeWidth={1.5}
+      strokeWidth={1.8}
       vectorEffect="non-scaling-stroke"
+      pointerEvents="none"
+     />
+     <circle
+      cx={tx}
+      cy={ty}
+      r={targetR * 0.35}
+      fill="#fff"
       pointerEvents="none"
      />
     </g>
@@ -316,7 +324,7 @@ function AnchorVisuals({
        data-id={item.id}
        fill="transparent"
        pointerEvents="all"
-       style={{cursor:'crosshair'}}
+       style={{cursor:'pointer'}}
        onPointerDown={e => onAnchorPointerDown?.(e, side)}
        aria-label={`Constraint handle ${side}`}
       />
@@ -533,10 +541,10 @@ function AnchorVisuals({
     <circle
      cx={endX}
      cy={endY}
-     r={isSnapped ? hr * 1.5 : hr * 1.15}
+     r={isSnapped ? targetR * 1.2 : targetR}
      fill="#2196F3"
      stroke="#fff"
-     strokeWidth={1.5}
+     strokeWidth={1.8}
      vectorEffect="non-scaling-stroke"
     />
 

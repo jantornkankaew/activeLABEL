@@ -518,3 +518,18 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
   - Production build passing (`npm run build`).
   - 25 Go unit tests passing (`go test ./...`).
   - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
+
+## 2026-10-15 — Enlarge Arrow Tip Connection Circle & Hand Pointer Cursor (ขยายขนาดจุดเชื่อมปลายลูกศรให้ชัดเจนขึ้น และเปลี่ยนเคอร์เซอร์เมาส์เป็นรูปมือ)
+
+- **Larger, Prominent Arrow Tip Connection Circle**:
+  - Increased arrow tip connection handle radius from `4.37px` to `targetR = 6.0 / pixelScale` (diameter ~12px on screen), making it easy to see, target, and grab.
+  - Added a clean 1.8px non-scaling white border and an inner white center dot for clear visual affordance.
+  - Aligned active dragging snap dot radius to `targetR` for consistent visual feedback.
+- **Hand Pointer Cursor (`cursor: pointer`)**:
+  - Changed cursor from `grab`/`crosshair` to `cursor: pointer` (👆 hand pointer) on both arrow tip connection handles and perimeter connection handles.
+  - Active drag continues to use `cursor: grabbing` (✊ closed hand) during movement.
+- **Verification**:
+  - 88 TypeScript unit tests passing (`npm test`).
+  - Production build passing (`npm run build`).
+  - 25 Go unit tests passing (`go test ./...`).
+  - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
