@@ -13,6 +13,16 @@ interface AnchorControlsProps {
 const SIDES: AnchorSide[] = ['top', 'left', 'right', 'bottom'];
 const MARGIN_PRESETS: Array<number | 'auto'> = [0, 4, 8, 16, 24, 32, 'auto'];
 
+function ConstraintLinkIcon({size = 14, className}: {size?: number; className?: string}) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" className={className} style={{flexShrink: 0}}>
+      <circle cx="3" cy="13" r="1.5" stroke="currentColor" strokeWidth="1.2" />
+      <path d="M4.5 13 C 7.5 13, 8.5 3, 11.5 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <circle cx="13" cy="3" r="1.5" stroke="currentColor" strokeWidth="1.2" />
+    </svg>
+  );
+}
+
 interface MarginComboboxProps {
   side: AnchorSide;
   margin: number | 'auto';
@@ -139,6 +149,7 @@ function MarginCombobox({
 export function AnchorControls({item, doc, disabled, onUpdate}: AnchorControlsProps) {
   const [activeMarginSide, setActiveMarginSide] = useState<AnchorSide | null>(null);
   const [constraintsExpanded, setConstraintsExpanded] = useState(true);
+  const [selectedConstraintSide, setSelectedConstraintSide] = useState<AnchorSide | null>(null);
   const anchors = item.anchors ?? {};
   const otherObjects = doc.objects.filter(o => o.id !== item.id);
 
@@ -373,37 +384,42 @@ export function AnchorControls({item, doc, disabled, onUpdate}: AnchorControlsPr
 
           {/* Center Box representing the view (Row 2, Col 2) */}
           <div className="as-center-view">
-            {/* Android Studio Fixed Dimension I-beam Glyphs */}
-            <svg className="as-box-glyph-svg" viewBox="0 0 50 36">
-              {/* Horizontal I-beam */}
-              <line x1="8" y1="18" x2="42" y2="18" stroke="#606672" strokeWidth="1.2"/>
-              <line x1="8" y1="14" x2="8" y2="22" stroke="#606672" strokeWidth="1.2"/>
-              <line x1="42" y1="14" x2="42" y2="22" stroke="#606672" strokeWidth="1.2"/>
+            {/* Android Studio Fixed Dimension I-beam Glyphs with center gap */}
+            <svg className="as-box-glyph-svg" viewBox="0 0 64 54">
+              {/* Horizontal I-beam: Left segment */}
+              <line x1="8" y1="27" x2="24" y2="27" stroke="#7f838c" strokeWidth="1.2"/>
+              <line x1="8" y1="21" x2="8" y2="33" stroke="#7f838c" strokeWidth="1.2"/>
+              <line x1="24" y1="22" x2="24" y2="32" stroke="#7f838c" strokeWidth="1.2"/>
 
-              {/* Vertical I-beam */}
-              <line x1="25" y1="6" x2="25" y2="30" stroke="#606672" strokeWidth="1.2"/>
-              <line x1="21" y1="6" x2="29" y2="6" stroke="#606672" strokeWidth="1.2"/>
-              <line x1="21" y1="30" x2="29" y2="30" stroke="#606672" strokeWidth="1.2"/>
+              {/* Horizontal I-beam: Right segment */}
+              <line x1="40" y1="27" x2="56" y2="27" stroke="#7f838c" strokeWidth="1.2"/>
+              <line x1="40" y1="22" x2="40" y2="32" stroke="#7f838c" strokeWidth="1.2"/>
+              <line x1="56" y1="21" x2="56" y2="33" stroke="#7f838c" strokeWidth="1.2"/>
+
+              {/* Vertical I-beam: Top segment */}
+              <line x1="32" y1="8" x2="32" y2="20" stroke="#7f838c" strokeWidth="1.2"/>
+              <line x1="26" y1="8" x2="38" y2="8" stroke="#7f838c" strokeWidth="1.2"/>
+              <line x1="27" y1="20" x2="37" y2="20" stroke="#7f838c" strokeWidth="1.2"/>
+
+              {/* Vertical I-beam: Bottom segment */}
+              <line x1="32" y1="34" x2="32" y2="46" stroke="#7f838c" strokeWidth="1.2"/>
+              <line x1="27" y1="34" x2="37" y2="34" stroke="#7f838c" strokeWidth="1.2"/>
+              <line x1="26" y1="46" x2="38" y2="46" stroke="#7f838c" strokeWidth="1.2"/>
             </svg>
 
             {/* Horizontal Zigzag Spring (when centered) */}
             {hasLeft && hasRight && (
-              <svg className="as-spring-svg as-h-spring" viewBox="0 0 50 8">
-                <path d="M 0 4 L 5 4 L 9 1 L 15 7 L 21 1 L 27 7 L 33 1 L 39 7 L 45 4 L 50 4" fill="none" stroke="#2196F3" strokeWidth="1.3"/>
+              <svg className="as-spring-svg as-h-spring" viewBox="0 0 64 8">
+                <path d="M 0 4 L 8 4 L 14 1 L 22 7 L 30 1 L 38 7 L 46 1 L 54 7 L 58 4 L 64 4" fill="none" stroke="#2196F3" strokeWidth="1.3"/>
               </svg>
             )}
 
             {/* Vertical Zigzag Spring (when centered) */}
             {hasTop && hasBottom && (
-              <svg className="as-spring-svg as-v-spring" viewBox="0 0 8 36">
-                <path d="M 4 0 L 4 4 L 1 7 L 7 13 L 1 19 L 7 25 L 1 29 L 4 32 L 4 36" fill="none" stroke="#2196F3" strokeWidth="1.3"/>
+              <svg className="as-spring-svg as-v-spring" viewBox="0 0 8 54">
+                <path d="M 4 0 L 4 6 L 1 11 L 7 19 L 1 27 L 7 35 L 1 43 L 4 48 L 4 54" fill="none" stroke="#2196F3" strokeWidth="1.3"/>
               </svg>
             )}
-
-            <div className="as-view-meta">
-              <span className="as-view-name">{item.name || item.kind}</span>
-              <span className="as-view-dim">{Number(item.width.toFixed(1))} × {Number(item.height.toFixed(1))}</span>
-            </div>
           </div>
 
           {/* Right Slot (Row 2, Col 3) */}
@@ -517,119 +533,151 @@ export function AnchorControls({item, doc, disabled, onUpdate}: AnchorControlsPr
                 className="as-bias-badge"
                 style={{left: `calc(${hBias * 100}% - 11px)`}}
               >
-                {Math.round(hBias * 100)}
+                ({Math.round(hBias * 100)})
               </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* Constraints Accordion Section (> Constraints (N)) */}
+      {/* Constraints Accordion Section (⌄ Constraints) */}
       <div className="as-constraints-accordion">
         <button
           type="button"
           className="as-accordion-toggle"
           onClick={() => setConstraintsExpanded(!constraintsExpanded)}
         >
-          <ChevronRight size={13} className={`as-toggle-arrow ${constraintsExpanded ? 'open' : ''}`}/>
-          <span>Constraints ({activeCount})</span>
+          <ChevronDown size={14} className={`as-toggle-arrow ${constraintsExpanded ? 'open' : ''}`}/>
+          <span>Constraints</span>
         </button>
 
         {constraintsExpanded && (
-          <div className="as-constraint-list">
-            {SIDES.map(side => {
-              const constraint = anchors[side];
-              const isLinked = Boolean(constraint);
+          <div className="as-as-constraint-list">
+            {SIDES.filter(s => Boolean(anchors[s])).map(side => {
+              const constraint = anchors[side]!;
               const isVertical = side === 'top' || side === 'bottom';
+              const sideName = side === 'left' ? 'Start' : side === 'right' ? 'End' : side === 'top' ? 'Top' : 'Bottom';
+              const edgeName = constraint.targetEdge === 'left' ? 'StartOf' : constraint.targetEdge === 'right' ? 'EndOf' : constraint.targetEdge === 'top' ? 'TopOf' : 'BottomOf';
+              let targetName = 'parent';
+              if (constraint.target !== 'parent') {
+                const targetObj = doc.objects.find(o => o.id === constraint.target);
+                targetName = targetObj ? (targetObj.name || targetObj.kind) : constraint.target;
+              }
+              const marginStr = constraint.margin === 'auto' ? 'auto' : `${constraint.margin}mm`;
+              const isSelected = selectedConstraintSide === side;
 
               return (
-                <div key={side} className={`as-constraint-row ${isLinked ? 'is-linked' : ''}`}>
-                  <div className="as-row-label">
-                    <span className={`as-side-dot ${isLinked ? 'linked' : ''}`}/>
-                    <span className="as-side-title">{side.toUpperCase()}</span>
+                <div
+                  key={side}
+                  className={`as-as-constraint-row ${isSelected ? 'selected' : ''}`}
+                  onClick={() => setSelectedConstraintSide(isSelected ? null : side)}
+                >
+                  <div className="as-as-row-header">
+                    <ConstraintLinkIcon size={14} className="as-as-wire-icon" />
+                    <span className="as-as-row-label">
+                      <span>{sideName} → {edgeName} </span>
+                      <strong className="as-as-target">{targetName}</strong>
+                      <span className="as-as-margin"> ({marginStr})</span>
+                    </span>
+                    <button
+                      type="button"
+                      className="as-as-row-del"
+                      title={`Remove ${sideName} constraint`}
+                      disabled={disabled}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        updateAnchor(side, null);
+                        if (selectedConstraintSide === side) setSelectedConstraintSide(null);
+                      }}
+                    >
+                      <X size={11} strokeWidth={2.4} />
+                    </button>
                   </div>
 
-                  <div className="as-row-controls">
-                    <select
-                      aria-label={`${side} target`}
-                      className="as-target-select"
-                      value={constraint ? constraint.target : 'none'}
-                      disabled={disabled}
-                      onChange={e => handleTargetChange(side, e.target.value)}
-                    >
-                      <option value="none">None</option>
-                      <option value="parent">Parent (Label)</option>
-                      {otherObjects.map(o => (
-                        <option key={o.id} value={o.id}>
-                          {o.name || o.kind} ({o.kind})
-                        </option>
-                      ))}
-                    </select>
-
-                    {constraint && (
-                      <>
+                  {isSelected && (
+                    <div className="as-as-inline-controls" onClick={(e) => e.stopPropagation()}>
+                      <div className="as-as-control-group">
+                        <label>Target:</label>
                         <select
-                          aria-label={`${side} target edge`}
-                          className="as-edge-select"
+                          value={constraint.target}
+                          disabled={disabled}
+                          onChange={(e) => handleTargetChange(side, e.target.value)}
+                        >
+                          <option value="parent">parent (Label)</option>
+                          {otherObjects.map(o => (
+                            <option key={o.id} value={o.id}>{o.name || o.kind}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="as-as-control-group">
+                        <label>Target Edge:</label>
+                        <select
                           value={constraint.targetEdge}
                           disabled={disabled}
-                          onChange={e => handleEdgeChange(side, e.target.value as AnchorSide)}
+                          onChange={(e) => handleEdgeChange(side, e.target.value as AnchorSide)}
                         >
                           {isVertical ? (
                             <>
-                              <option value="top">to Top</option>
-                              <option value="bottom">to Bottom</option>
+                              <option value="top">TopOf</option>
+                              <option value="bottom">BottomOf</option>
                             </>
                           ) : (
                             <>
-                              <option value="left">to Left</option>
-                              <option value="right">to Right</option>
+                              <option value="left">StartOf</option>
+                              <option value="right">EndOf</option>
                             </>
                           )}
                         </select>
+                      </div>
 
-                        {constraint.margin !== 'auto' ? (
-                          <div className="as-margin-input-box">
-                            <input
-                              aria-label={`${side} margin value`}
-                              type="number"
-                              step="0.5"
-                              min="0"
-                              value={constraint.margin}
-                              disabled={disabled}
-                              onChange={e => handleMarginChange(side, Math.max(0, parseFloat(e.target.value) || 0))}
-                            />
-                            <span className="as-unit">mm</span>
-                          </div>
-                        ) : (
-                          <span className="as-auto-badge">Auto</span>
-                        )}
-
+                      <div className="as-as-control-group">
+                        <label>Margin:</label>
+                        <div className="as-as-margin-wrap">
+                          <input
+                            type="number"
+                            step="0.5"
+                            min="0"
+                            value={constraint.margin === 'auto' ? 0 : constraint.margin}
+                            disabled={disabled || constraint.margin === 'auto'}
+                            onChange={(e) => handleMarginChange(side, Math.max(0, parseFloat(e.target.value) || 0))}
+                          />
+                          <span className="as-unit">mm</span>
+                        </div>
                         <button
                           type="button"
-                          className={`as-auto-btn ${constraint.margin === 'auto' ? 'active' : ''}`}
-                          title={constraint.margin === 'auto' ? 'Switch to fixed margin' : 'Set to Auto (Centering)'}
+                          className={`as-as-auto-toggle ${constraint.margin === 'auto' ? 'active' : ''}`}
                           disabled={disabled}
                           onClick={() => handleMarginChange(side, constraint.margin === 'auto' ? 0 : 'auto')}
                         >
                           Auto
                         </button>
-
-                        <button
-                          type="button"
-                          className="as-remove-btn"
-                          title={`Remove ${side} constraint`}
-                          disabled={disabled}
-                          onClick={() => updateAnchor(side, null)}
-                        >
-                          <X size={12}/>
-                        </button>
-                      </>
-                    )}
-                  </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
+
+            {/* Dimension rows like Android Studio */}
+            <div className="as-as-constraint-row as-dimension-row">
+              <div className="as-as-row-header">
+                <ConstraintLinkIcon size={14} className="as-as-wire-icon dim" />
+                <span className="as-as-row-label">
+                  <span>Width</span>
+                  <span className="as-as-margin"> ({Number(item.width.toFixed(1))}mm)</span>
+                </span>
+              </div>
+            </div>
+            <div className="as-as-constraint-row as-dimension-row">
+              <div className="as-as-row-header">
+                <ConstraintLinkIcon size={14} className="as-as-wire-icon dim" />
+                <span className="as-as-row-label">
+                  <span>Height</span>
+                  <span className="as-as-margin"> ({Number(item.height.toFixed(1))}mm)</span>
+                </span>
+              </div>
+            </div>
           </div>
         )}
       </div>

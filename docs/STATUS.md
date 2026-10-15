@@ -406,17 +406,21 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
   - Production build passing (`tsc --noEmit && vite build`).
   - 25 Go unit tests passing (`go test ./...`).
   - Print bridge cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
-## 2026-10-15 — Enlarge Constraint Disconnect Buttons in Widget (ขยายจุดตัดการเชื่อมต่อใน Constraint Widget)
+## 2026-10-15 — Authentic Android Studio Constraint Widget Design & Syntax (ปรับดีไซน์และรูปแบบตาม Android Studio)
 
-- **Enlarged Anchor Disconnect Target**:
-  - Replaced the tiny 8px gray anchor dot (`.as-anchor-dot.linked`) with a full-size 18px Android Studio constraint node matching the 18px unconstrained plus button (`.as-blue-plus-btn`).
-  - Added a 28px × 28px invisible hit target padding (`::before`), making clicking or tapping to remove constraints effortless and forgiving.
-- **Clear Visual Feedback on Hover**:
-  - In connected state: styled as a crisp blue circular node (`#3871e0`) with a white border and 5px centered white anchor dot.
-  - On hover (Disconnect/Remove action): transforms into a red circular button (`#ef4444`) displaying a sharp white `X` icon (`<X size={10} strokeWidth={2.8}/>`), immediately communicating the constraint removal action.
-  - Converted the elements from `div` to accessible `<button>` tags with `aria-label` and descriptive tooltips.
+- **Authentic Android Studio Layout**:
+  - Center Box: clean transparent 64×54px frame with 1px border (`#5a5d63`), 4 inward T-shaped I-beams with center opening, and removed inner text labels to match Android Studio's design.
+  - Anchor Nodes: 11px solid gray circles (`#7a7f8d`) on constrained borders, vertical dotted connector leading to 18px blue circular `+` button on unconstrained edges.
+  - Comboboxes: compact dark `#1e1f22` inputs with blue focus/active border (`#3871e0`).
+  - Bias Slider: track with dark circular badge displaying `(50)` format.
+- **Android Studio Syntax in Constraints List**:
+  - Implemented `ConstraintLinkIcon` (authentic S-curve wire glyph connecting two nodes).
+  - Formatted constraint rows in true Android Studio syntax: `Start → StartOf parent (0mm)`, `End → EndOf parent (0mm)`, `Top → BottomOf Brand (8mm)`.
+  - Added dimension entries `Width (42.0mm)` and `Height (8.0mm)`.
+  - Interactive row selection (`selected` class highlighted in slate-blue `#2b3344`) with inline target, edge, and margin editors.
 - **Verification**:
   - 88 TypeScript unit tests passing (`tests/*.test.ts`).
   - Production build passing (`tsc --noEmit && vite build`).
   - 25 Go unit tests passing (`go test ./...`).
   - Print bridge cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
+
