@@ -46,8 +46,13 @@ export function useCanvasInteraction(doc:LabelDocument|null,select:(id:string)=>
  }
 
  function startAnchor(event:PointerEvent<SVGElement>,side:AnchorSide){
-  const id=event.currentTarget.dataset.id;if(!doc||!id)return;const item=doc.objects.find(o=>o.id===id);if(!enabled||!item||item.locked)return;
-  const svg=event.currentTarget.ownerSVGElement;if(!svg)return;
+  const el=event.currentTarget;
+  const id=el.dataset.id??el.parentElement?.dataset.id??el.closest('[data-id]')?.getAttribute('data-id');
+  if(!doc||!id)return;
+  const item=doc.objects.find(o=>o.id===id);
+  if(!enabled||!item||item.locked)return;
+  const svg=el.ownerSVGElement??(el as unknown as {viewportElement?:SVGSVGElement}).viewportElement??(document.getElementById('label-svg') as SVGSVGElement|null);
+  if(!svg)return;
   const pt=getAnchorPoint(item,side);
   anchorDrag.current={
    item:structuredClone(item),

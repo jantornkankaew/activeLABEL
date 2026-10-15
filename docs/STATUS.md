@@ -300,6 +300,25 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
     - Floating margin distance numbers placed directly alongside the constraint lines.
 - Verification: 84 TypeScript unit tests passing, production build passing, 25 Go unit tests passing, and 3 cross-compilations passing.
 
+## 2026-10-15 — Authentic Android Studio Dot-to-Dot Constraint Linking & Cubic Bezier Wires
+
+- Re-engineered drag & drop constraint linking matching Android Studio ConstraintLayout editor:
+  - **Dot-to-Dot Target Discovery**:
+    - During anchor dragging (`activeAnchorDrag`), all other objects on canvas visibly reveal their receptive circular anchor dots (Top & Bottom for vertical drags, Left & Right for horizontal drags).
+    - As the pointer approaches another object or dot, the closest candidate anchor snaps magnetically with a glowing halo ring (`rgba(33, 150, 243, 0.22)`) and highlighted target box.
+    - Dragging towards canvas borders snaps to the parent boundary with a guide rail.
+  - **Smooth Cubic Bezier Wires (`bezierWirePath`)**:
+    - When constrained to another object, rendered lines now accurately calculate the target object's true midpoint anchor handle coordinate (`getAnchorPoint(t, a.targetEdge)`), eliminating previous alignment offsets.
+    - Connectors use smooth cubic Bezier arcs with natural departure/approach vectors and crisp arrowheads at the target dot.
+    - Center dual-parent constraints render the classic Android Studio tension zigzag spring (`springPath`).
+    - Margin badge pill is centered along the curve displaying exact distance (`margin mm` or `auto`).
+  - **Refined, Compact Anchor Handles**:
+    - Reduced visual handle radius to a crisp, subtle Android Studio proportion (`2.4 / pixelScale`, ~2.4 screen pixels), eliminating oversized dots.
+    - Generous invisible hit zone (`7.5 / pixelScale`) with reliable element ID resolution on pointer down.
+  - **Live Floating HUD Tooltip**:
+    - Dynamic floating badge above cursor displaying target name, edge, and live margin (`Target • 8.0mm`).
+- Verification: 87 TypeScript unit tests passing (including `getAnchorPoint`, `findCandidateAnchorTarget`, `bezierWirePath`), production build passing, 25 Go unit tests passing, and 3 cross-compilations (windows/amd64, darwin/arm64, darwin/amd64) passing.
+
 
 
 

@@ -338,45 +338,141 @@ export function findCandidateAnchorTarget(
   doc: Pick<LabelDocument, 'width' | 'height' | 'objects'>
 ): CandidateTarget {
   const otherObjects = doc.objects.filter(o => o.id !== sourceItem.id);
-  const snapPadding = 3.5;
+
+  interface ScoredCandidate {
+    candidate: CandidateTarget;
+    dist: number;
+  }
+
+  const candidates: ScoredCandidate[] = [];
+
+  // 1. Evaluate receptive handles on other objects
   for (const o of otherObjects) {
-    if (
-      docX >= o.x - snapPadding &&
-      docX <= o.x + o.width + snapPadding &&
-      docY >= o.y - snapPadding &&
-      docY <= o.y + o.height + snapPadding
-    ) {
-      if (sourceSide === 'top' || sourceSide === 'bottom') {
-        const targetEdge: AnchorSide = docY < o.y + o.height / 2 ? 'top' : 'bottom';
-        return {
+    if (sourceSide === 'top' || sourceSide === 'bottom') {
+      const hx = o.x + o.width / 2;
+      const topDist = Math.hypot(docX - hx, docY - o.y);
+      const bottomDist = Math.hypot(docX - hx, docY - (o.y + o.height));
+      const inside = docX >= o.x - 2 && docX <= o.x + o.width + 2 && docY >= o.y - 2 && docY <= o.y + o.height + 2;
+      const bonus = inside ? 0.6 : 1.0;
+
+      candidates.push({
+        candidate: {
           targetId: o.id,
-          targetEdge,
+          targetEdge: 'top',
           targetName: o.name || o.kind,
-          snapX: o.x + o.width / 2,
-          snapY: targetEdge === 'top' ? o.y : o.y + o.height
-        };
-      } else {
-        const targetEdge: AnchorSide = docX < o.x + o.width / 2 ? 'left' : 'right';
-        return {
+          snapX: hx,
+          snapY: o.y
+        },
+        dist: topDist * bonus
+      });
+
+      candidates.push({
+        candidate: {
           targetId: o.id,
-          targetEdge,
+          targetEdge: 'bottom',
           targetName: o.name || o.kind,
-          snapX: targetEdge === 'left' ? o.x : o.x + o.width,
-          snapY: o.y + o.height / 2
-        };
-      }
+          snapX: hx,
+          snapY: o.y + o.height
+        },
+        dist: bottomDist * bonus
+      });
+    } else {
+      const hy = o.y + o.height / 2;
+      const leftDist = Math.hypot(docX - o.x, docY - hy);
+      const rightDist = Math.hypot(docX - (o.x + o.width), docY - hy);
+      const inside = docX >= o.x - 2 && docX <= o.x + o.width + 2 && docY >= o.y - 2 && docY <= o.y + o.height + 2;
+      const bonus = inside ? 0.6 : 1.0;
+
+      candidates.push({
+        candidate: {
+          targetId: o.id,
+          targetEdge: 'left',
+          targetName: o.name || o.kind,
+          snapX: o.x,
+          snapY: hy
+        },
+        dist: leftDist * bonus
+      });
+
+      candidates.push({
+        candidate: {
+          targetId: o.id,
+          targetEdge: 'right',
+          targetName: o.name || o.kind,
+          snapX: o.x + o.width,
+          snapY: hy
+        },
+        dist: rightDist * bonus
+      });
     }
   }
 
-  if (sourceSide === 'top') {
-    return { targetId: 'parent', targetEdge: 'top', targetName: 'Label (Top)', snapX: sourceItem.x + sourceItem.width / 2, snapY: 0 };
+  // 2. Parent boundary edge candidates
+  if (sourceSide === 'top' || sourceSide === 'bottom') {
+    const defaultParentEdge: AnchorSide = sourceSide === 'top' ? 'top' : 'bottom';
+    const altParentEdge: AnchorSide = sourceSide === 'top' ? 'bottom' : 'top';
+    const defaultY = defaultParentEdge === 'top' ? 0 : doc.height;
+    const altY = altParentEdge === 'top' ? 0 : doc.height;
+    const dDefault = Math.abs(docY - defaultY);
+    const dAlt = Math.abs(docY - altY);
+
+    candidates.push({
+      candidate: {
+        targetId: 'parent',
+        targetEdge: defaultParentEdge,
+        targetName: `Label (${defaultParentEdge})`,
+        snapX: sourceItem.x + sourceItem.width / 2,
+        snapY: defaultY
+      },
+      dist: dDefault
+    });
+
+    if (dAlt < 6) {
+      candidates.push({
+        candidate: {
+          targetId: 'parent',
+          targetEdge: altParentEdge,
+          targetName: `Label (${altParentEdge})`,
+          snapX: sourceItem.x + sourceItem.width / 2,
+          snapY: altY
+        },
+        dist: dAlt
+      });
+    }
+  } else {
+    const defaultParentEdge: AnchorSide = sourceSide === 'left' ? 'left' : 'right';
+    const altParentEdge: AnchorSide = sourceSide === 'left' ? 'right' : 'left';
+    const defaultX = defaultParentEdge === 'left' ? 0 : doc.width;
+    const altX = altParentEdge === 'left' ? 0 : doc.width;
+    const dDefault = Math.abs(docX - defaultX);
+    const dAlt = Math.abs(docX - altX);
+
+    candidates.push({
+      candidate: {
+        targetId: 'parent',
+        targetEdge: defaultParentEdge,
+        targetName: `Label (${defaultParentEdge})`,
+        snapX: defaultX,
+        snapY: sourceItem.y + sourceItem.height / 2
+      },
+      dist: dDefault
+    });
+
+    if (dAlt < 6) {
+      candidates.push({
+        candidate: {
+          targetId: 'parent',
+          targetEdge: altParentEdge,
+          targetName: `Label (${altParentEdge})`,
+          snapX: altX,
+          snapY: sourceItem.y + sourceItem.height / 2
+        },
+        dist: dAlt
+      });
+    }
   }
-  if (sourceSide === 'bottom') {
-    return { targetId: 'parent', targetEdge: 'bottom', targetName: 'Label (Bottom)', snapX: sourceItem.x + sourceItem.width / 2, snapY: doc.height };
-  }
-  if (sourceSide === 'left') {
-    return { targetId: 'parent', targetEdge: 'left', targetName: 'Label (Left)', snapX: 0, snapY: sourceItem.y + sourceItem.height / 2 };
-  }
-  return { targetId: 'parent', targetEdge: 'right', targetName: 'Label (Right)', snapX: doc.width, snapY: sourceItem.y + sourceItem.height / 2 };
+
+  candidates.sort((a, b) => a.dist - b.dist);
+  return candidates[0].candidate;
 }
 

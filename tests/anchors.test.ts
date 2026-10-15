@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {seed, apply, validate, object} from '../src/core';
-import {computeAnchoredPosition, solveAnchors, validateAnchors} from '../src/anchors';
+import {computeAnchoredPosition, solveAnchors, validateAnchors, getAnchorPoint, findCandidateAnchorTarget} from '../src/anchors';
+import {bezierWirePath} from '../src/renderer';
 
 test('anchoring to parent with fixed margin places object accurately', () => {
   const doc = seed(); // width: 50, height: 30
@@ -148,3 +149,45 @@ test('validation rejects self-anchoring and invalid targets', () => {
     }, doc.objects, 'brand');
   }, /valid targetEdge/);
 });
+
+test('getAnchorPoint returns accurate midpoint perimeter coordinates', () => {
+  const item = object('box', { id: 'obj1', x: 10, y: 20, width: 30, height: 10 });
+  const top = { x: 25, y: 20 };
+  const bottom = { x: 25, y: 30 };
+  const left = { x: 10, y: 25 };
+  const right = { x: 40, y: 25 };
+
+  assert.deepEqual(getAnchorPoint(item, 'top'), top);
+  assert.deepEqual(getAnchorPoint(item, 'bottom'), bottom);
+  assert.deepEqual(getAnchorPoint(item, 'left'), left);
+  assert.deepEqual(getAnchorPoint(item, 'right'), right);
+});
+
+test('findCandidateAnchorTarget snaps to closest handle on another object or parent edge', () => {
+  const doc = seed(); // 50 x 30
+  const brand = doc.objects.find(o => o.id === 'brand')!; // x: 3, y: 3, w: 27, h: 5 -> bottom at 8
+  const name = doc.objects.find(o => o.id === 'name')!; // y: 9, h: 4
+
+  // Dragging from name top handle towards brand bottom handle (around y: 8)
+  const cand = findCandidateAnchorTarget('top', 16.5, 7.8, name, doc);
+  assert.equal(cand.targetId, brand.id);
+  assert.equal(cand.targetEdge, 'bottom');
+  assert.equal(cand.snapX, brand.x + brand.width / 2);
+  assert.equal(cand.snapY, brand.y + brand.height);
+
+  // Dragging upwards towards parent top boundary
+  const candParent = findCandidateAnchorTarget('top', 15, 0.5, brand, doc);
+  assert.equal(candParent.targetId, 'parent');
+  assert.equal(candParent.targetEdge, 'top');
+  assert.equal(candParent.snapY, 0);
+});
+
+test('bezierWirePath creates smooth cubic bezier curves and arrowheads connecting anchors', () => {
+  // Connect sku top to brand bottom
+  const wire = bezierWirePath(14, 10, 17.5, 8, 'top', 'bottom');
+  assert.match(wire.path, /^M 14 10 C/);
+  assert.ok(wire.arrowD);
+  assert.match(wire.arrowD, /L 17\.5 8/);
+  assert.ok(typeof wire.midX === 'number' && typeof wire.midY === 'number');
+});
+

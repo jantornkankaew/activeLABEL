@@ -15,12 +15,15 @@ export function barcodeOverflowSvg(o:LabelObject){return barcodeSvg(o).replace('
 function BarcodeVector({item,color}:{item:LabelObject;color?:string}){let source=barcodeSvg(item);if(color)source=source.replaceAll('#000000',color);const viewBox=/viewBox="([^"]+)"/.exec(source)?.[1]??`0 0 ${item.width} ${item.height}`,body=source.slice(source.indexOf('>')+1,source.lastIndexOf('</svg>'));return <svg data-barcode-vector="true" x={item.x} y={item.y} width={item.width} height={item.height} viewBox={viewBox} preserveAspectRatio="xMidYMid meet" overflow="hidden" dangerouslySetInnerHTML={{__html:body}}/>;}
 export function vectorObject(o:LabelObject){switch(o.kind){case 'text':{const align=o.textAlign??'left';return <text x={align==='center'?o.x+o.width/2:align==='right'?o.x+o.width:o.x} y={o.y+textMetrics(o.content,o.fontSize,o.fontName,o.bold).baseline} textAnchor={align==='center'?'middle':align==='right'?'end':'start'} fontSize={o.fontSize} fontFamily={fontStack(o.fontName)} style={{fontKerning:'none',fontVariantLigatures:'none'}} fontWeight={o.bold?700:400} fontStyle={o.italic?'italic':'normal'} textDecoration={o.underline?'underline':'none'}>{o.content}</text>;}case 'barcode':return <BarcodeVector item={o}/>;case 'image':return <image x={o.x} y={o.y} width={o.width} height={o.height} href={o.content} preserveAspectRatio="xMidYMid meet"/>;case 'box':return <rect x={o.x} y={o.y} width={o.width} height={o.height} fill="none" stroke="black" strokeWidth="0.2"/>;case 'line':{const p=linePoints(o);return <line x1={p.startX} y1={p.startY} x2={p.endX} y2={p.endY} stroke="black" strokeWidth="0.2"/>;}}}
 import type {AlignmentGuideline} from './guidelines';
+import {getAnchorPoint, calculateCurrentMargin, type AnchorSide} from './anchors';
 
-function springPath(x1: number, y1: number, x2: number, y2: number, isCentered = false): { path: string; arrowD?: string } {
+function springPath(x1: number, y1: number, x2: number, y2: number, isCentered = false): { path: string; arrowD?: string; midX: number; midY: number } {
  const dx = x2 - x1;
  const dy = y2 - y1;
  const dist = Math.hypot(dx, dy);
- if (dist < 1) return { path: `M ${x1} ${y1} L ${x2} ${y2}` };
+ const midX = (x1 + x2) / 2;
+ const midY = (y1 + y2) / 2;
+ if (dist < 1) return { path: `M ${x1} ${y1} L ${x2} ${y2}`, midX, midY };
  const ux = dx / dist;
  const uy = dy / dist;
  const px = -uy;
@@ -33,7 +36,7 @@ function springPath(x1: number, y1: number, x2: number, y2: number, isCentered =
  const arrowD = `M ${ax + px * arrowW} ${ay + py * arrowW} L ${x2} ${y2} L ${ax - px * arrowW} ${ay - py * arrowW}`;
 
  if (!isCentered || dist < 3) {
-  return { path: `M ${x1} ${y1} L ${ax} ${ay}`, arrowD };
+  return { path: `M ${x1} ${y1} L ${ax} ${ay}`, arrowD, midX, midY };
  }
 
  const lead = Math.min(1.5, dist * 0.1);
@@ -52,7 +55,53 @@ function springPath(x1: number, y1: number, x2: number, y2: number, isCentered =
   d += ` L ${cx + px * amp * sign} ${cy + py * amp * sign}`;
  }
  d += ` L ${ax} ${ay}`;
- return { path: d, arrowD };
+ return { path: d, arrowD, midX, midY };
+}
+
+export function bezierWirePath(
+ sx: number,
+ sy: number,
+ tx: number,
+ ty: number,
+ sourceSide: AnchorSide,
+ targetEdge: AnchorSide
+): { path: string; arrowD?: string; midX: number; midY: number } {
+ const dist = Math.hypot(tx - sx, ty - sy);
+ if (dist < 0.5) {
+  return { path: `M ${sx} ${sy} L ${tx} ${ty}`, midX: (sx + tx) / 2, midY: (sy + ty) / 2 };
+ }
+
+ const outDx = sourceSide === 'left' ? -1 : sourceSide === 'right' ? 1 : 0;
+ const outDy = sourceSide === 'top' ? -1 : sourceSide === 'bottom' ? 1 : 0;
+
+ const inDx = targetEdge === 'left' ? -1 : targetEdge === 'right' ? 1 : 0;
+ const inDy = targetEdge === 'top' ? -1 : targetEdge === 'bottom' ? 1 : 0;
+
+ const curveLen = Math.max(2.5, Math.min(dist * 0.45, 12));
+ const cp1x = sx + outDx * curveLen;
+ const cp1y = sy + outDy * curveLen;
+ const cp2x = tx + inDx * curveLen;
+ const cp2y = ty + inDy * curveLen;
+
+ const path = `M ${sx} ${sy} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${tx} ${ty}`;
+
+ const midX = 0.125 * sx + 0.375 * cp1x + 0.375 * cp2x + 0.125 * tx;
+ const midY = 0.125 * sy + 0.375 * cp1y + 0.375 * cp2y + 0.125 * ty;
+
+ const vArrX = tx - cp2x;
+ const vArrY = ty - cp2y;
+ const arrDist = Math.hypot(vArrX, vArrY) || 1;
+ const ux = vArrX / arrDist;
+ const uy = vArrY / arrDist;
+ const px = -uy;
+ const py = ux;
+ const arrowLen = Math.min(1.4, Math.max(0.8, dist * 0.2));
+ const arrowW = Math.min(1.0, Math.max(0.6, dist * 0.15));
+ const ax = tx - ux * arrowLen;
+ const ay = ty - uy * arrowLen;
+ const arrowD = `M ${ax + px * arrowW} ${ay + py * arrowW} L ${tx} ${ty} L ${ax - px * arrowW} ${ay - py * arrowW}`;
+
+ return { path, arrowD, midX, midY };
 }
 
 function AnchorVisuals({
@@ -74,79 +123,116 @@ function AnchorVisuals({
  const isVCentered = Boolean(anchors.top && anchors.bottom);
  const sides = ['top','bottom','left','right'] as const;
 
- const hr = Math.max(0.35, 3.2 / pixelScale);
+ // Compact, refined Android Studio handles
+ const hr = Math.max(0.28, 2.4 / pixelScale);
  const hitR = Math.max(1.2, 7.5 / pixelScale);
  const strokeW = Math.max(0.08, 1 / pixelScale);
 
+ // 1. Render established anchor lines and badges
  for(const side of sides){
   const a = anchors[side];
   if(!a)continue;
-  let sx=0, sy=0, tx=0, ty=0;
-  if(side==='top'){
-   sx = x + w/2; sy = y;
-   if(a.target==='parent'){
-    tx = sx; ty = a.targetEdge==='bottom'?doc.height:0;
-   } else {
-    const t = doc.objects.find(o=>o.id===a.target);
-    if(!t)continue;
-    tx = sx; ty = a.targetEdge==='bottom'?t.y+t.height:t.y;
+  const sp = getAnchorPoint(item, side);
+  const sx = sp.x;
+  const sy = sp.y;
+  let tx = 0;
+  let ty = 0;
+
+  if(a.target === 'parent'){
+   if(side === 'top'){
+    tx = sx; ty = a.targetEdge === 'bottom' ? doc.height : 0;
+   } else if(side === 'bottom'){
+    tx = sx; ty = a.targetEdge === 'top' ? 0 : doc.height;
+   } else if(side === 'left'){
+    tx = a.targetEdge === 'right' ? doc.width : 0; ty = sy;
+   } else if(side === 'right'){
+    tx = a.targetEdge === 'left' ? 0 : doc.width; ty = sy;
    }
-  } else if(side==='bottom'){
-   sx = x + w/2; sy = y + h;
-   if(a.target==='parent'){
-    tx = sx; ty = a.targetEdge==='top'?0:doc.height;
-   } else {
-    const t = doc.objects.find(o=>o.id===a.target);
-    if(!t)continue;
-    tx = sx; ty = a.targetEdge==='bottom'?t.y+t.height:t.y;
-   }
-  } else if(side==='left'){
-   sx = x; sy = y + h/2;
-   if(a.target==='parent'){
-    tx = a.targetEdge==='right'?doc.width:0; ty = sy;
-   } else {
-    const t = doc.objects.find(o=>o.id===a.target);
-    if(!t)continue;
-    tx = a.targetEdge==='right'?t.x+t.width:t.x; ty = sy;
-   }
-  } else if(side==='right'){
-   sx = x + w; sy = y + h/2;
-   if(a.target==='parent'){
-    tx = a.targetEdge==='left'?0:doc.width; ty = sy;
-   } else {
-    const t = doc.objects.find(o=>o.id===a.target);
-    if(!t)continue;
-    tx = a.targetEdge==='right'?t.x+t.width:t.x; ty = sy;
-   }
+  } else {
+   const t = doc.objects.find(o => o.id === a.target);
+   if(!t)continue;
+   const tp = getAnchorPoint(t, a.targetEdge);
+   tx = tp.x;
+   ty = tp.y;
   }
-  const midX = (sx + tx) / 2;
-  const midY = (sy + ty) / 2;
+
   const label = a.margin === 'auto' ? 'auto' : `${a.margin}mm`;
   const isCentered = (side==='left'||side==='right') ? isHCentered : isVCentered;
-  const {path: pathD, arrowD} = springPath(sx, sy, tx, ty, isCentered);
+
+  let pathD = '';
+  let arrowD: string | undefined;
+  let midX = (sx + tx) / 2;
+  let midY = (sy + ty) / 2;
+
+  if(a.target !== 'parent'){
+   const res = bezierWirePath(sx, sy, tx, ty, side, a.targetEdge);
+   pathD = res.path;
+   arrowD = res.arrowD;
+   midX = res.midX;
+   midY = res.midY;
+  } else {
+   const res = springPath(sx, sy, tx, ty, isCentered);
+   pathD = res.path;
+   arrowD = res.arrowD;
+   midX = res.midX;
+   midY = res.midY;
+  }
 
   visuals.push(
    <g key={`anchor-${side}`} data-editor-only="true" pointerEvents="none">
-    <path d={pathD} className={`canvas-anchor-line ${isCentered ? 'spring' : ''}`} fill="none" stroke="#2196F3" strokeWidth={1.2 / pixelScale} vectorEffect="non-scaling-stroke"/>
-    {arrowD && <path d={arrowD} fill="none" stroke="#2196F3" strokeWidth={1.3 / pixelScale} strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke"/>}
-    <circle cx={sx} cy={sy} r={Math.max(0.2, 2.2 / pixelScale)} fill="#2196F3"/>
-    <circle cx={tx} cy={ty} r={Math.max(0.25, 2.6 / pixelScale)} fill="#fff" stroke="#2196F3" strokeWidth={strokeW} vectorEffect="non-scaling-stroke"/>
+    <path
+     d={pathD}
+     className={`canvas-anchor-line ${isCentered && a.target === 'parent' ? 'spring' : ''}`}
+     fill="none"
+     stroke="#2196F3"
+     strokeWidth={1.3 / pixelScale}
+     vectorEffect="non-scaling-stroke"
+    />
+    {arrowD && (
+     <path
+      d={arrowD}
+      fill="none"
+      stroke="#2196F3"
+      strokeWidth={1.4 / pixelScale}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      vectorEffect="non-scaling-stroke"
+     />
+    )}
+    <circle cx={sx} cy={sy} r={Math.max(0.2, 1.8 / pixelScale)} fill="#2196F3"/>
+    <circle cx={tx} cy={ty} r={Math.max(0.25, 2.2 / pixelScale)} fill="#fff" stroke="#2196F3" strokeWidth={strokeW} vectorEffect="non-scaling-stroke"/>
     {Math.hypot(tx-sx, ty-sy) > 2 && (
-     <text
-      x={midX + (side==='top'||side==='bottom' ? 3 / pixelScale : 0)}
-      y={midY + (side==='left'||side==='right' ? -3 / pixelScale : 0.4)}
-      className="canvas-anchor-badge"
-      fontSize={Math.max(0.8, 8.5 / pixelScale)}
-      fill="#2196F3"
-     >
-      {label}
-     </text>
+     <g transform={`translate(${midX}, ${midY})`}>
+      <rect
+       x={-14 / pixelScale}
+       y={-6.5 / pixelScale}
+       width={28 / pixelScale}
+       height={13 / pixelScale}
+       rx={2.5 / pixelScale}
+       fill="#ffffff"
+       stroke="#2196F3"
+       strokeWidth={0.8 / pixelScale}
+       vectorEffect="non-scaling-stroke"
+      />
+      <text
+       x={0}
+       y={3.2 / pixelScale}
+       textAnchor="middle"
+       className="canvas-anchor-badge"
+       fontSize={Math.max(0.7, 7.5 / pixelScale)}
+       fontWeight="600"
+       fill="#1976D2"
+       fontFamily="ui-sans-serif, system-ui, -apple-system, sans-serif"
+      >
+       {label}
+      </text>
+     </g>
     )}
    </g>
   );
  }
 
- // 4 Android Studio circular constraint handles on the object perimeter (pixel-scaled, solid blue handles)
+ // 2. Android Studio circular constraint handles on the selected object perimeter
  const handleDefs = [
   {side:'top' as const, cx:x+w/2, cy:y},
   {side:'bottom' as const, cx:x+w/2, cy:y+h},
@@ -165,6 +251,7 @@ function AnchorVisuals({
        cx={cx}
        cy={cy}
        r={hitR}
+       data-id={item.id}
        fill="transparent"
        style={{cursor:'crosshair'}}
        onPointerDown={e => onAnchorPointerDown?.(e, side)}
@@ -174,11 +261,11 @@ function AnchorVisuals({
        <circle
         cx={cx}
         cy={cy}
-        r={hr * 1.8}
+        r={hr * 2.0}
         fill="none"
         stroke="#2196F3"
         strokeWidth={strokeW}
-        strokeOpacity={0.6}
+        strokeOpacity={0.65}
         strokeDasharray="2 1"
         vectorEffect="non-scaling-stroke"
         pointerEvents="none"
@@ -187,7 +274,7 @@ function AnchorVisuals({
       {isLinked ? (
        <g pointerEvents="none">
         <circle cx={cx} cy={cy} r={hr} fill="#2196F3" stroke="#fff" strokeWidth={strokeW} vectorEffect="non-scaling-stroke"/>
-        <circle cx={cx} cy={cy} r={hr * 0.45} fill="#fff"/>
+        <circle cx={cx} cy={cy} r={hr * 0.35} fill="#fff"/>
        </g>
       ) : (
        <g pointerEvents="none">
@@ -201,96 +288,182 @@ function AnchorVisuals({
   </g>
  );
 
- // Active Drag Visuals: Dynamic connection wire, target edge snapping, and floating pill badge
+ // 3. Active Drag Visuals: Receptive anchor dots on all other objects, parent rails, dynamic wire, and HUD badge
  if(activeAnchorDrag){
-  const targetObj = activeAnchorDrag.targetId !== 'parent'
-   ? doc.objects.find(o => o.id === activeAnchorDrag.targetId)
-   : null;
+  const isVerticalDrag = activeAnchorDrag.sourceSide === 'top' || activeAnchorDrag.sourceSide === 'bottom';
+  const receptiveSides = isVerticalDrag ? (['top', 'bottom'] as const) : (['left', 'right'] as const);
+  const otherObjects = doc.objects.filter(o => o.id !== activeAnchorDrag.sourceId);
 
+  // 3a. Receptive anchor targets on all other objects
   visuals.push(
-   <g key="active-anchor-drag" data-editor-only="true" pointerEvents="none">
-    {activeAnchorDrag.targetId === 'parent' && (
+   <g key="receptive-anchor-targets" data-editor-only="true" pointerEvents="none">
+    {otherObjects.map(o => {
+     const isTargetObj = activeAnchorDrag.targetId === o.id;
+     return (
+      <g key={`receptive-${o.id}`}>
+       {isTargetObj && (
+        <rect
+         x={o.x - 0.5}
+         y={o.y - 0.5}
+         width={o.width + 1}
+         height={o.height + 1}
+         fill="rgba(33, 150, 243, 0.06)"
+         stroke="#2196F3"
+         strokeWidth={1.3 / pixelScale}
+         strokeDasharray="3 2"
+         rx={0.8}
+         vectorEffect="non-scaling-stroke"
+        />
+       )}
+       {receptiveSides.map(side => {
+        const pt = getAnchorPoint(o, side);
+        const isSnapped = isTargetObj && activeAnchorDrag.targetEdge === side;
+        return (
+         <g key={`target-dot-${o.id}-${side}`}>
+          {isSnapped && (
+           <circle
+            cx={pt.x}
+            cy={pt.y}
+            r={hr * 2.2}
+            fill="rgba(33, 150, 243, 0.22)"
+            stroke="#2196F3"
+            strokeWidth={1.2 / pixelScale}
+            vectorEffect="non-scaling-stroke"
+           />
+          )}
+          <circle
+           cx={pt.x}
+           cy={pt.y}
+           r={isSnapped ? hr * 1.25 : hr * 0.95}
+           fill={isSnapped ? '#2196F3' : '#ffffff'}
+           stroke="#2196F3"
+           strokeWidth={strokeW}
+           vectorEffect="non-scaling-stroke"
+          />
+          <circle
+           cx={pt.x}
+           cy={pt.y}
+           r={hr * 0.35}
+           fill={isSnapped ? '#ffffff' : '#2196F3'}
+          />
+         </g>
+        );
+       })}
+      </g>
+     );
+    })}
+   </g>
+  );
+
+  // 3b. Parent edge guide rail if target is parent
+  if(activeAnchorDrag.targetId === 'parent'){
+   visuals.push(
+    <g key="parent-edge-rail" data-editor-only="true" pointerEvents="none">
      <line
       x1={activeAnchorDrag.targetEdge === 'right' ? doc.width : 0}
       y1={activeAnchorDrag.targetEdge === 'bottom' ? doc.height : 0}
       x2={activeAnchorDrag.targetEdge === 'left' ? 0 : doc.width}
       y2={activeAnchorDrag.targetEdge === 'top' ? 0 : doc.height}
       stroke="#2196F3"
-      strokeWidth={2.8 / pixelScale}
+      strokeWidth={2.4 / pixelScale}
       strokeDasharray="4 2"
+      vectorEffect="non-scaling-stroke"
+     />
+    </g>
+   );
+  }
+
+  // 3c. Dynamic dragging wire to target/cursor
+  let dragWireD = '';
+  let dragArrowD: string | undefined;
+  if(activeAnchorDrag.targetId !== 'parent'){
+   const res = bezierWirePath(
+    activeAnchorDrag.startX,
+    activeAnchorDrag.startY,
+    activeAnchorDrag.snapX,
+    activeAnchorDrag.snapY,
+    activeAnchorDrag.sourceSide,
+    activeAnchorDrag.targetEdge
+   );
+   dragWireD = res.path;
+   dragArrowD = res.arrowD;
+  } else {
+   const res = springPath(
+    activeAnchorDrag.startX,
+    activeAnchorDrag.startY,
+    activeAnchorDrag.snapX,
+    activeAnchorDrag.snapY,
+    false
+   );
+   dragWireD = res.path;
+   dragArrowD = res.arrowD;
+  }
+
+  const currentMargin = calculateCurrentMargin(
+   activeAnchorDrag.sourceSide,
+   activeAnchorDrag.targetId,
+   activeAnchorDrag.targetEdge,
+   item,
+   doc
+  );
+
+  visuals.push(
+   <g key="active-anchor-drag-wire" data-editor-only="true" pointerEvents="none">
+    <path
+     d={dragWireD}
+     stroke="#2196F3"
+     strokeWidth={1.5 / pixelScale}
+     strokeDasharray="3 1.5"
+     fill="none"
+     vectorEffect="non-scaling-stroke"
+    />
+    {dragArrowD && (
+     <path
+      d={dragArrowD}
+      stroke="#2196F3"
+      strokeWidth={1.5 / pixelScale}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      fill="none"
       vectorEffect="non-scaling-stroke"
      />
     )}
 
-    {targetObj && (
-     <g>
-      <rect
-       x={targetObj.x - 0.5}
-       y={targetObj.y - 0.5}
-       width={targetObj.width + 1}
-       height={targetObj.height + 1}
-       fill="rgba(33, 150, 243, 0.08)"
-       stroke="#2196F3"
-       strokeWidth={1.5 / pixelScale}
-       strokeDasharray="3 2"
-       rx={1}
-       vectorEffect="non-scaling-stroke"
-      />
-      <line
-       x1={activeAnchorDrag.targetEdge === 'right' ? targetObj.x + targetObj.width : targetObj.x}
-       y1={activeAnchorDrag.targetEdge === 'bottom' ? targetObj.y + targetObj.height : targetObj.y}
-       x2={activeAnchorDrag.targetEdge === 'left' ? targetObj.x : targetObj.x + targetObj.width}
-       y2={activeAnchorDrag.targetEdge === 'top' ? targetObj.y : targetObj.y + targetObj.height}
-       stroke="#2196F3"
-       strokeWidth={3.2 / pixelScale}
-       vectorEffect="non-scaling-stroke"
-      />
-     </g>
-    )}
-
-    <line
-     x1={activeAnchorDrag.startX}
-     y1={activeAnchorDrag.startY}
-     x2={activeAnchorDrag.snapX}
-     y2={activeAnchorDrag.snapY}
-     stroke="#2196F3"
-     strokeWidth={1.6 / pixelScale}
-     strokeDasharray="3 1.5"
-     vectorEffect="non-scaling-stroke"
-    />
-
+    {/* Target snap dot */}
     <circle
      cx={activeAnchorDrag.snapX}
      cy={activeAnchorDrag.snapY}
-     r={4 / pixelScale}
+     r={hr * 1.4}
      fill="#2196F3"
      stroke="#fff"
-     strokeWidth={1.5 / pixelScale}
+     strokeWidth={1.2 / pixelScale}
      vectorEffect="non-scaling-stroke"
     />
 
-    <g transform={`translate(${activeAnchorDrag.snapX}, ${activeAnchorDrag.snapY - 7 / pixelScale})`}>
+    {/* Floating HUD badge */}
+    <g transform={`translate(${activeAnchorDrag.snapX}, ${activeAnchorDrag.snapY - 8 / pixelScale})`}>
      <rect
-      x={-36 / pixelScale}
-      y={-14 / pixelScale}
-      width={72 / pixelScale}
-      height={14 / pixelScale}
+      x={-42 / pixelScale}
+      y={-15 / pixelScale}
+      width={84 / pixelScale}
+      height={15 / pixelScale}
       rx={3 / pixelScale}
       fill="#1e293b"
       fillOpacity="0.95"
+      stroke="#38bdf8"
+      strokeWidth={0.6 / pixelScale}
+      vectorEffect="non-scaling-stroke"
      />
      <text
-      x="0"
-      y={-4 / pixelScale}
+      x={0}
+      y={-4.5 / pixelScale}
       textAnchor="middle"
+      fontSize={7.8 / pixelScale}
       fill="#ffffff"
-      fontSize={8 / pixelScale}
-      fontFamily="system-ui, -apple-system, sans-serif"
-      fontWeight="600"
+      fontFamily="ui-sans-serif, system-ui, -apple-system, sans-serif"
+      fontWeight="500"
      >
-      {activeAnchorDrag.targetId === 'parent'
-       ? `Snap to Label (${activeAnchorDrag.targetEdge})`
-       : `Snap to ${activeAnchorDrag.targetName ?? 'Target'} (${activeAnchorDrag.targetEdge})`}
+      {activeAnchorDrag.targetName} • {currentMargin}mm
      </text>
     </g>
    </g>
