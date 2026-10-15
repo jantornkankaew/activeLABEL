@@ -208,11 +208,45 @@ export function useCanvasInteraction(doc:LabelDocument|null,select:(id:string)=>
      commit([{op:'update',id:current.item.id,changes:{anchors:updated}}],doc.revision);
     }
    } else if(current.moved&&current.target?.isSnapped){
-    const margin=calculateCurrentMargin(current.side,current.target.targetId,current.target.targetEdge,current.item,doc);
+    let effectiveSide: AnchorSide = current.side;
+    if(current.side === 'top' || current.side === 'bottom'){
+     if(current.target.targetId !== 'parent'){
+      const tObj = doc.objects.find(o => o.id === current.target!.targetId);
+      if(tObj){
+       if(current.item.y >= tObj.y + tObj.height - 0.5){
+        effectiveSide = 'top';
+       } else if(current.item.y + current.item.height <= tObj.y + 0.5){
+        effectiveSide = 'bottom';
+       }
+      }
+     } else {
+      if(current.target.targetEdge === 'top') effectiveSide = 'top';
+      else if(current.target.targetEdge === 'bottom') effectiveSide = 'bottom';
+     }
+    } else if(current.side === 'left' || current.side === 'right'){
+     if(current.target.targetId !== 'parent'){
+      const tObj = doc.objects.find(o => o.id === current.target!.targetId);
+      if(tObj){
+       if(current.item.x >= tObj.x + tObj.width - 0.5){
+        effectiveSide = 'left';
+       } else if(current.item.x + current.item.width <= tObj.x + 0.5){
+        effectiveSide = 'right';
+       }
+      }
+     } else {
+      if(current.target.targetEdge === 'left') effectiveSide = 'left';
+      else if(current.target.targetEdge === 'right') effectiveSide = 'right';
+     }
+    }
+
+    const margin=calculateCurrentMargin(effectiveSide,current.target.targetId,current.target.targetEdge,current.item,doc);
     const updated={
      ...(current.item.anchors??{}),
-     [current.side]:{target:current.target.targetId,targetEdge:current.target.targetEdge,margin}
+     [effectiveSide]:{target:current.target.targetId,targetEdge:current.target.targetEdge,margin}
     };
+    if(effectiveSide !== current.side && updated[current.side]){
+     delete updated[current.side];
+    }
     commit([{op:'update',id:current.item.id,changes:{anchors:updated}}],doc.revision);
    } else if(current.moved&&!current.target?.isSnapped&&current.item.anchors?.[current.side]){
     const updated={...(current.item.anchors??{})};

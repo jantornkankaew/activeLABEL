@@ -303,11 +303,15 @@ function AnchorVisuals({
  }
 
  // 2. Android Studio circular constraint handles on the selected object perimeter
+ const isThinV = h < 4.0 / pixelScale || item.kind === 'line';
+ const vOffset = isThinV ? 3.5 / pixelScale : 0;
+ const isThinH = w < 4.0 / pixelScale;
+ const hOffset = isThinH ? 3.5 / pixelScale : 0;
  const handleDefs = [
-  {side:'top' as const, cx:x+w/2, cy:y},
-  {side:'bottom' as const, cx:x+w/2, cy:y+h},
-  {side:'left' as const, cx:x, cy:y+h/2},
-  {side:'right' as const, cx:x+w, cy:y+h/2}
+  {side:'top' as const, cx:x+w/2, cy:y - vOffset},
+  {side:'bottom' as const, cx:x+w/2, cy:y+h + vOffset},
+  {side:'left' as const, cx:x - hOffset, cy:y+h/2},
+  {side:'right' as const, cx:x+w + hOffset, cy:y+h/2}
  ];
 
  visuals.push(

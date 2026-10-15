@@ -768,4 +768,23 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
   - 25 Go unit tests passing (`go test ./...`).
   - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
 
+## 2026-10-15 — Smart Constraint Edge Auto-Detection & Thin Object Handle Separation
+
+- **Root Cause of Line Moving Above Text**:
+  - Thin line objects (`height: 0.1mm`) had overlapping top and bottom anchor handles (`cy: y` vs `cy: y+h`).
+  - The bottom handle SVG circle rendered after the top handle, so pointer-down on the line always grabbed `side = 'bottom'` instead of `'top'`.
+  - When dragging upwards to an object above (such as "ACTIVE 5"), it created `Bottom → BottomOf Brand (2.8mm)`, which in layout engine mathematics solves as `line.bottom = Brand.bottom - 2.8mm`, pulling the line UP into the text.
+- **Fix**:
+  - **Handle Separation**: In `src/renderer.tsx`, separated top and bottom handles on thin objects (`isThinV`) by an offset (`vOffset = 3.5 / pixelScale`), allowing distinct visual and hit-test selection of top vs bottom handles.
+  - **Smart Drag Direction Auto-Detection**: In `src/useCanvasInteraction.ts`, when snapping an anchor wire between objects, the engine checks relative geometry:
+    - If the source item is physically below the target, the connection automatically binds to the source item's **`top`** edge (`Top → BottomOf`).
+    - If the source item is physically above the target, the connection automatically binds to the source item's **`bottom`** edge (`Bottom → TopOf`).
+    - Corresponding horizontal auto-detection for `left` and `right`.
+- **Verification**:
+  - 95 TypeScript unit tests passing (`npm test`).
+  - Production build passing (`npm run build`).
+  - 25 Go unit tests passing (`go test ./...`).
+  - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
+
+
 
