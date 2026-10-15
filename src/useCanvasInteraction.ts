@@ -175,6 +175,10 @@ export function useCanvasInteraction(doc:LabelDocument|null,select:(id:string)=>
    let targetY=align.guidelines.some(g=>g.orientation==='horizontal')?align.snappedY:snapCoordinate(rawY,step,snap);
    if(item.kind!=='barcode'){targetX=Math.max(0,Math.min(doc.width-item.width,targetX));targetY=Math.max(0,Math.min(doc.height-item.height,targetY));}
    item.x=targetX;item.y=targetY;
+   if(item.anchors){
+    const updated=updateAnchorsOnMove(current.item,targetX,targetY,doc);
+    if(updated)item.anchors=updated;
+   }
    setGuidelines(getActiveGuidelines(item,otherObjects));
   }
   else {

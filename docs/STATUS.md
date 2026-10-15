@@ -392,10 +392,19 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
 - Canvas workspace remains clean without overlay text clutter under barcodes. Barcode properties and magnification remain fully accessible via the property inspector panel.
 - Verification: 87 TypeScript unit tests passing, production build passing, 25 Go unit tests passing, and 3 print-bridge cross-compilations passing.
 
+## 2026-10-15 — High-Visibility Anchor Wires & Dynamic Real-time Distance Updates During Dragging (เส้นโยงจุดยึดชัดเจนและอัปเดตระยะห่าง Real-time ขณะลาก)
 
-
-
-
-
+- **High-Visibility Solid Anchor Wires**:
+  - Fixed issue where anchor connection lines were rendered as faint hairlines (<0.25px) on high-DPI canvases due to dividing `strokeWidth` by `pixelScale` while `vectorEffect="non-scaling-stroke"` was active.
+  - Upgraded anchor wires to clean, distinct 1.8px screen strokes, solid blue connection nodes, and clear arrowheads.
+  - Added subtle dashed target outline (`stroke="#2196F3" strokeWidth="1.2" strokeDasharray="3 2"`) surrounding the target object when anchored to another object so the connected relationship is immediately visible.
+- **Dynamic Real-time Distance Calculation During Object Movement**:
+  - Implemented continuous anchor distance recomputation during `current.mode === 'move'` inside `useCanvasInteraction.ts`.
+  - Margin badge on the canvas (`calculateCurrentMargin`) and sidebar constraint widget now dynamically reflect the exact physical distance as the object is being dragged across the label.
+- **Verification**:
+  - 88 TypeScript unit tests passing (`tests/*.test.ts`).
+  - Production build passing (`tsc --noEmit && vite build`).
+  - 25 Go unit tests passing (`go test ./...`).
+  - Print bridge cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
 
 

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {seed, apply, validate, object} from '../src/core';
-import {computeAnchoredPosition, solveAnchors, validateAnchors, getAnchorPoint, findCandidateAnchorTarget} from '../src/anchors';
+import {computeAnchoredPosition, solveAnchors, validateAnchors, getAnchorPoint, findCandidateAnchorTarget, updateAnchorsOnMove, calculateCurrentMargin} from '../src/anchors';
 import {bezierWirePath} from '../src/renderer';
 
 test('anchoring to parent with fixed margin places object accurately', () => {
@@ -197,4 +197,34 @@ test('bezierWirePath creates smooth cubic bezier curves and arrowheads connectin
   assert.match(wire.arrowD, /L 17\.5 8/);
   assert.ok(typeof wire.midX === 'number' && typeof wire.midY === 'number');
 });
+
+test('updateAnchorsOnMove and calculateCurrentMargin update distance numbers dynamically when dragging an object', () => {
+  const doc = seed(); // 50 x 30
+  const brand = doc.objects.find(o => o.id === 'brand')!;
+  const barcode = doc.objects.find(o => o.id === 'barcode')!;
+
+  const initialTopMargin = calculateCurrentMargin('top', brand.id, 'bottom', barcode, doc);
+  const initialRightMargin = calculateCurrentMargin('right', 'parent', 'right', barcode, doc);
+
+  // Set anchors on barcode: top to brand bottom, right to parent right
+  const anchoredItem = {
+    ...barcode,
+    anchors: {
+      top: { target: brand.id, targetEdge: 'bottom' as const, margin: initialTopMargin },
+      right: { target: 'parent' as const, targetEdge: 'right' as const, margin: initialRightMargin }
+    }
+  };
+
+  assert.equal(calculateCurrentMargin('top', brand.id, 'bottom', anchoredItem, doc), initialTopMargin);
+  assert.equal(calculateCurrentMargin('right', 'parent', 'right', anchoredItem, doc), initialRightMargin);
+
+  // User drags barcode 3mm down and 2mm to the right
+  const updated = updateAnchorsOnMove(anchoredItem, barcode.x + 2, barcode.y + 3, doc)!;
+  assert.ok(updated);
+  // Top margin increases by 3mm
+  assert.equal(updated.top?.margin, Number((initialTopMargin + 3).toFixed(1)));
+  // Right margin decreases by 2mm
+  assert.equal(updated.right?.margin, Number((initialRightMargin - 2).toFixed(1)));
+});
+
 

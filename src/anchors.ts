@@ -218,58 +218,13 @@ export function solveAnchors(doc: LabelDocument): LabelDocument {
 export function updateAnchorsOnMove(item: LabelObject, newX: number, newY: number, doc: LabelDocument): ObjectAnchors | undefined {
   if (!item.anchors || Object.keys(item.anchors).length === 0) return undefined;
   const next: ObjectAnchors = structuredClone(item.anchors);
-  const w = item.width;
-  const h = item.height;
+  const simulatedItem = { ...item, x: newX, y: newY };
 
-  if (next.left) {
-    let tX = 0;
-    if (next.left.target === 'parent') {
-      tX = next.left.targetEdge === 'right' ? doc.width : 0;
-    } else {
-      const t = doc.objects.find(o => o.id === next.left!.target);
-      if (t) tX = next.left.targetEdge === 'right' ? t.x + t.width : t.x;
-    }
-    if (typeof next.left.margin === 'number') {
-      next.left.margin = Number(Math.max(0, newX - tX).toFixed(2));
-    }
-  }
-
-  if (next.right) {
-    let tX = doc.width;
-    if (next.right.target === 'parent') {
-      tX = next.right.targetEdge === 'left' ? 0 : doc.width;
-    } else {
-      const t = doc.objects.find(o => o.id === next.right!.target);
-      if (t) tX = next.right.targetEdge === 'left' ? t.x : t.x + t.width;
-    }
-    if (typeof next.right.margin === 'number') {
-      next.right.margin = Number(Math.max(0, tX - (newX + w)).toFixed(2));
-    }
-  }
-
-  if (next.top) {
-    let tY = 0;
-    if (next.top.target === 'parent') {
-      tY = next.top.targetEdge === 'bottom' ? doc.height : 0;
-    } else {
-      const t = doc.objects.find(o => o.id === next.top!.target);
-      if (t) tY = next.top.targetEdge === 'bottom' ? t.y + t.height : t.y;
-    }
-    if (typeof next.top.margin === 'number') {
-      next.top.margin = Number(Math.max(0, newY - tY).toFixed(2));
-    }
-  }
-
-  if (next.bottom) {
-    let tY = doc.height;
-    if (next.bottom.target === 'parent') {
-      tY = next.bottom.targetEdge === 'top' ? 0 : doc.height;
-    } else {
-      const t = doc.objects.find(o => o.id === next.bottom!.target);
-      if (t) tY = next.bottom.targetEdge === 'top' ? t.y : t.y + t.height;
-    }
-    if (typeof next.bottom.margin === 'number') {
-      next.bottom.margin = Number(Math.max(0, tY - (newY + h)).toFixed(2));
+  for (const side of ['left', 'right', 'top', 'bottom'] as const) {
+    const a = next[side];
+    if (!a) continue;
+    if (typeof a.margin === 'number') {
+      a.margin = calculateCurrentMargin(side, a.target, a.targetEdge, simulatedItem, doc);
     }
   }
 
@@ -279,35 +234,39 @@ export function updateAnchorsOnMove(item: LabelObject, newX: number, newY: numbe
 export function calculateCurrentMargin(side: AnchorSide, target: AnchorTarget, targetEdge: AnchorSide, item: LabelObject, doc: Pick<LabelDocument, 'width' | 'height' | 'objects'>): number {
   if (target === 'parent') {
     if (side === 'left') {
-      return Number(Math.max(0, targetEdge === 'right' ? item.x - doc.width : item.x).toFixed(1));
+      const edgeX = targetEdge === 'right' ? doc.width : 0;
+      return Number(Math.abs(item.x - edgeX).toFixed(1));
     }
     if (side === 'right') {
-      return Number(Math.max(0, targetEdge === 'left' ? -(item.x + item.width) : doc.width - (item.x + item.width)).toFixed(1));
+      const edgeX = targetEdge === 'left' ? 0 : doc.width;
+      return Number(Math.abs(edgeX - (item.x + item.width)).toFixed(1));
     }
     if (side === 'top') {
-      return Number(Math.max(0, targetEdge === 'bottom' ? item.y - doc.height : item.y).toFixed(1));
+      const edgeY = targetEdge === 'bottom' ? doc.height : 0;
+      return Number(Math.abs(item.y - edgeY).toFixed(1));
     }
     if (side === 'bottom') {
-      return Number(Math.max(0, targetEdge === 'top' ? -(item.y + item.height) : doc.height - (item.y + item.height)).toFixed(1));
+      const edgeY = targetEdge === 'top' ? 0 : doc.height;
+      return Number(Math.abs(edgeY - (item.y + item.height)).toFixed(1));
     }
   } else {
     const tObj = doc.objects.find(o => o.id === target);
     if (!tObj) return 0;
     if (side === 'left') {
       const tx = targetEdge === 'right' ? tObj.x + tObj.width : tObj.x;
-      return Number(Math.max(0, item.x - tx).toFixed(1));
+      return Number(Math.abs(item.x - tx).toFixed(1));
     }
     if (side === 'right') {
       const tx = targetEdge === 'left' ? tObj.x : tObj.x + tObj.width;
-      return Number(Math.max(0, tx - (item.x + item.width)).toFixed(1));
+      return Number(Math.abs(tx - (item.x + item.width)).toFixed(1));
     }
     if (side === 'top') {
       const ty = targetEdge === 'bottom' ? tObj.y + tObj.height : tObj.y;
-      return Number(Math.max(0, item.y - ty).toFixed(1));
+      return Number(Math.abs(item.y - ty).toFixed(1));
     }
     if (side === 'bottom') {
       const ty = targetEdge === 'top' ? tObj.y : tObj.y + tObj.height;
-      return Number(Math.max(0, ty - (item.y + item.height)).toFixed(1));
+      return Number(Math.abs(ty - (item.y + item.height)).toFixed(1));
     }
   }
   return 0;

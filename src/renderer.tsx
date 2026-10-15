@@ -156,7 +156,8 @@ function AnchorVisuals({
    ty = tp.y;
   }
 
-  const label = a.margin === 'auto' ? 'auto' : `${a.margin}mm`;
+  const liveMargin = calculateCurrentMargin(side, a.target, a.targetEdge, item, doc);
+  const label = a.margin === 'auto' ? 'auto' : `${liveMargin}mm`;
   const isCentered = (side==='left'||side==='right') ? isHCentered : isVCentered;
 
   let pathD = '';
@@ -180,12 +181,34 @@ function AnchorVisuals({
 
   visuals.push(
    <g key={`anchor-${side}`} data-editor-only="true" pointerEvents="none">
+    {/* Target Object Highlight when anchored to another object */}
+    {a.target !== 'parent' && (() => {
+     const t = doc.objects.find(o => o.id === a.target);
+     if (!t) return null;
+     return (
+      <rect
+       key={`target-outline-${side}`}
+       x={t.x - 0.4}
+       y={t.y - 0.4}
+       width={t.width + 0.8}
+       height={t.height + 0.8}
+       fill="rgba(33, 150, 243, 0.05)"
+       stroke="#2196F3"
+       strokeWidth={1.2}
+       strokeDasharray="3 2"
+       rx={0.8}
+       vectorEffect="non-scaling-stroke"
+      />
+     );
+    })()}
+
+    {/* The connection wire between objects or to parent edge */}
     <path
      d={pathD}
      className={`canvas-anchor-line ${isCentered && a.target === 'parent' ? 'spring' : ''}`}
      fill="none"
      stroke="#2196F3"
-     strokeWidth={1.3 / pixelScale}
+     strokeWidth={1.8}
      vectorEffect="non-scaling-stroke"
     />
     {arrowD && (
@@ -193,14 +216,19 @@ function AnchorVisuals({
       d={arrowD}
       fill="none"
       stroke="#2196F3"
-      strokeWidth={1.4 / pixelScale}
+      strokeWidth={1.8}
       strokeLinecap="round"
       strokeLinejoin="round"
       vectorEffect="non-scaling-stroke"
      />
     )}
-    <circle cx={sx} cy={sy} r={Math.max(0.2, 1.8 / pixelScale)} fill="#2196F3"/>
-    <circle cx={tx} cy={ty} r={Math.max(0.25, 2.2 / pixelScale)} fill="#fff" stroke="#2196F3" strokeWidth={strokeW} vectorEffect="non-scaling-stroke"/>
+
+    {/* Source anchor dot */}
+    <circle cx={sx} cy={sy} r={hr} fill="#2196F3" stroke="#fff" strokeWidth={1.2} vectorEffect="non-scaling-stroke"/>
+
+    {/* Target anchor dot */}
+    <circle cx={tx} cy={ty} r={hr * 1.15} fill="#2196F3" stroke="#fff" strokeWidth={1.5} vectorEffect="non-scaling-stroke"/>
+
     {Math.hypot(tx-sx, ty-sy) > 2 && (
      <g transform={`translate(${midX}, ${midY})`}>
       <rect
@@ -211,7 +239,7 @@ function AnchorVisuals({
        rx={2.5 / pixelScale}
        fill="#ffffff"
        stroke="#2196F3"
-       strokeWidth={0.8 / pixelScale}
+       strokeWidth={1.2}
        vectorEffect="non-scaling-stroke"
       />
       <text
@@ -310,7 +338,7 @@ function AnchorVisuals({
          height={o.height + 1}
          fill="rgba(33, 150, 243, 0.06)"
          stroke="#2196F3"
-         strokeWidth={1.3 / pixelScale}
+         strokeWidth="1.4"
          strokeDasharray="3 2"
          rx={0.8}
          vectorEffect="non-scaling-stroke"
@@ -328,7 +356,7 @@ function AnchorVisuals({
             r={hr * 2.2}
             fill="rgba(33, 150, 243, 0.22)"
             stroke="#2196F3"
-            strokeWidth={1.2 / pixelScale}
+            strokeWidth="1.4"
             vectorEffect="non-scaling-stroke"
            />
           )}
@@ -338,7 +366,7 @@ function AnchorVisuals({
            r={isSnapped ? hr * 1.25 : hr * 0.95}
            fill={isSnapped ? '#2196F3' : '#ffffff'}
            stroke="#2196F3"
-           strokeWidth={strokeW}
+           strokeWidth="1.2"
            vectorEffect="non-scaling-stroke"
           />
           <circle
@@ -370,7 +398,7 @@ function AnchorVisuals({
       y2={activeAnchorDrag.targetEdge === 'top' ? 0 : doc.height}
       stroke="#2196F3"
       strokeOpacity={isSnapped ? 0.95 : 0.45}
-      strokeWidth={(isSnapped ? 2.4 : 1.6) / pixelScale}
+      strokeWidth={isSnapped ? 2.4 : 1.6}
       strokeDasharray={isSnapped ? '4 2' : '2 2'}
       vectorEffect="non-scaling-stroke"
      />
@@ -450,7 +478,7 @@ function AnchorVisuals({
     <path
      d={dragWireD}
      stroke="#2196F3"
-     strokeWidth={1.5 / pixelScale}
+     strokeWidth={1.8}
      strokeDasharray={isSnapped ? '3 1.5' : '2 2'}
      fill="none"
      vectorEffect="non-scaling-stroke"
@@ -459,7 +487,7 @@ function AnchorVisuals({
      <path
       d={dragArrowD}
       stroke="#2196F3"
-      strokeWidth={1.5 / pixelScale}
+      strokeWidth={1.8}
       strokeLinecap="round"
       strokeLinejoin="round"
       fill="none"
@@ -474,7 +502,7 @@ function AnchorVisuals({
      r={isSnapped ? hr * 1.5 : hr * 1.15}
      fill="#2196F3"
      stroke="#fff"
-     strokeWidth={strokeW * 1.5}
+     strokeWidth={1.5}
      vectorEffect="non-scaling-stroke"
     />
 
@@ -489,7 +517,7 @@ function AnchorVisuals({
       fill="#1e293b"
       fillOpacity="0.95"
       stroke="#38bdf8"
-      strokeWidth={0.6 / pixelScale}
+      strokeWidth={1.0}
       vectorEffect="non-scaling-stroke"
      />
      <text
