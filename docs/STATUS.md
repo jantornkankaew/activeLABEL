@@ -200,6 +200,8 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
 - Replaced separate zoom in/out buttons, input and select with a unified segmented zoom stepper combining `[-]`, percentage input, `[▾]` preset menu and `[+]` into one cohesive control.
 - Streamlined toolbar hierarchy by removing redundant pseudo-headers ("Document", "Layout", "View") and aligning Unit and DPI inline horizontally, removing the 3-level vertical clutter.
 - Kept the bottom workspace controls container frameless and transparent without outer borders or card backgrounds, preserving the clean canvas atelier aesthetic.
+- Removed clipped teal focus outline on the zoom percentage input and presets select for clean cursor editing.
 - Verification: 71 TypeScript tests, frontend production build, Go unit tests and printbridge cross-compilations passed.
+
 
 
