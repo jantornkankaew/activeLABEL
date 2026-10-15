@@ -222,7 +222,17 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
 - Converted Bold (B), Italic (I), and Underline (U) into a unified `.quick-btn-group` segmented pill with active teal highlights (`.chosen`).
 - Converted "Auto size" checkbox into the tactile `.switch-toggle` with animated sliding knob.
 - Unified text alignment buttons into a cohesive segmented icon group (`.quick-btn-group`).
-- Added subtle vertical separators (`.context-divider`) and refined the Properties button (`.context-prop-btn`).
+- Verification: 78 TypeScript tests passing, production build passing.
+
+## 2026-10-15 — Full Object Properties panel refactor (minimal & elegant)
+
+- Redesigned the full Object Properties panel (`Inspector` / `.properties-popover`) using the same minimal, elegant frosted-glass design language (`backdrop-filter: blur(16px)`, `rgba(255, 255, 255, 0.96)`, `#e5e4df` subtle border, clean elevation shadow).
+- Integrated `.font-family-select` with smooth chevron dropdown and unified font size stepper (`.unified-font-size-control`) into the Inspector typography section.
+- Modernized text styles (Bold, Italic, Underline) and text alignment into unified `.quick-btn-group` segmented pill controls with refined active teal states (`.chosen`).
+- Replaced the legacy Auto size checkbox with the tactile `.switch-toggle` sliding knob.
+- Redesigned `AlignmentControls.tsx`: transformed bulky boxes and Thai text labels into two sleek segmented icon groups (Horizontal & Vertical alignment) using `.quick-btn-group`, preserving tooltips and ARIA accessibility labels.
+- Standardized numeric dimension and coordinate inputs (X, Y, W, H) to 32px height with subtle `#00866c` focus rings and muted unit suffixes.
+- Styled the Lock button (`.lock-btn`) and Remove button (`.property-remove`) with subtle iconography and cohesive hover states.
 - Verification: 78 TypeScript tests passing, production build passing.
 
 
