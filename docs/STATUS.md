@@ -193,3 +193,11 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
 - Barcode artwork now renders as inline SVG geometry rather than a new base64 image URL on every pointer frame, removing Chrome image decoding and blank-frame flicker. A full transparent hit area keeps selection reliable over quiet zones.
 - Both centre-edge handles now adjust 1D bar height in either direction. The top handle anchors the bottom edge; the bottom handle anchors the top edge. A shortened barcode can be restored up to 100% from either handle without recalculating magnification.
 - Verification: 70 TypeScript tests and web/ChatGPT production builds passed. Chromium grew and shrank both handles from 50%, retained 61.37% magnification and exact width, preserved each opposite anchor and reported no console errors.
+
+## 2026-10-15 — Bottom workspace controls refactor
+
+- Converted Grid and Snap checkboxes into accessible toggle switches with tactile sliding knob animations and active teal states.
+- Replaced separate zoom in/out buttons, input and select with a unified segmented zoom stepper combining `[-]`, percentage input, `[▾]` preset menu and `[+]` into one cohesive control.
+- Streamlined toolbar hierarchy by removing redundant pseudo-headers ("Document", "Layout", "View") and aligning Unit and DPI inline horizontally, removing the 3-level vertical clutter.
+- Verification: 71 TypeScript tests, frontend production build, Go unit tests and printbridge cross-compilations passed.
+
