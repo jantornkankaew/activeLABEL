@@ -503,3 +503,18 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
   - Production build passing (`npm run build`).
   - 25 Go unit tests passing (`go test ./...`).
   - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
+
+## 2026-10-15 — Refine Zigzag Spring Link Wire (ปรับเส้นเชื่อมต่อแบบหยักให้มีขนาดเล็กลง เพรียวบาง และพอดีสายตา)
+
+- **Compact, Refined Spring Path on Canvas**:
+  - Reduced zigzag spring amplitude `amp` in `springPath` from `0.55mm` (1.1mm peak-to-peak) down to `0.22mm` (0.44mm peak-to-peak), cutting the zigzag width by 60% for a sleek, compact appearance.
+  - Adjusted wave pitch `coils = Math.max(3, Math.floor(span / 0.75))` and lead distance for smooth, elegant wave transitions.
+  - Reduced connection wire and active drag wire `strokeWidth` from `1.8px` down to `1.2px` (matching the `1.2px` arrow stroke width), replacing the heavy thick stroke with a crisp vector line.
+- **Compact Spring in Blueprint Inspector Widget**:
+  - Reduced horizontal spring height from 8px to 5px (`viewBox="0 0 64 5"`, `strokeWidth="1.1"`).
+  - Reduced vertical spring width from 8px to 5px (`viewBox="0 0 5 54"`, `strokeWidth="1.1"`).
+- **Verification**:
+  - 88 TypeScript unit tests passing (`npm test`).
+  - Production build passing (`npm run build`).
+  - 25 Go unit tests passing (`go test ./...`).
+  - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.

@@ -441,15 +441,15 @@ export function AnchorControls({item, doc, disabled, onUpdate}: AnchorControlsPr
 
             {/* Horizontal Zigzag Spring (when centered) */}
             {hasLeft && hasRight && (
-              <svg className="as-spring-svg as-h-spring" viewBox="0 0 64 8">
-                <path d="M 0 4 L 8 4 L 14 1 L 22 7 L 30 1 L 38 7 L 46 1 L 54 7 L 58 4 L 64 4" fill="none" stroke="#2196F3" strokeWidth="1.3"/>
+              <svg className="as-spring-svg as-h-spring" viewBox="0 0 64 5">
+                <path d="M 0 2.5 L 8 2.5 L 14 1 L 22 4 L 30 1 L 38 4 L 46 1 L 54 4 L 58 2.5 L 64 2.5" fill="none" stroke="#2196F3" strokeWidth="1.1"/>
               </svg>
             )}
 
             {/* Vertical Zigzag Spring (when centered) */}
             {hasTop && hasBottom && (
-              <svg className="as-spring-svg as-v-spring" viewBox="0 0 8 54">
-                <path d="M 4 0 L 4 6 L 1 11 L 7 19 L 1 27 L 7 35 L 1 43 L 4 48 L 4 54" fill="none" stroke="#2196F3" strokeWidth="1.3"/>
+              <svg className="as-spring-svg as-v-spring" viewBox="0 0 5 54">
+                <path d="M 2.5 0 L 2.5 6 L 1 11 L 4 19 L 1 27 L 4 35 L 1 43 L 2.5 48 L 2.5 54" fill="none" stroke="#2196F3" strokeWidth="1.1"/>
               </svg>
             )}
           </div>

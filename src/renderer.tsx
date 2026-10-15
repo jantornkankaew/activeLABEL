@@ -39,11 +39,11 @@ function springPath(x1: number, y1: number, x2: number, y2: number, isCentered =
   return { path: `M ${x1} ${y1} L ${ax} ${ay}`, arrowD, midX, midY };
  }
 
- const lead = Math.min(1.5, dist * 0.1);
+ const lead = Math.min(1.2, dist * 0.1);
  const span = dist - lead - arrowLen;
- const coils = Math.max(4, Math.floor(span / 0.65));
+ const coils = Math.max(3, Math.floor(span / 0.75));
  const step = span / (coils * 2);
- const amp = 0.55;
+ const amp = 0.22;
 
  let d = `M ${x1} ${y1} L ${x1 + ux * lead} ${y1 + uy * lead}`;
  let cx = x1 + ux * lead;
@@ -209,7 +209,7 @@ function AnchorVisuals({
      className={`canvas-anchor-line ${isCentered && a.target === 'parent' ? 'spring' : ''}`}
      fill="none"
      stroke="#2196F3"
-     strokeWidth={1.8}
+     strokeWidth={1.2}
      vectorEffect="non-scaling-stroke"
      pointerEvents="none"
     />
@@ -218,7 +218,7 @@ function AnchorVisuals({
       d={arrowD}
       fill="none"
       stroke="#2196F3"
-      strokeWidth={1.3}
+      strokeWidth={1.2}
       strokeLinecap="round"
       strokeLinejoin="round"
       vectorEffect="non-scaling-stroke"
@@ -512,7 +512,7 @@ function AnchorVisuals({
     <path
      d={dragWireD}
      stroke="#2196F3"
-     strokeWidth={1.8}
+     strokeWidth={1.2}
      strokeDasharray={isSnapped ? '3 1.5' : '2 2'}
      fill="none"
      vectorEffect="non-scaling-stroke"
@@ -521,7 +521,7 @@ function AnchorVisuals({
      <path
       d={dragArrowD}
       stroke="#2196F3"
-      strokeWidth={1.3}
+      strokeWidth={1.2}
       strokeLinecap="round"
       strokeLinejoin="round"
       fill="none"
