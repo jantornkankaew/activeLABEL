@@ -70,6 +70,12 @@ export const FUNCTION_CATALOG: {
     categoryIcon: '🔤',
     functions: [
       {
+        name: 'variable',
+        label: 'ดึงค่าตัวแปร (Use Variable)',
+        description: 'ดึงค่าตัวแปรจากเอกสารมาใช้ประมวลผล',
+        defaultParams: {variableName: ''},
+      },
+      {
         name: 'concat',
         label: 'Combine / Append Text',
         description: 'Appends prefix, suffix, or another variable',
@@ -247,6 +253,10 @@ export function evaluateBlock(
 
     case 'string': {
       let text = input;
+      if (block.functionName === 'variable') {
+        const varName = block.params.variableName || '';
+        return variables[varName] !== undefined ? variables[varName] : (varName ? `[${varName}]` : input);
+      }
       if (block.params.source) {
         text = resolve(block.params.source);
       }

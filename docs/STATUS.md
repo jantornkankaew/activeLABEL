@@ -743,3 +743,29 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
   - 25 Go unit tests passing (`go test ./...`).
   - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
 
+## 2026-10-15 — Spacious 2-Panel LEGO Formula Studio (ขยายพื้นที่กว้าง ใช้งานง่ายด้วย 1-Click Palette)
+
+- **Spacious Studio Layout & Fullscreen Toggle**:
+  - Expanded dialog from cramped 800px popup to a generous `1200px × 860px` studio workspace (`width: min(1200px, 96vw)`, `height: min(860px, 92vh)`).
+  - Added 1-click **Maximize / Fullscreen toggle** (`[ ⛶ ]`) expanding to `98vw × 96vh` for maximum working comfort.
+- **Left Palette (คลังชิ้นส่วน LEGO 1 คลิกต่อบล็อก & แม่แบบสำเร็จรูป)**:
+  - Fixed 330px sidebar with always-visible categories and 1-click addition buttons (no hidden dropdowns).
+  - **Instant 1-Click Templates**: Expiry 30 days, Expiry 1 year, Lot today, Running sequence, Uppercase, Price + VAT 7%.
+  - **Categorized Bricks**:
+    - 📅 Date & Time: Now, Add days, Add months, Add years, Format date, Date part.
+    - 🔤 Text & Variables: **Dedicated `variable` brick (`🧩 ดึงค่าตัวแปร`)**, Concat prefix/suffix, Pad 0s, Uppercase, Lowercase, Substring, Replace, Trim.
+    - 🔢 Numbers & Math: Counter, Math op (+ - × ÷), Round decimals.
+    - 🔀 Logic & Loops: IF/ELSE condition, Repeat pattern.
+- **Right Workspace & Live Previews**:
+  - Prominent **Live Result Card** in 18px monospace green box with 1-click copy action.
+  - Project variables bar showing real document variables.
+  - **Inline Variable Inserters (`[ {x} ตัวแปร ▾ ]`)** on text inputs allowing 1-click variable tag insertion without manual typing.
+  - **Quick Shortcut Pills** inside bricks (e.g. `[+7 วัน]`, `[+14 วัน]`, `[+30 วัน]`, `[+60 วัน]`, `[+90 วัน]`, `[+1 ปี]`, `[+ VAT 7%]`, `[ลด 10%]`).
+  - Tactile LEGO styling: 3D studs, step badges, colored category borders, duplicate brick, re-ordering, and step-by-step intermediate output badges.
+- **Verification**:
+  - 95 TypeScript unit tests passing (`npm test`).
+  - Production build passing (`npm run build`).
+  - 25 Go unit tests passing (`go test ./...`).
+  - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
+
+

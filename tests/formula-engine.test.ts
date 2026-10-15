@@ -97,6 +97,26 @@ test('evaluates String functions (concat, pad_start, uppercase, substring, repla
     ],
   };
   assert.equal(evaluateFormula(subFormula, {}), 'CDE');
+
+  const varFormula: LabelFormula = {
+    id: 'f_var',
+    name: 'Variable block',
+    blocks: [
+      {
+        id: 'b1',
+        category: 'string',
+        functionName: 'variable',
+        params: {variableName: 'sku_code'},
+      },
+      {
+        id: 'b2',
+        category: 'string',
+        functionName: 'concat',
+        params: {prefix: 'ITEM-', append: '-TH'},
+      },
+    ],
+  };
+  assert.equal(evaluateFormula(varFormula, {sku_code: '9988'}), 'ITEM-9988-TH');
 });
 
 test('evaluates Numeric functions (counter, math_op, round)', () => {
