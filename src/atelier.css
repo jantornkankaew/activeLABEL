@@ -59,6 +59,11 @@
 .atelier .property-header .lock-btn:hover{background:#f0f1ee;color:#202124}
 .atelier .property-section{padding:14px 18px;border-bottom:1px solid #f0f1ec}
 .atelier .property-section>h4{margin:0 0 10px;color:#70757a;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase}
+.atelier .property-section-header{display:flex;align-items:center;justify-content:space-between;margin:0 0 10px}
+.atelier .property-section-header>h4{margin:0!important;color:#70757a;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase}
+.atelier .property-remove-btn{background:transparent;border:0;padding:0;margin:0;border-radius:6px;color:#70747a;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;min-height:24px!important;transition:background .15s,color .15s}
+.atelier .property-remove-btn:hover{background:#fdf3f2;color:#d32f2f}
+.atelier .property-remove-btn:disabled{opacity:.35;cursor:not-allowed;pointer-events:none}
 .atelier .inspector label{font-size:11px;font-weight:500;color:#50555a;display:flex;flex-direction:column;gap:5px;margin:0 0 10px}
 .atelier .inspector input,.atelier .inspector select{height:32px;border:1px solid #d5d8dc;border-radius:8px;background:#fff;font-size:12px;font-weight:500;color:#202124;padding:0 9px;box-shadow:0 1px 2px rgba(0,0,0,.02);transition:border-color .15s,box-shadow .15s}
 .atelier .inspector input:focus,.atelier .inspector select:focus{border-color:#00866c;outline:none!important;box-shadow:0 0 0 2px rgba(0,134,108,.12)!important}

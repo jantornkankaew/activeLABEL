@@ -567,3 +567,15 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
   - Production build passing (`npm run build`).
   - 25 Go unit tests passing (`go test ./...`).
   - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
+
+## 2026-10-15 — Relocate Remove Object Button to Content Header (ย้ายปุ่มลบวัตถุเป็นไอคอนถังขยะด้านขวาของ CONTENT)
+
+- **Header Placement & Clean Icon Design**:
+  - Moved the object deletion action from the bottom of the inspector up to the top Content section header (`.property-section-header`), directly to the right of `<h4>Content</h4>`.
+  - Replaced the large bottom rectangular button ("Remove object") with a compact, dedicated trash can icon button (`.property-remove-btn`) using `<Trash2 size={14} />`.
+  - Styled with subtle hover interaction (`#fdf3f2` background with `#d32f2f` danger red icon) and properly disabled when the object is locked (`disabled={item.locked}`).
+- **Verification**:
+  - 88 TypeScript unit tests passing (`npm test`).
+  - Production build passing (`npm run build`).
+  - 25 Go unit tests passing (`go test ./...`).
+  - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
