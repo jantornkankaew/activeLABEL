@@ -724,3 +724,22 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
   - Production build passing (`npm run build`).
   - 25 Go unit tests passing (`go test ./...`).
   - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
+
+## 2026-10-15 — Quick Barcode Context-Bar Baseline Alignment (จัดระนาบช่องเครื่องมือบาร์โค้ด)
+
+- **Root Cause**:
+  - The floating context bar (`.quick-barcode`) contained a mix of native `<select>`, `<input type="number">`, custom `RatioCombobox` component, and labels.
+  - The barcode symbology and style dropdowns were wrapped in `.barcode-editor > label` which was inheriting flex-direction column and 6px gap from global `style.css`.
+  - Differing margins, spin buttons, line-heights, and box-sizing across `<select>`, `<input>`, and `.as-ratio-wrap` caused the controls to sit on staggered vertical baselines.
+  - An errant `.barcode-editor { flex-wrap: wrap; justify-content: center; }` on line 19 of `atelier.css` caused inconsistent flex layouts.
+- **Fix**:
+  - Locked all controls, wrappers, inputs, selects, comboboxes, and labels in `.atelier .quick-barcode` to a uniform `height: 30px`, `display: inline-flex`, `align-items: center`, and `box-sizing: border-box`.
+  - Enforced `vertical-align: middle !important` and `margin: 0 !important` across all child elements.
+  - Reset number input spin-buttons with `-webkit-inner-spin-button, -webkit-outer-spin-button { appearance: none !important; margin: 0 !important; }`.
+  - Standardized `.as-ratio-wrap` and `.as-ratio-combobox` with `height: 30px !important`, ensuring `Ratio (%)` and `Bar height (%)` align horizontally on the exact same center baseline as the dropdowns, divider, and context button.
+- **Verification**:
+  - 95 TypeScript unit tests passing (`npm test`).
+  - Production build passing (`npm run build`).
+  - 25 Go unit tests passing (`go test ./...`).
+  - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
+
