@@ -961,11 +961,11 @@ export function FormulaBuilderDialog({
                                     updateBlock(block.id, {format: e.target.value})
                                   }
                                 >
-                                  <option value="DD/MM/YYYY">15/10/2026 (DD/MM/YYYY)</option>
-                                  <option value="YYYY-MM-DD">2026-10-15 (YYYY-MM-DD)</option>
-                                  <option value="YYYYMMDD">20261015 (YYYYMMDD)</option>
-                                  <option value="DD-MM-YYYY">15-10-2026</option>
-                                  <option value="DD/MM/YY">15/10/26</option>
+                                  <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                                  <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                                  <option value="YYYYMMDD">YYYYMMDD</option>
+                                  <option value="DD-MM-YYYY">DD-MM-YYYY</option>
+                                  <option value="DD/MM/YY">DD/MM/YY</option>
                                 </select>
                               </div>
                             )}
@@ -990,10 +990,10 @@ export function FormulaBuilderDialog({
                                     updateBlock(block.id, {format: e.target.value})
                                   }
                                 >
-                                  <option value="DD/MM/YYYY">15/10/2026 (DD/MM/YYYY)</option>
-                                  <option value="YYYY-MM-DD">2026-10-15 (YYYY-MM-DD)</option>
-                                  <option value="YYYYMMDD">20261015 (YYYYMMDD)</option>
-                                  <option value="DD/MM/YY">15/10/26</option>
+                                  <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                                  <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                                  <option value="YYYYMMDD">YYYYMMDD</option>
+                                  <option value="DD/MM/YY">DD/MM/YY</option>
                                 </select>
                               </div>
                             )}
@@ -1018,9 +1018,9 @@ export function FormulaBuilderDialog({
                                     updateBlock(block.id, {format: e.target.value})
                                   }
                                 >
-                                  <option value="DD/MM/YYYY">15/10/2026 (DD/MM/YYYY)</option>
-                                  <option value="YYYY-MM-DD">2026-10-15 (YYYY-MM-DD)</option>
-                                  <option value="YYYYMMDD">20261015 (YYYYMMDD)</option>
+                                  <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                                  <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                                  <option value="YYYYMMDD">YYYYMMDD</option>
                                 </select>
                               </div>
                             )}
@@ -1045,9 +1045,9 @@ export function FormulaBuilderDialog({
                                     updateBlock(block.id, {format: e.target.value})
                                   }
                                 >
-                                  <option value="DD/MM/YYYY">15/10/2026 (DD/MM/YYYY)</option>
-                                  <option value="YYYY-MM-DD">2026-10-15 (YYYY-MM-DD)</option>
-                                  <option value="YYYYMMDD">20261015 (YYYYMMDD)</option>
+                                  <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                                  <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                                  <option value="YYYYMMDD">YYYYMMDD</option>
                                 </select>
                               </div>
                             )}
@@ -1385,7 +1385,7 @@ export function FormulaBuilderDialog({
                                 title="เลื่อนบล็อกขึ้น"
                                 onClick={() => moveBlock(block.id, -1)}
                               >
-                                <ChevronUp size={13} strokeWidth={2.5} />
+                                <ChevronUp size={12} strokeWidth={2.5} color="#ffffff" />
                               </button>
                             )}
                             {!isLast && (
@@ -1395,7 +1395,7 @@ export function FormulaBuilderDialog({
                                 title="เลื่อนบล็อกลง"
                                 onClick={() => moveBlock(block.id, 1)}
                               >
-                                <ChevronDown size={13} strokeWidth={2.5} />
+                                <ChevronDown size={12} strokeWidth={2.5} color="#ffffff" />
                               </button>
                             )}
                             <button
@@ -1404,7 +1404,7 @@ export function FormulaBuilderDialog({
                               title="ทำซ้ำบล็อกนี้"
                               onClick={() => duplicateBlock(block.id)}
                             >
-                              <Copy size={11} />
+                              <Copy size={11} color="#ffffff" />
                             </button>
                             <button
                               type="button"
@@ -1412,7 +1412,7 @@ export function FormulaBuilderDialog({
                               title="ลบบล็อกนี้"
                               onClick={() => removeBlock(block.id)}
                             >
-                              <Trash2 size={12} />
+                              <Trash2 size={11} color="#ffffff" />
                             </button>
                           </div>
                         </div>
@@ -1420,11 +1420,11 @@ export function FormulaBuilderDialog({
                         {/* Step Result Speech Bubble */}
                         <div
                           className="wb-step-speech-bubble"
-                          title="ผลลัพธ์ของบล็อกนี้"
+                          title={`ผลลัพธ์ของขั้นตอนนี้: "${stepVal}"`}
                         >
                           <span className="bubble-pointer">◀</span>
                           <span className="bubble-text">
-                            ได้ค่า: <strong>"{stepVal}"</strong>
+                            = <strong>"{stepVal}"</strong>
                           </span>
                         </div>
                       </div>

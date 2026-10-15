@@ -821,3 +821,25 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
   - Production build passing (`npm run build`).
   - 25 Go unit tests passing (`go test ./...`).
   - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
+
+## 2026-10-15 — Minimal LEGO® Word Blocks & Action Button Icon Visibility Fix
+
+- **Issues Addressed**:
+  - The block trailing action buttons (move up, move down, duplicate, delete) appeared as an empty dark rectangle with no icons. Root cause: global `button` padding (`padding: 9px 12px` in `src/style.css`) caused `.wb-btn-act` (`width: 22px; height: 22px`) content-box to collapse to negative dimensions (`22 - 24 = -2px`), squishing inner SVG icons to 0 width.
+  - Blocks were bulky and occupied too much vertical and horizontal screen real estate, causing date formats and labels to wrap awkwardly into two rows.
+  - Step result speech bubbles were pushed off the right screen edge due to excessive text (`ได้ค่า: "..."`).
+- **Fixes**:
+  - **Visible Action Buttons**: Enforced `padding: 0 !important; width: 20px !important; height: 20px !important;` on `.wb-btn-act`, explicit white stroke `stroke: #ffffff !important; stroke-width: 2.2 !important;` on `.wb-btn-act svg`, and `color="#ffffff"` on Lucide icon components. Up/down/copy/trash icons are now crisp, sharp, and centered.
+  - **Minimal & Compact Block Design**:
+    - Reduced `.wb-block` padding from `10px 16px` to `4px 10px`, font size to `12px`, and prevented multiline wrapping (`white-space: nowrap`).
+    - Scaled puzzle notch and bottom tab proportionally (`16px × 4px`).
+    - Reduced `.wb-hat-block` padding to `5px 14px 7px` with matching `12px` font.
+    - Compacted form controls: `.wb-slot-input` and `.wb-slot-dropdown` height `24px` with `border-radius: 12px`, padding `1px 7px`, font size `11.5px`.
+    - Simplified date format select options to clean standard codes (`DD/MM/YYYY`, `YYYY-MM-DD`, `YYYYMMDD`).
+  - **Compact Step Bubble**: Changed speech bubble output to `= "{stepVal}"` with slim padding `2px 7px` and max width `190px`, preventing horizontal overflow.
+- **Verification**:
+  - 95 TypeScript unit tests passing (`npm test`).
+  - Production build passing (`npm run build`).
+  - 25 Go unit tests passing (`go test ./...`).
+  - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
+
