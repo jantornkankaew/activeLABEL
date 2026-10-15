@@ -15,9 +15,9 @@ import {
   Maximize2,
   Minimize2,
   Copy,
-  Layers,
   Sparkles,
-  Repeat,
+  Layers,
+  Flag,
   Variable as VariableIcon,
 } from 'lucide-react';
 import type {LabelVariable} from './core';
@@ -30,10 +30,11 @@ import {
 } from './formulaEngine';
 import './formula.css';
 
+type WordBlockCategory = 'variable' | 'datetime' | 'operator' | 'control' | 'preset';
+
 type PresetRecipe = {
   id: string;
   name: string;
-  icon: string;
   desc: string;
   blocks: FormulaBlock[];
 };
@@ -42,7 +43,6 @@ const PRESET_RECIPES: PresetRecipe[] = [
   {
     id: 'exp_30_days',
     name: 'วันหมดอายุ (+30 วัน)',
-    icon: '📅',
     desc: 'วันปัจจุบัน + 30 วัน (เช่น 14/11/2026)',
     blocks: [
       {
@@ -56,7 +56,6 @@ const PRESET_RECIPES: PresetRecipe[] = [
   {
     id: 'exp_1_year',
     name: 'วันหมดอายุ (+1 ปี)',
-    icon: '📅',
     desc: 'วันปัจจุบัน + 1 ปี (เช่น 15/10/2027)',
     blocks: [
       {
@@ -70,8 +69,7 @@ const PRESET_RECIPES: PresetRecipe[] = [
   {
     id: 'lot_today',
     name: 'Lot วันนี้ (LOT-YYYYMMDD)',
-    icon: '📦',
-    desc: 'รหัส Lot ตามวันที่ เช่น LOT-20261015',
+    desc: 'รหัส Lot วันนี้ เช่น LOT-20261015',
     blocks: [
       {
         id: 'b1',
@@ -90,7 +88,6 @@ const PRESET_RECIPES: PresetRecipe[] = [
   {
     id: 'seq_counter',
     name: 'รหัสรันเลขอัตโนมัติ (SEQ-0001)',
-    icon: '🔢',
     desc: 'รันลำดับตัวเลข 4 หลัก มีคำนำหน้า',
     blocks: [
       {
@@ -110,7 +107,6 @@ const PRESET_RECIPES: PresetRecipe[] = [
   {
     id: 'uppercase_text',
     name: 'แปลงเป็นตัวพิมพ์ใหญ่',
-    icon: '🔤',
     desc: 'เปลี่ยนตัวอักษรภาษาอังกฤษทั้งหมดเป็นตัวพิมพ์ใหญ่',
     blocks: [
       {
@@ -124,7 +120,6 @@ const PRESET_RECIPES: PresetRecipe[] = [
   {
     id: 'price_vat',
     name: 'คำนวณราคา + VAT 7%',
-    icon: '💰',
     desc: 'คูณ 1.07 และปัดทศนิยม 2 ตำแหน่ง',
     blocks: [
       {
@@ -185,10 +180,7 @@ export function FormulaBuilderDialog({
 
   const [isMaximized, setIsMaximized] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [activeVarMenu, setActiveVarMenu] = useState<{
-    blockId: string;
-    fieldKey: string;
-  } | null>(null);
+  const [selectedPaletteTab, setSelectedPaletteTab] = useState<WordBlockCategory>('variable');
 
   const activeFormula = list.find((f) => f.id === activeId) || list[0];
 
@@ -321,16 +313,6 @@ export function FormulaBuilderDialog({
     updateActiveFormula({blocks: next});
   }
 
-  function insertVariableIntoParam(blockId: string, fieldKey: string, varName: string) {
-    if (!activeFormula) return;
-    const block = activeFormula.blocks.find((b) => b.id === blockId);
-    if (!block) return;
-    const currentVal = String(block.params[fieldKey] ?? '');
-    const newVal = currentVal + `{{${varName}}}`;
-    updateBlock(blockId, {[fieldKey]: newVal});
-    setActiveVarMenu(null);
-  }
-
   function copyResultToClipboard() {
     if (!finalResult) return;
     navigator.clipboard?.writeText(finalResult).catch(() => {});
@@ -338,58 +320,66 @@ export function FormulaBuilderDialog({
     setTimeout(() => setCopied(false), 1600);
   }
 
+  // Insert variable into the latest text block or append variable block
+  function insertVariableAsBlock(varName: string) {
+    addBlock('string', 'variable', {variableName: varName});
+  }
+
   return (
     <div className="modal-backdrop">
       <div
-        className={`modal minimal-formula-modal ${isMaximized ? 'is-maximized' : ''}`}
+        className={`modal minimal-formula-modal lego-word-blocks-modal ${
+          isMaximized ? 'is-maximized' : ''
+        }`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="formula-title"
       >
         {/* ================= HEADER ================= */}
-        <header className="min-header">
-          <div className="min-header-left">
-            <div className="min-brand-badge">
-              <span className="min-lego-icon">🧱</span>
-              <strong className="min-brand-text">LEGO Formula Studio</strong>
+        <header className="wb-studio-header">
+          <div className="wb-header-left">
+            <div className="wb-brand-badge">
+              <span className="wb-spike-logo">🟧</span>
+              <strong className="wb-brand-title">LEGO® Word Blocks Studio</strong>
             </div>
 
-            <div className="min-formula-tabs">
+            {/* Formula Tabs */}
+            <div className="wb-formula-tabs">
               {list.map((f) => (
                 <button
                   key={f.id}
                   type="button"
-                  className={`min-tab-pill ${f.id === activeId ? 'active' : ''}`}
+                  className={`wb-tab-pill ${f.id === activeId ? 'active' : ''}`}
                   onClick={() => setActiveId(f.id)}
                 >
-                  <span className="tab-pill-icon">🧩</span>
-                  {f.name || 'Untitled Formula'}
+                  <span className="wb-tab-dot" />
+                  <span className="wb-tab-name">{f.name || 'Untitled'}</span>
                 </button>
               ))}
               <button
                 type="button"
-                className="min-add-tab-btn"
+                className="wb-add-tab-btn"
                 title="สร้างสูตรใหม่"
                 onClick={addFormula}
               >
-                <Plus size={14} strokeWidth={2.5} />
-                <span>เพิ่มสูตร</span>
+                <Plus size={13} strokeWidth={2.5} />
+                <span>สูตรใหม่</span>
               </button>
             </div>
           </div>
 
-          <div className="min-header-right">
+          <div className="wb-header-right">
             <button
               type="button"
-              className="min-header-btn"
-              title={isMaximized ? 'ย่อขนาดหน้าต่าง' : 'ขยายเต็มจอ (Maximize)'}
+              className="wb-header-icon-btn"
+              title={isMaximized ? 'ย่อหน้าต่าง' : 'ขยายเต็มจอ (Maximize)'}
               onClick={() => setIsMaximized(!isMaximized)}
             >
               {isMaximized ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
             </button>
             <button
               type="button"
-              className="min-close-btn"
+              className="wb-close-dialog-btn"
               aria-label="Close dialog"
               onClick={onClose}
             >
@@ -398,246 +388,343 @@ export function FormulaBuilderDialog({
           </div>
         </header>
 
-        {/* ================= STUDIO 2-PANEL BODY ================= */}
-        <div className="formula-studio-body">
-          {/* ================= LEFT SIDEBAR: BLOCK PALETTE ================= */}
-          <aside className="formula-palette-sidebar">
-            {/* Quick 1-Click Templates */}
-            <div className="palette-section">
-              <div className="palette-section-title">
-                <Zap size={14} fill="#eab308" color="#eab308" />
-                <span>แม่แบบยอดนิยม (1 คลิกพร้อมใช้)</span>
-              </div>
-              <div className="palette-preset-grid">
-                {PRESET_RECIPES.map((recipe) => (
-                  <button
-                    key={recipe.id}
-                    type="button"
-                    className="palette-preset-btn"
-                    onClick={() => applyPreset(recipe)}
-                    title={recipe.desc}
-                  >
-                    <span className="preset-btn-icon">{recipe.icon}</span>
-                    <div className="preset-btn-text">
-                      <strong>{recipe.name}</strong>
-                      <small>{recipe.desc}</small>
-                    </div>
-                  </button>
-                ))}
-              </div>
+        {/* ================= WORD BLOCKS 2-PANEL BODY ================= */}
+        <div className="wb-studio-body">
+          {/* ================= LEFT: CATEGORY DRAWER & WORD BLOCKS PALETTE ================= */}
+          <aside className="wb-palette-sidebar">
+            {/* Category Switcher Tabs (Scratch / LEGO SPIKE Style) */}
+            <div className="wb-category-strip">
+              <button
+                type="button"
+                className={`wb-cat-strip-btn cat-variable ${
+                  selectedPaletteTab === 'variable' ? 'active' : ''
+                }`}
+                onClick={() => setSelectedPaletteTab('variable')}
+                title="ตัวแปร (Variables)"
+              >
+                <span className="cat-dot cat-variable" />
+                <span className="cat-strip-label">ตัวแปร</span>
+              </button>
+              <button
+                type="button"
+                className={`wb-cat-strip-btn cat-datetime ${
+                  selectedPaletteTab === 'datetime' ? 'active' : ''
+                }`}
+                onClick={() => setSelectedPaletteTab('datetime')}
+                title="วันที่ & เวลา (Date & Time)"
+              >
+                <span className="cat-dot cat-datetime" />
+                <span className="cat-strip-label">วันที่</span>
+              </button>
+              <button
+                type="button"
+                className={`wb-cat-strip-btn cat-operator ${
+                  selectedPaletteTab === 'operator' ? 'active' : ''
+                }`}
+                onClick={() => setSelectedPaletteTab('operator')}
+                title="ตัวดำเนินการ & ข้อความ (Operators)"
+              >
+                <span className="cat-dot cat-operator" />
+                <span className="cat-strip-label">ข้อความ</span>
+              </button>
+              <button
+                type="button"
+                className={`wb-cat-strip-btn cat-control ${
+                  selectedPaletteTab === 'control' ? 'active' : ''
+                }`}
+                onClick={() => setSelectedPaletteTab('control')}
+                title="เงื่อนไข (Control / IF)"
+              >
+                <span className="cat-dot cat-control" />
+                <span className="cat-strip-label">เงื่อนไข</span>
+              </button>
+              <button
+                type="button"
+                className={`wb-cat-strip-btn cat-preset ${
+                  selectedPaletteTab === 'preset' ? 'active' : ''
+                }`}
+                onClick={() => setSelectedPaletteTab('preset')}
+                title="แม่แบบสำเร็จรูป (1-Click Recipes)"
+              >
+                <span className="cat-dot cat-preset">⚡</span>
+                <span className="cat-strip-label">แม่แบบ</span>
+              </button>
             </div>
 
-            <div className="palette-divider" />
+            {/* Blocks List Pane */}
+            <div className="wb-palette-blocks-scroll">
+              {/* 1. VARIABLE BLOCKS (ORANGE) */}
+              {selectedPaletteTab === 'variable' && (
+                <div className="wb-palette-group">
+                  <div className="wb-palette-title orange">
+                    <VariableIcon size={14} />
+                    <span>บล็อกคำสั่งตัวแปร (Variable Blocks)</span>
+                  </div>
 
-            {/* Block Catalog By Category */}
-            <div className="palette-section">
-              <div className="palette-section-title">
-                <Layers size={14} color="#3b82f6" />
-                <span>คลังชิ้นส่วน LEGO (คลิกเพื่อต่อบล็อก)</span>
-              </div>
+                  {/* Document Variables as Clickable Reporter Pills */}
+                  {variables && variables.length > 0 ? (
+                    <div className="wb-reporter-pills-shelf">
+                      <span className="shelf-label">คลิกตัวแปรเพื่อเพิ่มลงในสูตร:</span>
+                      <div className="shelf-pills">
+                        {variables.map((v) => (
+                          <button
+                            key={v.name}
+                            type="button"
+                            className="wb-pill-reporter"
+                            onClick={() => insertVariableAsBlock(v.name)}
+                            title={`คลิกเพื่อใส่ตัวแปร {{${v.name}}} = "${v.value || ''}"`}
+                          >
+                            <span className="pill-dot" />
+                            <span>{v.label || v.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="wb-empty-vars-hint">
+                      💡 ยังไม่มีตัวแปรในโปรเจกต์นี้ สามารถสร้างได้ที่ปุ่ม Variables ด้านบน
+                    </p>
+                  )}
 
-              {/* 1. Date & Time Category */}
-              <div className="palette-cat-group">
-                <div className="palette-cat-header cat-datetime">
-                  <Calendar size={13} />
-                  <span>📅 วันที่ & เวลา (Date & Time)</span>
-                </div>
-                <div className="palette-buttons-list">
-                  <button
-                    type="button"
-                    className="palette-brick-btn"
-                    onClick={() =>
-                      addBlock('datetime', 'add_days', {days: 30, format: 'DD/MM/YYYY'})
-                    }
-                  >
-                    <span className="brick-btn-tag cat-datetime">+</span>
-                    <span>บวกวันหมดอายุ (+วัน)</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="palette-brick-btn"
-                    onClick={() => addBlock('datetime', 'now', {format: 'DD/MM/YYYY'})}
-                  >
-                    <span className="brick-btn-tag cat-datetime">+</span>
-                    <span>วันที่ปัจจุบัน (NOW)</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="palette-brick-btn"
-                    onClick={() =>
-                      addBlock('datetime', 'add_months', {months: 1, format: 'DD/MM/YYYY'})
-                    }
-                  >
-                    <span className="brick-btn-tag cat-datetime">+</span>
-                    <span>บวก/ลบเดือน (+Months)</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="palette-brick-btn"
-                    onClick={() =>
-                      addBlock('datetime', 'add_years', {years: 1, format: 'DD/MM/YYYY'})
-                    }
-                  >
-                    <span className="brick-btn-tag cat-datetime">+</span>
-                    <span>บวก/ลบปี (+Years)</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="palette-brick-btn"
-                    onClick={() =>
-                      addBlock('datetime', 'format_date', {format: 'DD/MM/YYYY'})
-                    }
-                  >
-                    <span className="brick-btn-tag cat-datetime">+</span>
-                    <span>แปลงรูปแบบวันที่ (Format)</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="palette-brick-btn"
-                    onClick={() => addBlock('datetime', 'date_part', {part: 'YYYY'})}
-                  >
-                    <span className="brick-btn-tag cat-datetime">+</span>
-                    <span>ดึงเฉพาะปี / เดือน / วัน</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* 2. Text & Variables Category */}
-              <div className="palette-cat-group">
-                <div className="palette-cat-header cat-string">
-                  <Type size={13} />
-                  <span>🔤 ข้อความ & ตัวแปร (Text & Variables)</span>
-                </div>
-                <div className="palette-buttons-list">
-                  <button
-                    type="button"
-                    className="palette-brick-btn"
+                  {/* Set Variable Block */}
+                  <div
+                    className="wb-brick-preview wb-block-variable"
                     onClick={() =>
                       addBlock('string', 'variable', {
                         variableName: variables[0]?.name || '',
                       })
                     }
                   >
-                    <span className="brick-btn-tag cat-string">+</span>
-                    <span>🧩 ดึงค่าตัวแปร (Use Variable)</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="palette-brick-btn"
+                    <span>ตั้งค่าผลลัพธ์เป็นตัวแปร</span>
+                    <span className="wb-slot-dropdown">
+                      {variables[0]?.name || 'my_variable'} ▾
+                    </span>
+                  </div>
+
+                  {/* Concat / Prefix Block */}
+                  <div
+                    className="wb-brick-preview wb-block-variable"
+                    onClick={() =>
+                      addBlock('string', 'concat', {prefix: 'LOT-', append: ''})
+                    }
+                  >
+                    <span>เติมคำนำหน้า</span>
+                    <span className="wb-slot-input">LOT-</span>
+                    <span>ต่อกับตัวแปร</span>
+                  </div>
+                </div>
+              )}
+
+              {/* 2. DATE & TIME BLOCKS (BLUE) */}
+              {selectedPaletteTab === 'datetime' && (
+                <div className="wb-palette-group">
+                  <div className="wb-palette-title blue">
+                    <Calendar size={14} />
+                    <span>บล็อกคำสั่งวันที่ & เวลา (Date & Time Blocks)</span>
+                  </div>
+
+                  {/* Now Block */}
+                  <div
+                    className="wb-brick-preview wb-block-datetime"
+                    onClick={() => addBlock('datetime', 'now', {format: 'DD/MM/YYYY'})}
+                  >
+                    <span>วันที่ปัจจุบัน รูปแบบ</span>
+                    <span className="wb-slot-dropdown">DD/MM/YYYY ▾</span>
+                  </div>
+
+                  {/* Add Days Block */}
+                  <div
+                    className="wb-brick-preview wb-block-datetime"
+                    onClick={() =>
+                      addBlock('datetime', 'add_days', {days: 30, format: 'DD/MM/YYYY'})
+                    }
+                  >
+                    <span>วันที่ปัจจุบัน +</span>
+                    <span className="wb-slot-input">30</span>
+                    <span>วัน (วันหมดอายุ)</span>
+                  </div>
+
+                  {/* Add Months Block */}
+                  <div
+                    className="wb-brick-preview wb-block-datetime"
+                    onClick={() =>
+                      addBlock('datetime', 'add_months', {months: 1, format: 'DD/MM/YYYY'})
+                    }
+                  >
+                    <span>วันที่ปัจจุบัน +</span>
+                    <span className="wb-slot-input">1</span>
+                    <span>เดือน</span>
+                  </div>
+
+                  {/* Add Years Block */}
+                  <div
+                    className="wb-brick-preview wb-block-datetime"
+                    onClick={() =>
+                      addBlock('datetime', 'add_years', {years: 1, format: 'DD/MM/YYYY'})
+                    }
+                  >
+                    <span>วันที่ปัจจุบัน +</span>
+                    <span className="wb-slot-input">1</span>
+                    <span>ปี</span>
+                  </div>
+
+                  {/* Format Date Block */}
+                  <div
+                    className="wb-brick-preview wb-block-datetime"
+                    onClick={() =>
+                      addBlock('datetime', 'format_date', {format: 'DD/MM/YYYY'})
+                    }
+                  >
+                    <span>แปลงรูปแบบวันที่เป็น</span>
+                    <span className="wb-slot-input">DD/MM/YYYY</span>
+                  </div>
+
+                  {/* Date Part Block */}
+                  <div
+                    className="wb-brick-preview wb-block-datetime"
+                    onClick={() => addBlock('datetime', 'date_part', {part: 'YYYY'})}
+                  >
+                    <span>ดึงเฉพาะส่วน</span>
+                    <span className="wb-slot-dropdown">ปี 4 หลัก (YYYY) ▾</span>
+                  </div>
+                </div>
+              )}
+
+              {/* 3. OPERATORS & STRING BLOCKS (GREEN) */}
+              {selectedPaletteTab === 'operator' && (
+                <div className="wb-palette-group">
+                  <div className="wb-palette-title green">
+                    <Type size={14} />
+                    <span>บล็อกตัวดำเนินการ & ข้อความ (Operators & String)</span>
+                  </div>
+
+                  {/* Concat Block */}
+                  <div
+                    className="wb-brick-preview wb-block-operator"
                     onClick={() =>
                       addBlock('string', 'concat', {prefix: '', append: ''})
                     }
                   >
-                    <span className="brick-btn-tag cat-string">+</span>
-                    <span>เติมคำนำหน้า / ต่อท้าย</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="palette-brick-btn"
+                    <span>เชื่อมข้อความ</span>
+                    <span className="wb-slot-input">นำหน้า</span>
+                    <span>กับ</span>
+                    <span className="wb-slot-input">ต่อท้าย</span>
+                  </div>
+
+                  {/* Pad 0 Block */}
+                  <div
+                    className="wb-brick-preview wb-block-operator"
                     onClick={() =>
                       addBlock('string', 'pad_start', {length: 4, char: '0'})
                     }
                   >
-                    <span className="brick-btn-tag cat-string">+</span>
-                    <span>เติมเลข 0 ด้านหน้า (เช่น 0001)</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="palette-brick-btn"
+                    <span>เติมเลข</span>
+                    <span className="wb-slot-input">0</span>
+                    <span>ด้านหน้าให้ครบ</span>
+                    <span className="wb-slot-input">4</span>
+                    <span>หลัก</span>
+                  </div>
+
+                  {/* Uppercase Block */}
+                  <div
+                    className="wb-brick-preview wb-block-operator"
                     onClick={() => addBlock('string', 'uppercase', {})}
                   >
-                    <span className="brick-btn-tag cat-string">+</span>
                     <span>แปลงเป็นตัวพิมพ์ใหญ่ (UPPERCASE)</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="palette-brick-btn"
+                  </div>
+
+                  {/* Lowercase Block */}
+                  <div
+                    className="wb-brick-preview wb-block-operator"
                     onClick={() => addBlock('string', 'lowercase', {})}
                   >
-                    <span className="brick-btn-tag cat-string">+</span>
                     <span>แปลงเป็นตัวพิมพ์เล็ก (lowercase)</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="palette-brick-btn"
+                  </div>
+
+                  {/* Substring Block */}
+                  <div
+                    className="wb-brick-preview wb-block-operator"
                     onClick={() =>
                       addBlock('string', 'substring', {start: 0, length: 5})
                     }
                   >
-                    <span className="brick-btn-tag cat-string">+</span>
-                    <span>ตัดข้อความบางส่วน (Substring)</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="palette-brick-btn"
+                    <span>ตัดข้อความเริ่มที่</span>
+                    <span className="wb-slot-input">0</span>
+                    <span>ยาว</span>
+                    <span className="wb-slot-input">5</span>
+                    <span>ตัว</span>
+                  </div>
+
+                  {/* Replace Block */}
+                  <div
+                    className="wb-brick-preview wb-block-operator"
                     onClick={() =>
                       addBlock('string', 'replace', {search: '', replace: ''})
                     }
                   >
-                    <span className="brick-btn-tag cat-string">+</span>
-                    <span>ค้นหาและแทนที่คำ (Replace)</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="palette-brick-btn"
+                    <span>ค้นหาคำว่า</span>
+                    <span className="wb-slot-input">คำเดิม</span>
+                    <span>แทนที่ด้วย</span>
+                    <span className="wb-slot-input">คำใหม่</span>
+                  </div>
+
+                  {/* Trim Block */}
+                  <div
+                    className="wb-brick-preview wb-block-operator"
                     onClick={() => addBlock('string', 'trim', {})}
                   >
-                    <span className="brick-btn-tag cat-string">+</span>
-                    <span>ตัดช่องว่างหน้า-หลัง (Trim)</span>
-                  </button>
-                </div>
-              </div>
+                    <span>ตัดช่องว่างหน้า-หลัง</span>
+                  </div>
 
-              {/* 3. Numbers & Math Category */}
-              <div className="palette-cat-group">
-                <div className="palette-cat-header cat-numeric">
-                  <Hash size={13} />
-                  <span>🔢 ตัวเลข & การคำนวณ (Numbers & Math)</span>
-                </div>
-                <div className="palette-buttons-list">
-                  <button
-                    type="button"
-                    className="palette-brick-btn"
-                    onClick={() =>
-                      addBlock('numeric', 'counter', {start: 1, padZeros: 4})
-                    }
-                  >
-                    <span className="brick-btn-tag cat-numeric">+</span>
-                    <span>รันเลขลำดับอัตโนมัติ (Counter)</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="palette-brick-btn"
+                  {/* Math Op Block */}
+                  <div
+                    className="wb-brick-preview wb-block-numeric"
                     onClick={() =>
                       addBlock('numeric', 'math_op', {op: 'add', value: 10})
                     }
                   >
-                    <span className="brick-btn-tag cat-numeric">+</span>
-                    <span>คำนวณ (+ - × ÷)</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="palette-brick-btn"
+                    <span>คำนวณตัวเลข</span>
+                    <span className="wb-slot-dropdown">+ บวก ▾</span>
+                    <span className="wb-slot-input">10</span>
+                  </div>
+
+                  {/* Counter Block */}
+                  <div
+                    className="wb-brick-preview wb-block-numeric"
                     onClick={() =>
-                      addBlock('numeric', 'round', {decimals: 2})
+                      addBlock('numeric', 'counter', {start: 1, padZeros: 4})
                     }
                   >
-                    <span className="brick-btn-tag cat-numeric">+</span>
-                    <span>ปัดเศษทศนิยม (Round)</span>
-                  </button>
-                </div>
-              </div>
+                    <span>รันเลขลำดับ เริ่มที่</span>
+                    <span className="wb-slot-input">1</span>
+                    <span>เติม 0 ครบ</span>
+                    <span className="wb-slot-input">4</span>
+                    <span>หลัก</span>
+                  </div>
 
-              {/* 4. Logic & Loops */}
-              <div className="palette-cat-group">
-                <div className="palette-cat-header cat-if">
-                  <GitBranch size={13} />
-                  <span>🔀 เงื่อนไข & วนซ้ำ (Logic & Loops)</span>
+                  {/* Round Block */}
+                  <div
+                    className="wb-brick-preview wb-block-numeric"
+                    onClick={() => addBlock('numeric', 'round', {decimals: 2})}
+                  >
+                    <span>ปัดเศษทศนิยม</span>
+                    <span className="wb-slot-input">2</span>
+                    <span>ตำแหน่ง</span>
+                  </div>
                 </div>
-                <div className="palette-buttons-list">
-                  <button
-                    type="button"
-                    className="palette-brick-btn"
+              )}
+
+              {/* 4. CONTROL / IF BLOCKS (AMBER / GOLD) */}
+              {selectedPaletteTab === 'control' && (
+                <div className="wb-palette-group">
+                  <div className="wb-palette-title amber">
+                    <GitBranch size={14} />
+                    <span>บล็อกควบคุมเงื่อนไข (Control Blocks)</span>
+                  </div>
+
+                  {/* IF-ELSE Block */}
+                  <div
+                    className="wb-brick-preview wb-block-control"
                     onClick={() =>
                       addBlock('if', 'if_else', {
                         operator: 'is_not_empty',
@@ -646,34 +733,63 @@ export function FormulaBuilderDialog({
                       })
                     }
                   >
-                    <span className="brick-btn-tag cat-if">+</span>
-                    <span>ถ้าเงื่อนไขตรง (IF / ELSE)</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="palette-brick-btn"
+                    <span>ถ้า &lt; มีค่าไม่ว่าง &gt; แล้วให้ค่า</span>
+                    <span className="wb-slot-input">พร้อมจำหน่าย</span>
+                    <span>มิฉะนั้น</span>
+                    <span className="wb-slot-input">สินค้าหมด</span>
+                  </div>
+
+                  {/* Repeat Block */}
+                  <div
+                    className="wb-brick-preview wb-block-control"
                     onClick={() =>
                       addBlock('loop', 'repeat', {text: '*', times: 5, separator: ''})
                     }
                   >
-                    <span className="brick-btn-tag cat-loop">+</span>
-                    <span>ทำซ้ำข้อความ (Repeat)</span>
-                  </button>
+                    <span>ทำซ้ำข้อความ</span>
+                    <span className="wb-slot-input">*</span>
+                    <span>จำนวน</span>
+                    <span className="wb-slot-input">5</span>
+                    <span>ครั้ง</span>
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* 5. 1-CLICK PRESETS */}
+              {selectedPaletteTab === 'preset' && (
+                <div className="wb-palette-group">
+                  <div className="wb-palette-title yellow">
+                    <Zap size={14} fill="#eab308" color="#eab308" />
+                    <span>แม่แบบสูตรสำเร็จรูปยอดนิยม</span>
+                  </div>
+                  <div className="wb-presets-list">
+                    {PRESET_RECIPES.map((recipe) => (
+                      <button
+                        key={recipe.id}
+                        type="button"
+                        className="wb-preset-card-btn"
+                        onClick={() => applyPreset(recipe)}
+                      >
+                        <strong>{recipe.name}</strong>
+                        <small>{recipe.desc}</small>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </aside>
 
-          {/* ================= RIGHT MAIN WORKSPACE ================= */}
-          <main className="formula-canvas-pane">
-            {/* Top Workspace Bar: Name & Big Live Result */}
-            <div className="workspace-top-bar">
-              <div className="workspace-name-col">
-                <label className="workspace-name-label">ชื่อสูตรที่กำลังแก้ไข:</label>
-                <div className="workspace-name-wrap">
+          {/* ================= RIGHT: WORKSPACE / CODING CANVAS ================= */}
+          <main className="wb-coding-workspace">
+            {/* Top Workspace Stage Bar */}
+            <div className="wb-stage-bar">
+              <div className="wb-formula-name-field">
+                <span className="wb-field-label">ชื่อสูตร Word Blocks:</span>
+                <div className="wb-name-input-row">
                   <input
                     type="text"
-                    className="workspace-name-input"
+                    className="wb-formula-name-input"
                     value={activeFormula?.name ?? ''}
                     placeholder="เช่น วันหมดอายุ (+30 วัน)"
                     onChange={(e) => updateActiveFormula({name: e.target.value})}
@@ -681,700 +797,536 @@ export function FormulaBuilderDialog({
                   {list.length > 1 && (
                     <button
                       type="button"
-                      className="workspace-del-formula-btn"
+                      className="wb-delete-formula-btn"
                       title="ลบสูตรนี้"
                       onClick={() => removeFormula(activeId)}
                     >
-                      <Trash2 size={14} />
-                      <span>ลบสูตรนี้</span>
+                      <Trash2 size={13} />
+                      <span>ลบสูตร</span>
                     </button>
                   )}
                 </div>
               </div>
 
-              {/* Large Prominent Live Result Card */}
-              <div className="workspace-result-card">
-                <div className="result-card-header">
-                  <span className="result-tag">
-                    <Sparkles size={12} /> ผลลัพธ์สูตรจำลอง (Live Preview)
+              {/* Scratch / SPIKE Style Stage Monitor */}
+              <div className="wb-stage-monitor-card">
+                <div className="wb-monitor-header">
+                  <span className="wb-monitor-tag">
+                    <span className="wb-monitor-led" /> ผลลัพธ์สูตร (Stage Output)
                   </span>
                   <button
                     type="button"
-                    className="result-copy-btn"
+                    className="wb-monitor-copy-btn"
                     title="คัดลอกผลลัพธ์"
                     onClick={copyResultToClipboard}
                   >
                     {copied ? (
                       <>
-                        <Check size={12} color="#16a34a" /> คัดลอกแล้ว
+                        <Check size={11} color="#16a34a" /> คัดลอกแล้ว
                       </>
                     ) : (
                       <>
-                        <Copy size={12} /> คัดลอก
+                        <Copy size={11} /> คัดลอก
                       </>
                     )}
                   </button>
                 </div>
-                <div className="result-card-val" title="ผลลัพธ์ที่คำนวณได้จริง">
-                  {finalResult || <span className="val-empty">(ไม่มีผลลัพธ์)</span>}
+                <div className="wb-monitor-screen">
+                  <strong>{finalResult || '(ไม่มีผลลัพธ์)'}</strong>
                 </div>
               </div>
             </div>
 
-            {/* Document Variables Banner (if available) */}
+            {/* Quick Variable Bar (If Project Variables Exist) */}
             {variables && variables.length > 0 && (
-              <div className="workspace-vars-banner">
-                <div className="vars-banner-left">
-                  <VariableIcon size={13} color="#2563eb" />
-                  <strong>ตัวแปรในโปรเจกต์นี้:</strong>
-                </div>
-                <div className="vars-pills-row">
+              <div className="wb-variables-ribbon">
+                <span className="ribbon-title">
+                  <VariableIcon size={12} color="#ff8c1a" />
+                  <strong>ตัวแปรในโปรเจกต์:</strong>
+                </span>
+                <div className="ribbon-pills">
                   {variables.map((v) => (
-                    <span
+                    <button
                       key={v.name}
-                      className="var-preview-pill"
-                      title={`ชื่อตัวแปร: {{${v.name}}} = "${v.value || ''}"`}
+                      type="button"
+                      className="wb-pill-reporter mini"
+                      onClick={() => insertVariableAsBlock(v.name)}
+                      title={`คลิกเพื่อต่อบล็อกตัวแปร "${v.name}" = "${v.value || ''}"`}
                     >
-                      <span className="var-pill-name">{v.name}</span>
-                      <span className="var-pill-eq">=</span>
-                      <span className="var-pill-val">"{v.value || ''}"</span>
-                    </span>
+                      <span>{v.name}</span>
+                      <small>="{v.value || ''}"</small>
+                    </button>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Canvas Area: LEGO Chain Stack */}
-            <div className="workspace-lego-canvas">
-              {!activeFormula || activeFormula.blocks.length === 0 ? (
-                <div className="lego-empty-hero">
-                  <div className="empty-hero-icon">🧱</div>
-                  <h3>ยังไม่มีชิ้นส่วนในสูตรนี้</h3>
-                  <p>
-                    เลือกแม่แบบสำเร็จรูป ⚡ หรือคลิกปุ่มชิ้นส่วน LEGO 🧱 ในเมนูด้านซ้ายเพื่อเริ่มต่อบล็อก
-                  </p>
+            {/* The Stacking Canvas (Interlocking Word Blocks) */}
+            <div className="wb-canvas-scroll">
+              <div className="wb-blocks-chain-container">
+                {/* 1. HAT BLOCK: When Formula Evaluates */}
+                <div className="wb-hat-block">
+                  <div className="wb-hat-inner">
+                    <Flag size={15} fill="#ffffff" color="#ffffff" />
+                    <span>เมื่อคำนวณสูตร</span>
+                    <strong className="wb-hat-formula-title">
+                      "{activeFormula?.name || 'Untitled'}"
+                    </strong>
+                  </div>
                 </div>
-              ) : (
-                <div className="lego-chain-stack">
-                  {activeFormula.blocks.map((block, index) => {
+
+                {/* Blocks Stack */}
+                {!activeFormula || activeFormula.blocks.length === 0 ? (
+                  <div className="wb-empty-stack-placeholder">
+                    <div className="wb-placeholder-jigsaw-icon">🧩</div>
+                    <h4>ยังไม่มีบล็อกคำสั่งในสูตรนี้</h4>
+                    <p>
+                      คลิกบล็อกคำสั่งในเมนูด้านซ้ายเพื่อต่อบล็อกเข้ากับคำสั่งเริ่มต้นด้านบน
+                    </p>
+                  </div>
+                ) : (
+                  activeFormula.blocks.map((block, index) => {
                     const isFirst = index === 0;
                     const isLast = index === activeFormula.blocks.length - 1;
                     const stepVal = stepOutputs[index] ?? '';
 
+                    const categoryClass =
+                      block.functionName === 'variable'
+                        ? 'wb-block-variable'
+                        : block.category === 'datetime'
+                        ? 'wb-block-datetime'
+                        : block.category === 'string'
+                        ? 'wb-block-operator'
+                        : block.category === 'numeric'
+                        ? 'wb-block-numeric'
+                        : block.category === 'if'
+                        ? 'wb-block-control'
+                        : 'wb-block-control';
+
                     return (
-                      <div key={block.id} className="lego-step-wrapper">
-                        {/* Connecting visual arrow */}
-                        {index > 0 && (
-                          <div className="lego-connector-flow">
-                            <div className="flow-line" />
-                            <div className="flow-badge">
-                              <ArrowDown size={13} strokeWidth={2.5} />
-                              <span>ส่งผลลัพธ์ต่อไปยังชิ้นถัดไป</span>
-                            </div>
-                            <div className="flow-line" />
-                          </div>
-                        )}
+                      <div key={block.id} className="wb-step-row">
+                        {/* The Interlocking Word Block */}
+                        <div className={`wb-block ${categoryClass}`}>
+                          {/* Step Index Dot */}
+                          <span className="wb-block-index">{index + 1}</span>
 
-                        {/* Genuine LEGO Card */}
-                        <div className={`lego-brick-card cat-${block.category}`}>
-                          {/* 3D Studs on top of card */}
-                          <div className="lego-studs-bar">
-                            <span className="lego-stud" />
-                            <span className="lego-stud" />
-                            <span className="lego-stud" />
-                            <span className="lego-stud" />
-                            <span className="lego-stud" />
-                            <span className="lego-stud" />
-                          </div>
-
-                          {/* Brick Header */}
-                          <div className="brick-card-header">
-                            <div className="brick-header-left">
-                              <span className="brick-step-badge">
-                                ขั้นที่ {index + 1}
-                              </span>
-                              <span className={`brick-cat-tag cat-${block.category}`}>
-                                {block.category === 'datetime' && '📅 วันที่'}
-                                {block.category === 'string' && '🔤 ข้อความ'}
-                                {block.category === 'numeric' && '🔢 ตัวเลข'}
-                                {block.category === 'if' && '🔀 เงื่อนไข'}
-                                {block.category === 'loop' && '🔁 ทำซ้ำ'}
-                              </span>
-                              <strong className="brick-title-text">
-                                {block.functionName === 'now' && 'วันที่ปัจจุบัน (NOW)'}
-                                {block.functionName === 'add_days' && 'บวก/ลบวัน (วันหมดอายุ)'}
-                                {block.functionName === 'add_months' && 'บวก/ลบเดือน'}
-                                {block.functionName === 'add_years' && 'บวก/ลบปี'}
-                                {block.functionName === 'format_date' && 'แปลงรูปแบบวันที่'}
-                                {block.functionName === 'date_part' && 'ดึงส่วนวันที่'}
-                                {block.functionName === 'variable' && 'ดึงค่าตัวแปร (Variable)'}
-                                {block.functionName === 'concat' && 'ต่อข้อความ / เติมคำนำหน้า'}
-                                {block.functionName === 'pad_start' && 'เติมเลข 0 ด้านหน้า'}
-                                {block.functionName === 'pad_end' && 'เติมตัวอักษรด้านหลัง'}
-                                {block.functionName === 'substring' && 'ตัดข้อความบางส่วน'}
-                                {block.functionName === 'uppercase' && 'แปลงเป็นตัวพิมพ์ใหญ่ (UPPERCASE)'}
-                                {block.functionName === 'lowercase' && 'แปลงเป็นตัวพิมพ์เล็ก (lowercase)'}
-                                {block.functionName === 'replace' && 'ค้นหาและแทนที่คำ'}
-                                {block.functionName === 'trim' && 'ตัดช่องว่างหน้า-หลัง'}
-                                {block.functionName === 'counter' && 'รันเลขลำดับอัตโนมัติ'}
-                                {block.functionName === 'math_op' && 'คำนวณตัวเลข (+ - × ÷)'}
-                                {block.functionName === 'round' && 'ปัดเศษทศนิยม'}
-                                {block.functionName === 'if_else' && 'เงื่อนไข (IF/ELSE)'}
-                                {block.functionName === 'repeat' && 'ทำซ้ำข้อความ'}
-                              </strong>
-                            </div>
-
-                            <div className="brick-header-right">
-                              {/* Intermediate result pill */}
-                              <div className="brick-intermediate-result" title="ผลลัพธ์ของขั้นตอนนี้">
-                                <span className="inter-lbl">ได้ค่า:</span>
-                                <strong className="inter-val">{stepVal}</strong>
-                              </div>
-
-                              {/* Brick action buttons */}
-                              <div className="brick-actions-bar">
-                                {!isFirst && (
-                                  <button
-                                    type="button"
-                                    className="brick-act-btn"
-                                    title="เลื่อนขึ้น"
-                                    onClick={() => moveBlock(block.id, -1)}
-                                  >
-                                    <ChevronUp size={14} strokeWidth={2.5} />
-                                  </button>
-                                )}
-                                {!isLast && (
-                                  <button
-                                    type="button"
-                                    className="brick-act-btn"
-                                    title="เลื่อนลง"
-                                    onClick={() => moveBlock(block.id, 1)}
-                                  >
-                                    <ChevronDown size={14} strokeWidth={2.5} />
-                                  </button>
-                                )}
-                                <button
-                                  type="button"
-                                  className="brick-act-btn"
-                                  title="ทำซ้ำชิ้นส่วนนี้"
-                                  onClick={() => duplicateBlock(block.id)}
+                          {/* Block Content Form */}
+                          <div className="wb-block-body">
+                            {/* variable */}
+                            {block.functionName === 'variable' && (
+                              <div className="wb-block-inline-fields">
+                                <span>ดึงค่าจากตัวแปร</span>
+                                <select
+                                  className="wb-slot-dropdown"
+                                  value={block.params.variableName ?? ''}
+                                  onChange={(e) =>
+                                    updateBlock(block.id, {variableName: e.target.value})
+                                  }
                                 >
-                                  <Copy size={13} />
-                                </button>
-                                <button
-                                  type="button"
-                                  className="brick-act-btn del-btn"
-                                  title="ลบชิ้นส่วนนี้"
-                                  onClick={() => removeBlock(block.id)}
-                                >
-                                  <Trash2 size={13} />
-                                </button>
+                                  <option value="">-- เลือกตัวแปร --</option>
+                                  {variables.map((v) => (
+                                    <option key={v.name} value={v.name}>
+                                      {v.label || v.name} ({v.value ? `"${v.value}"` : 'ว่าง'})
+                                    </option>
+                                  ))}
+                                </select>
                               </div>
-                            </div>
-                          </div>
+                            )}
 
-                          {/* Brick Content & Controls */}
-                          <div className="brick-card-body">
                             {/* now */}
                             {block.functionName === 'now' && (
-                              <div className="control-row-natural">
-                                <span className="control-label">รูปแบบวันที่แสดงผล:</span>
+                              <div className="wb-block-inline-fields">
+                                <span>วันที่ปัจจุบัน รูปแบบ</span>
                                 <select
-                                  className="studio-select"
+                                  className="wb-slot-dropdown"
                                   value={block.params.format ?? 'DD/MM/YYYY'}
-                                  onChange={(e) => updateBlock(block.id, {format: e.target.value})}
+                                  onChange={(e) =>
+                                    updateBlock(block.id, {format: e.target.value})
+                                  }
                                 >
-                                  <option value="DD/MM/YYYY">15/10/2026 (DD/MM/YYYY - แบบไทยสากล)</option>
-                                  <option value="YYYY-MM-DD">2026-10-15 (YYYY-MM-DD - ISO มาตรฐาน)</option>
-                                  <option value="YYYYMMDD">20261015 (YYYYMMDD - สำหรับบาร์โค้ด)</option>
-                                  <option value="DD-MM-YYYY">15-10-2026 (DD-MM-YYYY)</option>
-                                  <option value="DD/MM/YY">15/10/26 (DD/MM/YY - ย่อปี)</option>
+                                  <option value="DD/MM/YYYY">15/10/2026 (DD/MM/YYYY)</option>
+                                  <option value="YYYY-MM-DD">2026-10-15 (YYYY-MM-DD)</option>
+                                  <option value="YYYYMMDD">20261015 (YYYYMMDD)</option>
+                                  <option value="DD-MM-YYYY">15-10-2026</option>
+                                  <option value="DD/MM/YY">15/10/26</option>
                                 </select>
                               </div>
                             )}
 
                             {/* add_days */}
                             {block.functionName === 'add_days' && (
-                              <div className="brick-control-flow">
-                                <div className="control-row-natural">
-                                  <span className="control-label">บวกเพิ่มจากวันนี้:</span>
-                                  <input
-                                    type="number"
-                                    className="studio-input-number"
-                                    value={block.params.days ?? 30}
-                                    onChange={(e) => updateBlock(block.id, {days: Number(e.target.value)})}
-                                  />
-                                  <span className="control-unit">วัน</span>
-
-                                  {/* Quick Day Shortcut Pills */}
-                                  <div className="quick-shortcut-pills">
-                                    <button type="button" onClick={() => updateBlock(block.id, {days: 7})}>+7 วัน</button>
-                                    <button type="button" onClick={() => updateBlock(block.id, {days: 14})}>+14 วัน</button>
-                                    <button type="button" className="active" onClick={() => updateBlock(block.id, {days: 30})}>+30 วัน</button>
-                                    <button type="button" onClick={() => updateBlock(block.id, {days: 60})}>+60 วัน</button>
-                                    <button type="button" onClick={() => updateBlock(block.id, {days: 90})}>+90 วัน</button>
-                                    <button type="button" onClick={() => updateBlock(block.id, {days: 365})}>+1 ปี (365)</button>
-                                  </div>
-                                </div>
-
-                                <div className="control-row-natural">
-                                  <span className="control-label">รูปแบบแสดงผล:</span>
-                                  <select
-                                    className="studio-select"
-                                    value={block.params.format ?? 'DD/MM/YYYY'}
-                                    onChange={(e) => updateBlock(block.id, {format: e.target.value})}
-                                  >
-                                    <option value="DD/MM/YYYY">15/10/2026 (DD/MM/YYYY)</option>
-                                    <option value="YYYY-MM-DD">2026-10-15 (YYYY-MM-DD)</option>
-                                    <option value="YYYYMMDD">20261015 (YYYYMMDD)</option>
-                                    <option value="DD/MM/YY">15/10/26 (DD/MM/YY)</option>
-                                  </select>
-                                </div>
+                              <div className="wb-block-inline-fields">
+                                <span>วันที่ปัจจุบัน +</span>
+                                <input
+                                  type="number"
+                                  className="wb-slot-input num"
+                                  value={block.params.days ?? 30}
+                                  onChange={(e) =>
+                                    updateBlock(block.id, {days: Number(e.target.value)})
+                                  }
+                                />
+                                <span>วัน รูปแบบ</span>
+                                <select
+                                  className="wb-slot-dropdown"
+                                  value={block.params.format ?? 'DD/MM/YYYY'}
+                                  onChange={(e) =>
+                                    updateBlock(block.id, {format: e.target.value})
+                                  }
+                                >
+                                  <option value="DD/MM/YYYY">15/10/2026 (DD/MM/YYYY)</option>
+                                  <option value="YYYY-MM-DD">2026-10-15 (YYYY-MM-DD)</option>
+                                  <option value="YYYYMMDD">20261015 (YYYYMMDD)</option>
+                                  <option value="DD/MM/YY">15/10/26</option>
+                                </select>
                               </div>
                             )}
 
                             {/* add_months */}
                             {block.functionName === 'add_months' && (
-                              <div className="brick-control-flow">
-                                <div className="control-row-natural">
-                                  <span className="control-label">บวกเพิ่ม:</span>
-                                  <input
-                                    type="number"
-                                    className="studio-input-number"
-                                    value={block.params.months ?? 1}
-                                    onChange={(e) => updateBlock(block.id, {months: Number(e.target.value)})}
-                                  />
-                                  <span className="control-unit">เดือน</span>
-
-                                  <div className="quick-shortcut-pills">
-                                    <button type="button" onClick={() => updateBlock(block.id, {months: 1})}>+1 เดือน</button>
-                                    <button type="button" onClick={() => updateBlock(block.id, {months: 3})}>+3 เดือน</button>
-                                    <button type="button" onClick={() => updateBlock(block.id, {months: 6})}>+6 เดือน</button>
-                                    <button type="button" onClick={() => updateBlock(block.id, {months: 12})}>+12 เดือน</button>
-                                  </div>
-                                </div>
-
-                                <div className="control-row-natural">
-                                  <span className="control-label">รูปแบบ:</span>
-                                  <select
-                                    className="studio-select"
-                                    value={block.params.format ?? 'DD/MM/YYYY'}
-                                    onChange={(e) => updateBlock(block.id, {format: e.target.value})}
-                                  >
-                                    <option value="DD/MM/YYYY">15/10/2026 (DD/MM/YYYY)</option>
-                                    <option value="YYYY-MM-DD">2026-10-15 (YYYY-MM-DD)</option>
-                                    <option value="YYYYMMDD">20261015 (YYYYMMDD)</option>
-                                  </select>
-                                </div>
+                              <div className="wb-block-inline-fields">
+                                <span>วันที่ปัจจุบัน +</span>
+                                <input
+                                  type="number"
+                                  className="wb-slot-input num"
+                                  value={block.params.months ?? 1}
+                                  onChange={(e) =>
+                                    updateBlock(block.id, {months: Number(e.target.value)})
+                                  }
+                                />
+                                <span>เดือน รูปแบบ</span>
+                                <select
+                                  className="wb-slot-dropdown"
+                                  value={block.params.format ?? 'DD/MM/YYYY'}
+                                  onChange={(e) =>
+                                    updateBlock(block.id, {format: e.target.value})
+                                  }
+                                >
+                                  <option value="DD/MM/YYYY">15/10/2026 (DD/MM/YYYY)</option>
+                                  <option value="YYYY-MM-DD">2026-10-15 (YYYY-MM-DD)</option>
+                                  <option value="YYYYMMDD">20261015 (YYYYMMDD)</option>
+                                </select>
                               </div>
                             )}
 
                             {/* add_years */}
                             {block.functionName === 'add_years' && (
-                              <div className="brick-control-flow">
-                                <div className="control-row-natural">
-                                  <span className="control-label">บวกเพิ่ม:</span>
-                                  <input
-                                    type="number"
-                                    className="studio-input-number"
-                                    value={block.params.years ?? 1}
-                                    onChange={(e) => updateBlock(block.id, {years: Number(e.target.value)})}
-                                  />
-                                  <span className="control-unit">ปี</span>
-
-                                  <div className="quick-shortcut-pills">
-                                    <button type="button" onClick={() => updateBlock(block.id, {years: 1})}>+1 ปี</button>
-                                    <button type="button" onClick={() => updateBlock(block.id, {years: 2})}>+2 ปี</button>
-                                    <button type="button" onClick={() => updateBlock(block.id, {years: 3})}>+3 ปี</button>
-                                  </div>
-                                </div>
-
-                                <div className="control-row-natural">
-                                  <span className="control-label">รูปแบบ:</span>
-                                  <select
-                                    className="studio-select"
-                                    value={block.params.format ?? 'DD/MM/YYYY'}
-                                    onChange={(e) => updateBlock(block.id, {format: e.target.value})}
-                                  >
-                                    <option value="DD/MM/YYYY">15/10/2026 (DD/MM/YYYY)</option>
-                                    <option value="YYYY-MM-DD">2026-10-15 (YYYY-MM-DD)</option>
-                                    <option value="YYYYMMDD">20261015 (YYYYMMDD)</option>
-                                  </select>
-                                </div>
+                              <div className="wb-block-inline-fields">
+                                <span>วันที่ปัจจุบัน +</span>
+                                <input
+                                  type="number"
+                                  className="wb-slot-input num"
+                                  value={block.params.years ?? 1}
+                                  onChange={(e) =>
+                                    updateBlock(block.id, {years: Number(e.target.value)})
+                                  }
+                                />
+                                <span>ปี รูปแบบ</span>
+                                <select
+                                  className="wb-slot-dropdown"
+                                  value={block.params.format ?? 'DD/MM/YYYY'}
+                                  onChange={(e) =>
+                                    updateBlock(block.id, {format: e.target.value})
+                                  }
+                                >
+                                  <option value="DD/MM/YYYY">15/10/2026 (DD/MM/YYYY)</option>
+                                  <option value="YYYY-MM-DD">2026-10-15 (YYYY-MM-DD)</option>
+                                  <option value="YYYYMMDD">20261015 (YYYYMMDD)</option>
+                                </select>
                               </div>
                             )}
 
                             {/* format_date */}
                             {block.functionName === 'format_date' && (
-                              <div className="control-row-natural">
-                                <span className="control-label">แปลงรูปแบบวันที่เป็น:</span>
+                              <div className="wb-block-inline-fields">
+                                <span>แปลงรูปแบบวันที่เป็น</span>
                                 <input
                                   type="text"
-                                  className="studio-input-text"
-                                  style={{width: 160}}
+                                  className="wb-slot-input"
+                                  style={{width: 120}}
                                   value={block.params.format ?? 'DD/MM/YYYY'}
-                                  onChange={(e) => updateBlock(block.id, {format: e.target.value})}
+                                  onChange={(e) =>
+                                    updateBlock(block.id, {format: e.target.value})
+                                  }
                                 />
-                                <div className="quick-shortcut-pills">
-                                  <button type="button" onClick={() => updateBlock(block.id, {format: 'DD/MM/YYYY'})}>DD/MM/YYYY</button>
-                                  <button type="button" onClick={() => updateBlock(block.id, {format: 'YYYY-MM-DD'})}>YYYY-MM-DD</button>
-                                  <button type="button" onClick={() => updateBlock(block.id, {format: 'YYYYMMDD'})}>YYYYMMDD</button>
-                                </div>
                               </div>
                             )}
 
                             {/* date_part */}
                             {block.functionName === 'date_part' && (
-                              <div className="control-row-natural">
-                                <span className="control-label">ดึงข้อมูลเฉพาะ:</span>
+                              <div className="wb-block-inline-fields">
+                                <span>ดึงเฉพาะส่วน</span>
                                 <select
-                                  className="studio-select"
+                                  className="wb-slot-dropdown"
                                   value={block.params.part ?? 'YYYY'}
-                                  onChange={(e) => updateBlock(block.id, {part: e.target.value})}
+                                  onChange={(e) =>
+                                    updateBlock(block.id, {part: e.target.value})
+                                  }
                                 >
-                                  <option value="YYYY">ปี ค.ศ. 4 หลัก (เช่น 2026)</option>
-                                  <option value="YY">ปี ค.ศ. 2 หลัก (เช่น 26)</option>
-                                  <option value="MM">เดือน 2 หลัก (เช่น 10)</option>
-                                  <option value="DD">วันที่ 2 หลัก (เช่น 15)</option>
+                                  <option value="YYYY">ปี 4 หลัก (YYYY)</option>
+                                  <option value="YY">ปี 2 หลัก (YY)</option>
+                                  <option value="MM">เดือน (MM)</option>
+                                  <option value="DD">วัน (DD)</option>
                                 </select>
-                              </div>
-                            )}
-
-                            {/* variable */}
-                            {block.functionName === 'variable' && (
-                              <div className="control-row-natural">
-                                <span className="control-label">เลือกตัวแปรที่จะนำมาใช้:</span>
-                                {variables && variables.length > 0 ? (
-                                  <select
-                                    className="studio-select"
-                                    value={block.params.variableName ?? ''}
-                                    onChange={(e) => updateBlock(block.id, {variableName: e.target.value})}
-                                  >
-                                    <option value="">-- เลือกตัวแปร --</option>
-                                    {variables.map((v) => (
-                                      <option key={v.name} value={v.name}>
-                                        {v.label ? `${v.label} (${v.name})` : v.name} {v.value ? `➔ "${v.value}"` : ''}
-                                      </option>
-                                    ))}
-                                  </select>
-                                ) : (
-                                  <span className="hint-note">ยังไม่มีตัวแปรในโปรเจกต์นี้ (สร้างได้ที่ปุ่ม Variables ด้านบน)</span>
-                                )}
                               </div>
                             )}
 
                             {/* concat */}
                             {block.functionName === 'concat' && (
-                              <div className="control-row-natural">
-                                <span className="control-label">ข้อความนำหน้า:</span>
-                                <div className="input-with-var-btn">
-                                  <input
-                                    type="text"
-                                    className="studio-input-text"
-                                    placeholder="เช่น LOT- หรือ NO-"
-                                    value={block.params.prefix ?? ''}
-                                    onChange={(e) => updateBlock(block.id, {prefix: e.target.value})}
-                                  />
-                                  {variables && variables.length > 0 && (
-                                    <div className="inline-var-popover-wrap">
-                                      <button
-                                        type="button"
-                                        className="btn-insert-var"
-                                        title="แทรกตัวแปร"
-                                        onClick={() =>
-                                          setActiveVarMenu(
-                                            activeVarMenu?.blockId === block.id && activeVarMenu?.fieldKey === 'prefix'
-                                              ? null
-                                              : {blockId: block.id, fieldKey: 'prefix'}
-                                          )
-                                        }
-                                      >
-                                        <VariableIcon size={11} />
-                                        <span>ตัวแปร</span>
-                                      </button>
-                                      {activeVarMenu?.blockId === block.id && activeVarMenu?.fieldKey === 'prefix' && (
-                                        <div className="inline-var-menu">
-                                          {variables.map((v) => (
-                                            <button
-                                              key={v.name}
-                                              type="button"
-                                              onClick={() => insertVariableIntoParam(block.id, 'prefix', v.name)}
-                                            >
-                                              {v.label || v.name} ({`{{${v.name}}}`})
-                                            </button>
-                                          ))}
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-
-                                <span className="control-label" style={{marginLeft: 10}}>ข้อความต่อท้าย:</span>
-                                <div className="input-with-var-btn">
-                                  <input
-                                    type="text"
-                                    className="studio-input-text"
-                                    placeholder="เช่น -TH หรือ /2026"
-                                    value={block.params.append ?? ''}
-                                    onChange={(e) => updateBlock(block.id, {append: e.target.value})}
-                                  />
-                                  {variables && variables.length > 0 && (
-                                    <div className="inline-var-popover-wrap">
-                                      <button
-                                        type="button"
-                                        className="btn-insert-var"
-                                        title="แทรกตัวแปร"
-                                        onClick={() =>
-                                          setActiveVarMenu(
-                                            activeVarMenu?.blockId === block.id && activeVarMenu?.fieldKey === 'append'
-                                              ? null
-                                              : {blockId: block.id, fieldKey: 'append'}
-                                          )
-                                        }
-                                      >
-                                        <VariableIcon size={11} />
-                                        <span>ตัวแปร</span>
-                                      </button>
-                                      {activeVarMenu?.blockId === block.id && activeVarMenu?.fieldKey === 'append' && (
-                                        <div className="inline-var-menu">
-                                          {variables.map((v) => (
-                                            <button
-                                              key={v.name}
-                                              type="button"
-                                              onClick={() => insertVariableIntoParam(block.id, 'append', v.name)}
-                                            >
-                                              {v.label || v.name} ({`{{${v.name}}}`})
-                                            </button>
-                                          ))}
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
+                              <div className="wb-block-inline-fields">
+                                <span>เติมข้อความนำหน้า</span>
+                                <input
+                                  type="text"
+                                  className="wb-slot-input"
+                                  placeholder="เช่น LOT-"
+                                  style={{width: 90}}
+                                  value={block.params.prefix ?? ''}
+                                  onChange={(e) =>
+                                    updateBlock(block.id, {prefix: e.target.value})
+                                  }
+                                />
+                                <span>และต่อท้ายด้วย</span>
+                                <input
+                                  type="text"
+                                  className="wb-slot-input"
+                                  placeholder="เช่น -TH"
+                                  style={{width: 90}}
+                                  value={block.params.append ?? ''}
+                                  onChange={(e) =>
+                                    updateBlock(block.id, {append: e.target.value})
+                                  }
+                                />
                               </div>
                             )}
 
                             {/* pad_start */}
                             {block.functionName === 'pad_start' && (
-                              <div className="control-row-natural">
-                                <span className="control-label">เติมตัวอักษร:</span>
+                              <div className="wb-block-inline-fields">
+                                <span>เติมตัวอักษร</span>
                                 <input
                                   type="text"
-                                  className="studio-input-mini"
+                                  className="wb-slot-input mini"
                                   value={block.params.char ?? '0'}
-                                  onChange={(e) => updateBlock(block.id, {char: e.target.value})}
+                                  onChange={(e) =>
+                                    updateBlock(block.id, {char: e.target.value})
+                                  }
                                 />
-                                <span className="control-label">ด้านหน้าให้ครบ:</span>
+                                <span>ด้านหน้าให้ครบ</span>
                                 <input
                                   type="number"
-                                  className="studio-input-number"
+                                  className="wb-slot-input num"
                                   value={block.params.length ?? 4}
-                                  onChange={(e) => updateBlock(block.id, {length: Number(e.target.value)})}
+                                  onChange={(e) =>
+                                    updateBlock(block.id, {length: Number(e.target.value)})
+                                  }
                                 />
-                                <span className="control-unit">หลัก</span>
-
-                                <div className="quick-shortcut-pills">
-                                  <button type="button" onClick={() => updateBlock(block.id, {char: '0', length: 3})}>3 หลัก (001)</button>
-                                  <button type="button" onClick={() => updateBlock(block.id, {char: '0', length: 4})}>4 หลัก (0001)</button>
-                                  <button type="button" onClick={() => updateBlock(block.id, {char: '0', length: 6})}>6 หลัก (000001)</button>
-                                </div>
-                              </div>
-                            )}
-
-                            {/* substring */}
-                            {block.functionName === 'substring' && (
-                              <div className="control-row-natural">
-                                <span className="control-label">ตัดเริ่มที่ตำแหน่งที่:</span>
-                                <input
-                                  type="number"
-                                  className="studio-input-number"
-                                  value={block.params.start ?? 0}
-                                  onChange={(e) => updateBlock(block.id, {start: Number(e.target.value)})}
-                                />
-                                <span className="control-label">ความยาว:</span>
-                                <input
-                                  type="number"
-                                  className="studio-input-number"
-                                  value={block.params.length ?? 5}
-                                  onChange={(e) => updateBlock(block.id, {length: Number(e.target.value)})}
-                                />
-                                <span className="control-unit">ตัวอักษร</span>
+                                <span>หลัก</span>
                               </div>
                             )}
 
                             {/* uppercase / lowercase / trim */}
                             {block.functionName === 'uppercase' && (
-                              <div className="control-row-natural">
-                                <span className="accent-tip-text">
-                                  ✓ แปลงตัวอักษรภาษาอังกฤษทั้งหมดเป็นตัวพิมพ์ใหญ่ (UPPERCASE)
-                                </span>
+                              <div className="wb-block-inline-fields">
+                                <span>แปลงเป็นตัวพิมพ์ใหญ่ (UPPERCASE)</span>
                               </div>
                             )}
                             {block.functionName === 'lowercase' && (
-                              <div className="control-row-natural">
-                                <span className="accent-tip-text">
-                                  ✓ แปลงตัวอักษรภาษาอังกฤษทั้งหมดเป็นตัวพิมพ์เล็ก (lowercase)
-                                </span>
+                              <div className="wb-block-inline-fields">
+                                <span>แปลงเป็นตัวพิมพ์เล็ก (lowercase)</span>
                               </div>
                             )}
                             {block.functionName === 'trim' && (
-                              <div className="control-row-natural">
-                                <span className="accent-tip-text">
-                                  ✓ ลบช่องว่างส่วนเกินที่อยู่ด้านหน้าและด้านหลังข้อความออก
-                                </span>
+                              <div className="wb-block-inline-fields">
+                                <span>ตัดช่องว่างด้านหน้าและด้านหลังข้อความออก</span>
+                              </div>
+                            )}
+
+                            {/* substring */}
+                            {block.functionName === 'substring' && (
+                              <div className="wb-block-inline-fields">
+                                <span>ตัดข้อความเริ่มตัวที่</span>
+                                <input
+                                  type="number"
+                                  className="wb-slot-input num"
+                                  value={block.params.start ?? 0}
+                                  onChange={(e) =>
+                                    updateBlock(block.id, {start: Number(e.target.value)})
+                                  }
+                                />
+                                <span>ยาว</span>
+                                <input
+                                  type="number"
+                                  className="wb-slot-input num"
+                                  value={block.params.length ?? 5}
+                                  onChange={(e) =>
+                                    updateBlock(block.id, {length: Number(e.target.value)})
+                                  }
+                                />
+                                <span>ตัวอักษร</span>
                               </div>
                             )}
 
                             {/* replace */}
                             {block.functionName === 'replace' && (
-                              <div className="control-row-natural">
-                                <span className="control-label">ค้นหาคำว่า:</span>
+                              <div className="wb-block-inline-fields">
+                                <span>ค้นหาคำว่า</span>
                                 <input
                                   type="text"
-                                  className="studio-input-text"
-                                  style={{width: 130}}
+                                  className="wb-slot-input"
+                                  style={{width: 90}}
                                   value={block.params.search ?? ''}
-                                  onChange={(e) => updateBlock(block.id, {search: e.target.value})}
+                                  onChange={(e) =>
+                                    updateBlock(block.id, {search: e.target.value})
+                                  }
                                 />
-                                <span className="control-label">แทนที่ด้วย:</span>
+                                <span>แทนที่ด้วย</span>
                                 <input
                                   type="text"
-                                  className="studio-input-text"
-                                  style={{width: 130}}
+                                  className="wb-slot-input"
+                                  style={{width: 90}}
                                   value={block.params.replace ?? ''}
-                                  onChange={(e) => updateBlock(block.id, {replace: e.target.value})}
+                                  onChange={(e) =>
+                                    updateBlock(block.id, {replace: e.target.value})
+                                  }
                                 />
                               </div>
                             )}
 
                             {/* counter */}
                             {block.functionName === 'counter' && (
-                              <div className="control-row-natural">
-                                <span className="control-label">เริ่มต้นนับที่เลข:</span>
+                              <div className="wb-block-inline-fields">
+                                <span>รันเลขอัตโนมัติ เริ่มที่</span>
                                 <input
                                   type="number"
-                                  className="studio-input-number"
+                                  className="wb-slot-input num"
                                   value={block.params.start ?? 1}
-                                  onChange={(e) => updateBlock(block.id, {start: Number(e.target.value)})}
+                                  onChange={(e) =>
+                                    updateBlock(block.id, {start: Number(e.target.value)})
+                                  }
                                 />
-                                <span className="control-label">เติมเลข 0 ให้ครบ:</span>
+                                <span>เติม 0 ครบ</span>
                                 <input
                                   type="number"
-                                  className="studio-input-number"
+                                  className="wb-slot-input num"
                                   value={block.params.padZeros ?? 4}
-                                  onChange={(e) => updateBlock(block.id, {padZeros: Number(e.target.value)})}
+                                  onChange={(e) =>
+                                    updateBlock(block.id, {
+                                      padZeros: Number(e.target.value),
+                                    })
+                                  }
                                 />
-                                <span className="control-unit">หลัก</span>
-
-                                <div className="quick-shortcut-pills">
-                                  <button type="button" onClick={() => updateBlock(block.id, {padZeros: 3})}>3 หลัก (001)</button>
-                                  <button type="button" onClick={() => updateBlock(block.id, {padZeros: 4})}>4 หลัก (0001)</button>
-                                </div>
+                                <span>หลัก</span>
                               </div>
                             )}
 
                             {/* math_op */}
                             {block.functionName === 'math_op' && (
-                              <div className="control-row-natural">
-                                <span className="control-label">คำนวณ:</span>
+                              <div className="wb-block-inline-fields">
+                                <span>คำนวณ</span>
                                 <select
-                                  className="studio-select"
+                                  className="wb-slot-dropdown"
                                   value={block.params.op ?? 'add'}
-                                  onChange={(e) => updateBlock(block.id, {op: e.target.value})}
+                                  onChange={(e) =>
+                                    updateBlock(block.id, {op: e.target.value})
+                                  }
                                 >
-                                  <option value="add">บวก (+)</option>
-                                  <option value="sub">ลบ (-)</option>
-                                  <option value="mul">คูณ (×)</option>
-                                  <option value="div">หาร (÷)</option>
+                                  <option value="add">+ บวก</option>
+                                  <option value="sub">- ลบ</option>
+                                  <option value="mul">× คูณ</option>
+                                  <option value="div">÷ หาร</option>
                                 </select>
-                                <span className="control-label">ด้วยตัวเลข:</span>
+                                <span>ด้วยเลข</span>
                                 <input
                                   type="number"
                                   step="any"
-                                  className="studio-input-number"
+                                  className="wb-slot-input num"
                                   value={block.params.value ?? 10}
-                                  onChange={(e) => updateBlock(block.id, {value: Number(e.target.value)})}
+                                  onChange={(e) =>
+                                    updateBlock(block.id, {
+                                      value: Number(e.target.value),
+                                    })
+                                  }
                                 />
-                                <div className="quick-shortcut-pills">
-                                  <button type="button" onClick={() => updateBlock(block.id, {op: 'mul', value: 1.07})}>+ VAT 7% (× 1.07)</button>
-                                  <button type="button" onClick={() => updateBlock(block.id, {op: 'mul', value: 0.9})}>ลด 10% (× 0.9)</button>
-                                </div>
                               </div>
                             )}
 
                             {/* round */}
                             {block.functionName === 'round' && (
-                              <div className="control-row-natural">
-                                <span className="control-label">ปัดเศษทศนิยม:</span>
+                              <div className="wb-block-inline-fields">
+                                <span>ปัดเศษทศนิยม</span>
                                 <input
                                   type="number"
-                                  className="studio-input-number"
+                                  className="wb-slot-input num"
                                   value={block.params.decimals ?? 2}
                                   min={0}
                                   max={6}
-                                  onChange={(e) => updateBlock(block.id, {decimals: Number(e.target.value)})}
+                                  onChange={(e) =>
+                                    updateBlock(block.id, {
+                                      decimals: Number(e.target.value),
+                                    })
+                                  }
                                 />
-                                <span className="control-unit">ตำแหน่ง</span>
-
-                                <div className="quick-shortcut-pills">
-                                  <button type="button" onClick={() => updateBlock(block.id, {decimals: 0})}>จำนวนเต็ม (0)</button>
-                                  <button type="button" onClick={() => updateBlock(block.id, {decimals: 2})}>2 ตำแหน่ง (0.00)</button>
-                                </div>
+                                <span>ตำแหน่ง</span>
                               </div>
                             )}
 
                             {/* if_else */}
                             {block.functionName === 'if_else' && (
-                              <div className="if-else-builder-grid">
-                                <div className="control-row-natural">
-                                  <span className="control-label">ถ้าค่าข้อมูล:</span>
+                              <div className="wb-block-if-wrap">
+                                <div className="wb-block-inline-fields">
+                                  <span>ถ้า &lt;</span>
                                   <select
-                                    className="studio-select"
+                                    className="wb-slot-dropdown"
                                     value={block.params.operator ?? 'is_not_empty'}
-                                    onChange={(e) => updateBlock(block.id, {operator: e.target.value})}
+                                    onChange={(e) =>
+                                      updateBlock(block.id, {
+                                        operator: e.target.value,
+                                      })
+                                    }
                                   >
-                                    <option value="is_not_empty">มีค่า (ไม่ว่างเปล่า)</option>
-                                    <option value="is_empty">ไม่มีค่า (ว่างเปล่า)</option>
+                                    <option value="is_not_empty">มีค่าไม่ว่าง</option>
+                                    <option value="is_empty">ว่างเปล่า</option>
                                     <option value="equals">เท่ากับ (=)</option>
                                     <option value="not_equals">ไม่เท่ากับ (!=)</option>
                                     <option value="contains">มีคำว่า...</option>
-                                    <option value="greater_than">มากกว่า (&gt;)</option>
-                                    <option value="less_than">น้อยกว่า (&lt;)</option>
                                   </select>
-
                                   {(block.params.operator === 'equals' ||
                                     block.params.operator === 'not_equals' ||
-                                    block.params.operator === 'contains' ||
-                                    block.params.operator === 'greater_than' ||
-                                    block.params.operator === 'less_than') && (
+                                    block.params.operator === 'contains') && (
                                     <input
                                       type="text"
-                                      className="studio-input-text"
-                                      style={{width: 140}}
-                                      placeholder="คำที่ต้องการเทียบ"
+                                      className="wb-slot-input"
+                                      style={{width: 90}}
                                       value={block.params.target ?? ''}
-                                      onChange={(e) => updateBlock(block.id, {target: e.target.value})}
+                                      onChange={(e) =>
+                                        updateBlock(block.id, {target: e.target.value})
+                                      }
                                     />
                                   )}
+                                  <span>&gt; แล้ว:</span>
                                 </div>
-
-                                <div className="control-row-natural" style={{marginTop: 6}}>
-                                  <span className="if-result-tag green">✓ ถ้าตรงเงื่อนไข (จริง):</span>
+                                <div
+                                  className="wb-block-inline-fields"
+                                  style={{paddingLeft: 14}}
+                                >
+                                  <span>จริงให้ส่งค่า</span>
                                   <input
                                     type="text"
-                                    className="studio-input-text"
-                                    style={{width: 160}}
+                                    className="wb-slot-input"
+                                    style={{width: 110}}
                                     value={block.params.thenValue ?? 'พร้อมจำหน่าย'}
-                                    onChange={(e) => updateBlock(block.id, {thenValue: e.target.value})}
+                                    onChange={(e) =>
+                                      updateBlock(block.id, {thenValue: e.target.value})
+                                    }
                                   />
-
-                                  <span className="if-result-tag red" style={{marginLeft: 12}}>✗ ถ้าไม่ตรง (เท็จ):</span>
+                                  <span>มิฉะนั้น</span>
                                   <input
                                     type="text"
-                                    className="studio-input-text"
-                                    style={{width: 160}}
+                                    className="wb-slot-input"
+                                    style={{width: 110}}
                                     value={block.params.elseValue ?? 'สินค้าหมด'}
-                                    onChange={(e) => updateBlock(block.id, {elseValue: e.target.value})}
+                                    onChange={(e) =>
+                                      updateBlock(block.id, {elseValue: e.target.value})
+                                    }
                                   />
                                 </div>
                               </div>
@@ -1382,53 +1334,106 @@ export function FormulaBuilderDialog({
 
                             {/* repeat */}
                             {block.functionName === 'repeat' && (
-                              <div className="control-row-natural">
-                                <span className="control-label">ข้อความที่จะทำซ้ำ:</span>
+                              <div className="wb-block-inline-fields">
+                                <span>ทำซ้ำข้อความ</span>
                                 <input
                                   type="text"
-                                  className="studio-input-text"
-                                  style={{width: 90}}
+                                  className="wb-slot-input"
+                                  style={{width: 70}}
                                   value={block.params.text ?? '*'}
-                                  onChange={(e) => updateBlock(block.id, {text: e.target.value})}
+                                  onChange={(e) =>
+                                    updateBlock(block.id, {text: e.target.value})
+                                  }
                                 />
-                                <span className="control-label">จำนวน:</span>
+                                <span>จำนวน</span>
                                 <input
                                   type="number"
-                                  className="studio-input-number"
+                                  className="wb-slot-input num"
                                   value={block.params.times ?? 5}
-                                  onChange={(e) => updateBlock(block.id, {times: Number(e.target.value)})}
+                                  onChange={(e) =>
+                                    updateBlock(block.id, {times: Number(e.target.value)})
+                                  }
                                 />
-                                <span className="control-unit">ครั้ง</span>
+                                <span>ครั้ง</span>
                               </div>
                             )}
                           </div>
+
+                          {/* Block Actions */}
+                          <div className="wb-block-actions">
+                            {!isFirst && (
+                              <button
+                                type="button"
+                                className="wb-btn-act"
+                                title="เลื่อนบล็อกขึ้น"
+                                onClick={() => moveBlock(block.id, -1)}
+                              >
+                                <ChevronUp size={13} strokeWidth={2.5} />
+                              </button>
+                            )}
+                            {!isLast && (
+                              <button
+                                type="button"
+                                className="wb-btn-act"
+                                title="เลื่อนบล็อกลง"
+                                onClick={() => moveBlock(block.id, 1)}
+                              >
+                                <ChevronDown size={13} strokeWidth={2.5} />
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              className="wb-btn-act"
+                              title="ทำซ้ำบล็อกนี้"
+                              onClick={() => duplicateBlock(block.id)}
+                            >
+                              <Copy size={11} />
+                            </button>
+                            <button
+                              type="button"
+                              className="wb-btn-act del"
+                              title="ลบบล็อกนี้"
+                              onClick={() => removeBlock(block.id)}
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Step Result Speech Bubble */}
+                        <div
+                          className="wb-step-speech-bubble"
+                          title="ผลลัพธ์ของบล็อกนี้"
+                        >
+                          <span className="bubble-pointer">◀</span>
+                          <span className="bubble-text">
+                            ได้ค่า: <strong>"{stepVal}"</strong>
+                          </span>
                         </div>
                       </div>
                     );
-                  })}
-                </div>
-              )}
+                  })
+                )}
+              </div>
             </div>
           </main>
         </div>
 
         {/* ================= FOOTER ================= */}
-        <footer className="formula-studio-footer">
-          <div className="footer-tip">
-            <span>💡 <strong>คำแนะนำ:</strong> ชิ้นส่วน LEGO ทำงานต่อกันจากบนลงล่าง โดยส่งผลลัพธ์ของแต่ละขั้นไปประมวลผลต่อในขั้นถัดไป</span>
+        <footer className="wb-studio-footer">
+          <div className="wb-footer-hint">
+            <span>
+              🧩 <strong>LEGO® Word Blocks:</strong> บล็อกคำสั่งจะประมวลผลต่อเนื่องจากบนลงล่างตามรอยต่อจิ๊กซอว์
+            </span>
           </div>
 
-          <div className="footer-actions">
-            <button
-              type="button"
-              className="studio-btn-cancel"
-              onClick={onClose}
-            >
+          <div className="wb-footer-actions">
+            <button type="button" className="wb-btn-cancel" onClick={onClose}>
               ยกเลิก
             </button>
             <button
               type="button"
-              className="studio-btn-save"
+              className="wb-btn-save"
               onClick={() => onSave(list)}
             >
               <Check size={16} strokeWidth={2.5} />

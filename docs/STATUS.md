@@ -786,5 +786,27 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
   - 25 Go unit tests passing (`go test ./...`).
   - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
 
+## 2026-10-15 — Authentic LEGO® Education Word Blocks Studio (Scratch 3.0 Jigsaw Blocks)
+
+- **Authentic LEGO Word Blocks Visual Architecture**:
+  - Replaced generic web cards with genuine **LEGO Education SPIKE Prime / Scratch 3.0 Word Blocks**:
+    - **Classic Puzzle Tabs & Sockets**: Interlocking top notch (凹 socket in) and bottom tab (凸 tab out) connecting sequentially.
+    - **Hat Block at the Top**: `🚩 เมื่อคำนวณสูตร [ชื่อสูตร]` starting the formula execution chain.
+    - **Official Category Palette Colors**:
+      - 🟧 Variables (`#FF8C1A`): `( [ตัวแปร] )` oval pills, `ตั้งค่าผลลัพธ์เป็นตัวแปร [ ▾ ]`
+      - 🟦 Date & Time (`#4C97FF`): `( วันที่ปัจจุบัน รูปแบบ [DD/MM/YYYY ▾] )`, `( วันที่ปัจจุบัน + [30] วัน )`, etc.
+      - 🟩 Operators & String (`#59C059`): `( เชื่อมข้อความ [ ] กับ [ ] )`, `( เติมเลข [0] ด้านหน้า [4] หลัก )`, uppercase, substring, etc.
+      - 🟪 Math & Numbers (`#9966FF`): Counter, Math operations, Round decimals.
+      - 🟨 Control / Logic (`#FFAB19`): IF / ELSE condition blocks, Repeat pattern.
+    - **White Inset Input Slots**: Rounded white capsule pills (`border-radius: 14px`) with inner shadows for numeric and string values.
+    - **Speech Bubble Step Output**: Each block displays its dynamic intermediate result in a Scratch-style speech bubble `💬 ได้ค่า: "..."`.
+    - **Scratch Stage Monitor**: High-contrast LCD stage display at the top right showing live formula output with active green LED and copy button.
+- **Verification**:
+  - 95 TypeScript unit tests passing (`npm test`).
+  - Production build passing (`npm run build`).
+  - 25 Go unit tests passing (`go test ./...`).
+  - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
+
+
 
 
