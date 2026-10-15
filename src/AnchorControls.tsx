@@ -1,7 +1,7 @@
 import {useState} from 'react';
-import {X,Link2,Unlink,Maximize2} from 'lucide-react';
+import {X,Link2,Unlink,Maximize2,ChevronDown,Minus,AlignHorizontalDistributeCenter,AlignVerticalDistributeCenter} from 'lucide-react';
 import type {LabelDocument, LabelObject} from './core';
-import type {AnchorSide, AnchorConstraint, ObjectAnchors} from './anchors';
+import {type AnchorSide, type AnchorConstraint, type ObjectAnchors, calculateCurrentMargin} from './anchors';
 
 interface AnchorControlsProps {
   item: LabelObject;
@@ -10,13 +10,19 @@ interface AnchorControlsProps {
   onUpdate: (changes: Partial<LabelObject>) => boolean | void;
 }
 
-const SIDES: AnchorSide[] = ['top', 'bottom', 'left', 'right'];
+const SIDES: AnchorSide[] = ['top', 'left', 'right', 'bottom'];
+const MARGIN_PRESETS: Array<number | 'auto'> = [0, 2, 4, 8, 16, 24, 'auto'];
 
 export function AnchorControls({item, doc, disabled, onUpdate}: AnchorControlsProps) {
-  const [activeSide, setActiveSide] = useState<AnchorSide>('top');
+  const [activeMarginSide, setActiveMarginSide] = useState<AnchorSide | null>(null);
   const anchors = item.anchors ?? {};
-
   const otherObjects = doc.objects.filter(o => o.id !== item.id);
+
+  const hasLeft = Boolean(anchors.left);
+  const hasRight = Boolean(anchors.right);
+  const hasTop = Boolean(anchors.top);
+  const hasBottom = Boolean(anchors.bottom);
+  const hasAny = Boolean(item.anchors && Object.keys(item.anchors).length > 0);
 
   function updateAnchor(side: AnchorSide, constraint: AnchorConstraint | null) {
     const next: ObjectAnchors = {...anchors};
@@ -29,6 +35,24 @@ export function AnchorControls({item, doc, disabled, onUpdate}: AnchorControlsPr
     onUpdate({anchors: clean});
   }
 
+  function toggleAnchorNode(side: AnchorSide) {
+    if (disabled) return;
+    if (anchors[side]) {
+      // Disconnect
+      updateAnchor(side, null);
+      if (activeMarginSide === side) setActiveMarginSide(null);
+    } else {
+      // Connect to parent with current margin distance (authentic Android Studio behavior)
+      const defaultTargetEdge = side;
+      const currentMargin = calculateCurrentMargin(side, 'parent', defaultTargetEdge, item, doc);
+      updateAnchor(side, {
+        target: 'parent',
+        targetEdge: defaultTargetEdge,
+        margin: currentMargin
+      });
+    }
+  }
+
   function handleTargetChange(side: AnchorSide, targetValue: string) {
     if (targetValue === 'none') {
       updateAnchor(side, null);
@@ -39,10 +63,11 @@ export function AnchorControls({item, doc, disabled, onUpdate}: AnchorControlsPr
       : (targetValue === 'parent' ? side : (side === 'left' ? 'right' : 'left'));
 
     const existing = anchors[side];
+    const margin = existing?.margin ?? calculateCurrentMargin(side, targetValue, defaultTargetEdge, item, doc);
     updateAnchor(side, {
       target: targetValue,
       targetEdge: existing?.targetEdge ?? defaultTargetEdge,
-      margin: existing?.margin ?? 0
+      margin
     });
   }
 
@@ -55,10 +80,9 @@ export function AnchorControls({item, doc, disabled, onUpdate}: AnchorControlsPr
   function handleMarginChange(side: AnchorSide, margin: number | 'auto') {
     const current = anchors[side];
     if (!current) {
-      const defaultTargetEdge = side === 'top' || side === 'bottom' ? side : side;
       updateAnchor(side, {
         target: 'parent',
-        targetEdge: defaultTargetEdge,
+        targetEdge: side,
         margin
       });
       return;
@@ -66,7 +90,7 @@ export function AnchorControls({item, doc, disabled, onUpdate}: AnchorControlsPr
     updateAnchor(side, {...current, margin});
   }
 
-  function quickCenterHorizontal() {
+  function centerHorizontal() {
     onUpdate({
       anchors: {
         ...anchors,
@@ -76,7 +100,7 @@ export function AnchorControls({item, doc, disabled, onUpdate}: AnchorControlsPr
     });
   }
 
-  function quickCenterVertical() {
+  function centerVertical() {
     onUpdate({
       anchors: {
         ...anchors,
@@ -86,284 +110,355 @@ export function AnchorControls({item, doc, disabled, onUpdate}: AnchorControlsPr
     });
   }
 
-  function quickCenterAll() {
-    onUpdate({
-      anchors: {
-        top: {target: 'parent', targetEdge: 'top', margin: 'auto'},
-        bottom: {target: 'parent', targetEdge: 'bottom', margin: 'auto'},
-        left: {target: 'parent', targetEdge: 'left', margin: 'auto'},
-        right: {target: 'parent', targetEdge: 'right', margin: 'auto'}
-      }
-    });
-  }
-
-  function clearAllAnchors() {
+  function clearAll() {
     onUpdate({anchors: undefined});
+    setActiveMarginSide(null);
   }
-
-  const currentConstraint = anchors[activeSide];
 
   return (
-    <div className="anchor-controls">
-      <div className="anchor-header">
-        <h4>Anchors & Constraints</h4>
-        <div className="anchor-quick-actions">
+    <div className="as-constraint-panel">
+      {/* Android Studio Style Header & Action Toolbar */}
+      <div className="as-constraint-header">
+        <h4>Constraints</h4>
+        <div className="as-toolbar-actions">
           <button
             type="button"
-            className="anchor-pill-btn"
-            title="Center horizontally in label"
+            className="as-tool-btn"
+            title="Center Horizontally in Parent"
             disabled={disabled}
-            onClick={quickCenterHorizontal}
+            onClick={centerHorizontal}
           >
-            H-Center
+            <AlignHorizontalDistributeCenter size={14}/>
           </button>
           <button
             type="button"
-            className="anchor-pill-btn"
-            title="Center vertically in label"
+            className="as-tool-btn"
+            title="Center Vertically in Parent"
             disabled={disabled}
-            onClick={quickCenterVertical}
+            onClick={centerVertical}
           >
-            V-Center
+            <AlignVerticalDistributeCenter size={14}/>
           </button>
-          <button
-            type="button"
-            className="anchor-pill-btn"
-            title="Center in label"
-            disabled={disabled}
-            onClick={quickCenterAll}
-          >
-            <Maximize2 size={12}/>
-          </button>
-          {Boolean(item.anchors && Object.keys(item.anchors).length > 0) && (
+          {hasAny && (
             <button
               type="button"
-              className="anchor-pill-btn danger-pill"
-              title="Clear all anchors"
+              className="as-tool-btn danger"
+              title="Clear All Constraints"
               disabled={disabled}
-              onClick={clearAllAnchors}
+              onClick={clearAll}
             >
-              <X size={12}/>
+              <X size={14}/>
             </button>
           )}
         </div>
       </div>
 
-      {/* Blueprint Visual Constraint Box (Android Studio style) */}
-      <div className="constraint-widget-container">
-        <div className="constraint-blueprint">
-          {/* Top Node & Margin */}
-          <div className="blueprint-top">
-            <button
-              type="button"
-              className={`anchor-node ${anchors.top ? 'linked' : ''} ${activeSide === 'top' ? 'active' : ''}`}
-              title={anchors.top ? `Top anchored: ${anchors.top.margin === 'auto' ? 'Auto' : anchors.top.margin + 'mm'}` : 'Click to edit Top anchor'}
-              disabled={disabled}
-              onClick={() => setActiveSide('top')}
-            >
-              {anchors.top ? <span className="anchor-dot"/> : <span className="anchor-plus">+</span>}
-            </button>
-            <span
-              className={`blueprint-margin-badge ${activeSide === 'top' ? 'active' : ''}`}
-              onClick={() => setActiveSide('top')}
-            >
-              {anchors.top ? (anchors.top.margin === 'auto' ? 'auto' : `${anchors.top.margin}`) : '—'}
-            </span>
-          </div>
-
-          {/* Middle Row: Left - Center Box - Right */}
-          <div className="blueprint-middle">
-            {/* Left Node & Margin */}
-            <div className="blueprint-left">
-              <span
-                className={`blueprint-margin-badge ${activeSide === 'left' ? 'active' : ''}`}
-                onClick={() => setActiveSide('left')}
-              >
-                {anchors.left ? (anchors.left.margin === 'auto' ? 'auto' : `${anchors.left.margin}`) : '—'}
-              </span>
+      {/* The Android Studio Constraint Widget Box */}
+      <div className="as-widget-stage">
+        <div className="as-widget-frame">
+          {/* Top Anchor & Margin */}
+          <div className="as-node-col as-top-col">
+            <div className="as-margin-selector-wrap">
               <button
                 type="button"
-                className={`anchor-node ${anchors.left ? 'linked' : ''} ${activeSide === 'left' ? 'active' : ''}`}
-                title={anchors.left ? `Left anchored: ${anchors.left.margin === 'auto' ? 'Auto' : anchors.left.margin + 'mm'}` : 'Click to edit Left anchor'}
+                className={`as-margin-pill ${hasTop ? 'active' : ''}`}
+                title="Top Margin"
                 disabled={disabled}
-                onClick={() => setActiveSide('left')}
+                onClick={() => setActiveMarginSide(activeMarginSide === 'top' ? null : 'top')}
               >
-                {anchors.left ? <span className="anchor-dot"/> : <span className="anchor-plus">+</span>}
+                <span>{hasTop ? (anchors.top!.margin === 'auto' ? 'auto' : `${anchors.top!.margin}`) : '—'}</span>
+                <ChevronDown size={10} className="as-chevron"/>
               </button>
-            </div>
-
-            {/* Center Object Box */}
-            <div className="blueprint-center-box">
-              <span className="blueprint-item-name">{item.name || item.kind}</span>
-              <span className="blueprint-item-size">{Number(item.width.toFixed(1))}×{Number(item.height.toFixed(1))}</span>
-            </div>
-
-            {/* Right Node & Margin */}
-            <div className="blueprint-right">
-              <button
-                type="button"
-                className={`anchor-node ${anchors.right ? 'linked' : ''} ${activeSide === 'right' ? 'active' : ''}`}
-                title={anchors.right ? `Right anchored: ${anchors.right.margin === 'auto' ? 'Auto' : anchors.right.margin + 'mm'}` : 'Click to edit Right anchor'}
-                disabled={disabled}
-                onClick={() => setActiveSide('right')}
-              >
-                {anchors.right ? <span className="anchor-dot"/> : <span className="anchor-plus">+</span>}
-              </button>
-              <span
-                className={`blueprint-margin-badge ${activeSide === 'right' ? 'active' : ''}`}
-                onClick={() => setActiveSide('right')}
-              >
-                {anchors.right ? (anchors.right.margin === 'auto' ? 'auto' : `${anchors.right.margin}`) : '—'}
-              </span>
-            </div>
-          </div>
-
-          {/* Bottom Node & Margin */}
-          <div className="blueprint-bottom">
-            <span
-              className={`blueprint-margin-badge ${activeSide === 'bottom' ? 'active' : ''}`}
-              onClick={() => setActiveSide('bottom')}
-            >
-              {anchors.bottom ? (anchors.bottom.margin === 'auto' ? 'auto' : `${anchors.bottom.margin}`) : '—'}
-            </span>
-            <button
-              type="button"
-              className={`anchor-node ${anchors.bottom ? 'linked' : ''} ${activeSide === 'bottom' ? 'active' : ''}`}
-              title={anchors.bottom ? `Bottom anchored: ${anchors.bottom.margin === 'auto' ? 'Auto' : anchors.bottom.margin + 'mm'}` : 'Click to edit Bottom anchor'}
-              disabled={disabled}
-              onClick={() => setActiveSide('bottom')}
-            >
-              {anchors.bottom ? <span className="anchor-dot"/> : <span className="anchor-plus">+</span>}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Side Selector Tabs */}
-      <div className="quick-btn-group anchor-side-tabs" aria-label="Anchor sides">
-        {SIDES.map(side => {
-          const isLinked = Boolean(anchors[side]);
-          return (
-            <button
-              key={side}
-              type="button"
-              className={`${activeSide === side ? 'chosen' : ''}`}
-              disabled={disabled}
-              onClick={() => setActiveSide(side)}
-            >
-              {side.charAt(0).toUpperCase() + side.slice(1)}
-              {isLinked && <span className="anchor-tab-dot"/>}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Active Side Configuration Panel */}
-      <div className="anchor-side-config">
-        <div className="anchor-field-row">
-          <label>
-            <span>Target</span>
-            <div className="font-family-select anchor-target-select">
-              <select
-                value={currentConstraint ? currentConstraint.target : 'none'}
-                disabled={disabled}
-                onChange={e => handleTargetChange(activeSide, e.target.value)}
-              >
-                <option value="none">None (Free)</option>
-                <option value="parent">Label (Parent)</option>
-                {otherObjects.map(o => (
-                  <option key={o.id} value={o.id}>
-                    {o.name || o.kind} ({o.kind})
-                  </option>
-                ))}
-              </select>
-            </div>
-          </label>
-
-          {currentConstraint && (
-            <button
-              type="button"
-              className="unlink-btn"
-              title="Remove this anchor"
-              disabled={disabled}
-              onClick={() => updateAnchor(activeSide, null)}
-            >
-              <Unlink size={13}/>
-            </button>
-          )}
-        </div>
-
-        {currentConstraint && (
-          <>
-            {/* Target Edge Selection */}
-            <div className="anchor-field-row">
-              <label>
-                <span>Snap to</span>
-                <div className="quick-btn-group" aria-label="Target edge">
-                  {(activeSide === 'top' || activeSide === 'bottom' ? ['top', 'bottom'] as const : ['left', 'right'] as const).map(edge => (
+              {activeMarginSide === 'top' && (
+                <div className="as-preset-popover">
+                  {MARGIN_PRESETS.map(preset => (
                     <button
-                      key={edge}
+                      key={preset}
                       type="button"
-                      className={currentConstraint.targetEdge === edge ? 'chosen' : ''}
-                      disabled={disabled}
-                      onClick={() => handleEdgeChange(activeSide, edge)}
+                      className={anchors.top?.margin === preset ? 'chosen' : ''}
+                      onClick={() => {
+                        handleMarginChange('top', preset);
+                        setActiveMarginSide(null);
+                      }}
                     >
-                      {edge.charAt(0).toUpperCase() + edge.slice(1)}
+                      {preset === 'auto' ? 'Auto' : `${preset} mm`}
                     </button>
                   ))}
                 </div>
-              </label>
+              )}
             </div>
 
-            {/* Padding / Margin Control */}
-            <div className="anchor-margin-control">
-              <div className="anchor-margin-header">
-                <small>Margin (mm)</small>
+            <button
+              type="button"
+              className={`as-anchor-dot ${hasTop ? 'linked' : ''}`}
+              title={hasTop ? 'Click to remove Top constraint' : 'Click to constraint Top to Parent'}
+              disabled={disabled}
+              onClick={() => toggleAnchorNode('top')}
+            >
+              {hasTop ? <div className="as-dot-inner"/> : <span className="as-dot-plus">+</span>}
+            </button>
+            {hasTop && <div className="as-link-line as-v-line"/>}
+          </div>
+
+          {/* Middle Row: Left - Center Box - Right */}
+          <div className="as-widget-mid-row">
+            {/* Left Anchor & Margin */}
+            <div className="as-node-row as-left-row">
+              <div className="as-margin-selector-wrap">
                 <button
                   type="button"
-                  className={`auto-toggle-btn ${currentConstraint.margin === 'auto' ? 'chosen' : ''}`}
+                  className={`as-margin-pill ${hasLeft ? 'active' : ''}`}
+                  title="Left Margin"
                   disabled={disabled}
-                  onClick={() => handleMarginChange(activeSide, currentConstraint.margin === 'auto' ? 0 : 'auto')}
+                  onClick={() => setActiveMarginSide(activeMarginSide === 'left' ? null : 'left')}
                 >
-                  Auto
+                  <span>{hasLeft ? (anchors.left!.margin === 'auto' ? 'auto' : `${anchors.left!.margin}`) : '—'}</span>
+                  <ChevronDown size={10} className="as-chevron"/>
                 </button>
-              </div>
-
-              {currentConstraint.margin !== 'auto' ? (
-                <div className="margin-input-row">
-                  <div className="quick-btn-group margin-presets" aria-label="Margin presets">
-                    {[0, 2, 4, 8].map(val => (
+                {activeMarginSide === 'left' && (
+                  <div className="as-preset-popover">
+                    {MARGIN_PRESETS.map(preset => (
                       <button
-                        key={val}
+                        key={preset}
                         type="button"
-                        className={currentConstraint.margin === val ? 'chosen' : ''}
-                        disabled={disabled}
-                        onClick={() => handleMarginChange(activeSide, val)}
+                        className={anchors.left?.margin === preset ? 'chosen' : ''}
+                        onClick={() => {
+                          handleMarginChange('left', preset);
+                          setActiveMarginSide(null);
+                        }}
                       >
-                        {val}
+                        {preset === 'auto' ? 'Auto' : `${preset} mm`}
                       </button>
                     ))}
                   </div>
-                  <div className="margin-input-wrap">
-                    <input
-                      type="number"
-                      step="0.5"
-                      min="0"
-                      value={currentConstraint.margin}
-                      disabled={disabled}
-                      onChange={e => handleMarginChange(activeSide, Math.max(0, parseFloat(e.target.value) || 0))}
-                    />
-                    <span className="unit-label">mm</span>
+                )}
+              </div>
+
+              {hasLeft && <div className="as-link-line as-h-line"/>}
+              <button
+                type="button"
+                className={`as-anchor-dot ${hasLeft ? 'linked' : ''}`}
+                title={hasLeft ? 'Click to remove Left constraint' : 'Click to constraint Left to Parent'}
+                disabled={disabled}
+                onClick={() => toggleAnchorNode('left')}
+              >
+                {hasLeft ? <div className="as-dot-inner"/> : <span className="as-dot-plus">+</span>}
+              </button>
+            </div>
+
+            {/* Center View Representation */}
+            <div className="as-center-view">
+              {/* Horizontal Zigzag Spring (when both left & right are constrained) */}
+              {hasLeft && hasRight && (
+                <svg className="as-spring-svg as-h-spring" viewBox="0 0 40 8">
+                  <path d="M 0 4 L 4 4 L 7 1 L 13 7 L 19 1 L 25 7 L 31 1 L 34 7 L 37 4 L 40 4" fill="none" stroke="#00866c" strokeWidth="1.2"/>
+                </svg>
+              )}
+
+              {/* Vertical Zigzag Spring (when both top & bottom are constrained) */}
+              {hasTop && hasBottom && (
+                <svg className="as-spring-svg as-v-spring" viewBox="0 0 8 40">
+                  <path d="M 4 0 L 4 4 L 1 7 L 7 13 L 1 19 L 7 25 L 1 31 L 7 34 L 4 37 L 4 40" fill="none" stroke="#00866c" strokeWidth="1.2"/>
+                </svg>
+              )}
+
+              <div className="as-view-meta">
+                <span className="as-view-name">{item.name || item.kind}</span>
+                <span className="as-view-dim">{Number(item.width.toFixed(1))} × {Number(item.height.toFixed(1))}</span>
+              </div>
+            </div>
+
+            {/* Right Anchor & Margin */}
+            <div className="as-node-row as-right-row">
+              <button
+                type="button"
+                className={`as-anchor-dot ${hasRight ? 'linked' : ''}`}
+                title={hasRight ? 'Click to remove Right constraint' : 'Click to constraint Right to Parent'}
+                disabled={disabled}
+                onClick={() => toggleAnchorNode('right')}
+              >
+                {hasRight ? <div className="as-dot-inner"/> : <span className="as-dot-plus">+</span>}
+              </button>
+              {hasRight && <div className="as-link-line as-h-line"/>}
+
+              <div className="as-margin-selector-wrap">
+                <button
+                  type="button"
+                  className={`as-margin-pill ${hasRight ? 'active' : ''}`}
+                  title="Right Margin"
+                  disabled={disabled}
+                  onClick={() => setActiveMarginSide(activeMarginSide === 'right' ? null : 'right')}
+                >
+                  <span>{hasRight ? (anchors.right!.margin === 'auto' ? 'auto' : `${anchors.right!.margin}`) : '—'}</span>
+                  <ChevronDown size={10} className="as-chevron"/>
+                </button>
+                {activeMarginSide === 'right' && (
+                  <div className="as-preset-popover">
+                    {MARGIN_PRESETS.map(preset => (
+                      <button
+                        key={preset}
+                        type="button"
+                        className={anchors.right?.margin === preset ? 'chosen' : ''}
+                        onClick={() => {
+                          handleMarginChange('right', preset);
+                          setActiveMarginSide(null);
+                        }}
+                      >
+                        {preset === 'auto' ? 'Auto' : `${preset} mm`}
+                      </button>
+                    ))}
                   </div>
-                </div>
-              ) : (
-                <div className="auto-margin-badge">
-                  <span>Centering / Auto distribution active</span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Anchor & Margin */}
+          <div className="as-node-col as-bottom-col">
+            {hasBottom && <div className="as-link-line as-v-line"/>}
+            <button
+              type="button"
+              className={`as-anchor-dot ${hasBottom ? 'linked' : ''}`}
+              title={hasBottom ? 'Click to remove Bottom constraint' : 'Click to constraint Bottom to Parent'}
+              disabled={disabled}
+              onClick={() => toggleAnchorNode('bottom')}
+            >
+              {hasBottom ? <div className="as-dot-inner"/> : <span className="as-dot-plus">+</span>}
+            </button>
+
+            <div className="as-margin-selector-wrap">
+              <button
+                type="button"
+                className={`as-margin-pill ${hasBottom ? 'active' : ''}`}
+                title="Bottom Margin"
+                disabled={disabled}
+                onClick={() => setActiveMarginSide(activeMarginSide === 'bottom' ? null : 'bottom')}
+              >
+                <span>{hasBottom ? (anchors.bottom!.margin === 'auto' ? 'auto' : `${anchors.bottom!.margin}`) : '—'}</span>
+                <ChevronDown size={10} className="as-chevron"/>
+              </button>
+              {activeMarginSide === 'bottom' && (
+                <div className="as-preset-popover">
+                  {MARGIN_PRESETS.map(preset => (
+                    <button
+                      key={preset}
+                      type="button"
+                      className={anchors.bottom?.margin === preset ? 'chosen' : ''}
+                      onClick={() => {
+                        handleMarginChange('bottom', preset);
+                        setActiveMarginSide(null);
+                      }}
+                    >
+                      {preset === 'auto' ? 'Auto' : `${preset} mm`}
+                    </button>
+                  ))}
                 </div>
               )}
             </div>
-          </>
-        )}
+          </div>
+        </div>
+      </div>
+
+      {/* Constraints Attribute Rows (Android Studio Style Attributes) */}
+      <div className="as-constraint-list">
+        {SIDES.map(side => {
+          const constraint = anchors[side];
+          const isLinked = Boolean(constraint);
+          const isVertical = side === 'top' || side === 'bottom';
+
+          return (
+            <div key={side} className={`as-constraint-row ${isLinked ? 'is-linked' : ''}`}>
+              <div className="as-row-label">
+                <span className={`as-side-dot ${isLinked ? 'linked' : ''}`}/>
+                <span className="as-side-title">{side.toUpperCase()}</span>
+              </div>
+
+              <div className="as-row-controls">
+                {/* Target Dropdown */}
+                <select
+                  aria-label={`${side} target`}
+                  className="as-target-select"
+                  value={constraint ? constraint.target : 'none'}
+                  disabled={disabled}
+                  onChange={e => handleTargetChange(side, e.target.value)}
+                >
+                  <option value="none">None</option>
+                  <option value="parent">Parent (Label)</option>
+                  {otherObjects.map(o => (
+                    <option key={o.id} value={o.id}>
+                      {o.name || o.kind} ({o.kind})
+                    </option>
+                  ))}
+                </select>
+
+                {constraint && (
+                  <>
+                    {/* Snap Edge Dropdown */}
+                    <select
+                      aria-label={`${side} target edge`}
+                      className="as-edge-select"
+                      value={constraint.targetEdge}
+                      disabled={disabled}
+                      onChange={e => handleEdgeChange(side, e.target.value as AnchorSide)}
+                    >
+                      {isVertical ? (
+                        <>
+                          <option value="top">to Top</option>
+                          <option value="bottom">to Bottom</option>
+                        </>
+                      ) : (
+                        <>
+                          <option value="left">to Left</option>
+                          <option value="right">to Right</option>
+                        </>
+                      )}
+                    </select>
+
+                    {/* Margin input or Auto badge */}
+                    {constraint.margin !== 'auto' ? (
+                      <div className="as-margin-input-box">
+                        <input
+                          aria-label={`${side} margin value`}
+                          type="number"
+                          step="0.5"
+                          min="0"
+                          value={constraint.margin}
+                          disabled={disabled}
+                          onChange={e => handleMarginChange(side, Math.max(0, parseFloat(e.target.value) || 0))}
+                        />
+                        <span className="as-unit">mm</span>
+                      </div>
+                    ) : (
+                      <span className="as-auto-badge">Auto</span>
+                    )}
+
+                    {/* Auto Toggle Pill */}
+                    <button
+                      type="button"
+                      className={`as-auto-btn ${constraint.margin === 'auto' ? 'active' : ''}`}
+                      title={constraint.margin === 'auto' ? 'Switch to fixed margin' : 'Set to Auto (Centering)'}
+                      disabled={disabled}
+                      onClick={() => handleMarginChange(side, constraint.margin === 'auto' ? 0 : 'auto')}
+                    >
+                      Auto
+                    </button>
+
+                    {/* Disconnect Button */}
+                    <button
+                      type="button"
+                      className="as-remove-btn"
+                      title={`Remove ${side} constraint`}
+                      disabled={disabled}
+                      onClick={() => updateAnchor(side, null)}
+                    >
+                      <X size={12}/>
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

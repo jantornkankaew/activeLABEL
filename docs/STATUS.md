@@ -257,5 +257,18 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
 - Vertically aligned the Auto size switch with the text alignment icon group in a refined card container.
 - Verification: 84 TypeScript tests passing, production build passing.
 
+## 2026-10-15 — Rebuild Anchor Constraint Widget to authentically match Android Studio Layout Inspector
+
+- Completely redesigned the Anchor constraint inspector in `src/AnchorControls.tsx` to replicate Android Studio's authentic 4-sided Constraint Widget:
+  - Eliminated the tabbed interface in favor of simultaneous 4-sided Top/Bottom/Left/Right control.
+  - Positioned 4 margin pills directly on the 4 blueprint box edges with preset dropdown popovers (`0`, `2`, `4`, `8`, `16`, `24`, `auto`).
+  - Implemented 4 interactive circular anchor handles: clicking when unconstrained automatically calculates the current margin distance to parent without jumping (via `calculateCurrentMargin` in `src/anchors.ts`); clicking when linked disconnects the constraint.
+  - Rendered horizontal and vertical SVG zigzag tension spring coils (`\/\/\/\/\/`) inside the blueprint center view when dual-axis centering constraints exist.
+  - Added Android Studio quick toolbar buttons (`H-Center`, `V-Center`, `Clear All Constraints`).
+  - Added comprehensive simultaneous attribute rows below the blueprint widget for all 4 edges, allowing explicit selection of target (`Parent` or another object), target snap edge (`Top`/`Bottom`, `Left`/`Right`), manual numeric margin inputs in mm, `Auto` toggle, and quick remove buttons.
+  - Added on-canvas visual zigzag spring coils (`springPath` in `src/renderer.tsx`) and circular anchor perimeter nodes on the selected object, strictly marked with `data-editor-only="true"` so they never bleed into SVG export or physical printing.
+- Verification: 84 TypeScript unit tests passing, production build passing, 25 Go unit tests passing with full race detection.
+
+
 
 

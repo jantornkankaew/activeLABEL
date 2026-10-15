@@ -16,11 +16,41 @@ function BarcodeVector({item,color}:{item:LabelObject;color?:string}){let source
 export function vectorObject(o:LabelObject){switch(o.kind){case 'text':{const align=o.textAlign??'left';return <text x={align==='center'?o.x+o.width/2:align==='right'?o.x+o.width:o.x} y={o.y+textMetrics(o.content,o.fontSize,o.fontName,o.bold).baseline} textAnchor={align==='center'?'middle':align==='right'?'end':'start'} fontSize={o.fontSize} fontFamily={fontStack(o.fontName)} style={{fontKerning:'none',fontVariantLigatures:'none'}} fontWeight={o.bold?700:400} fontStyle={o.italic?'italic':'normal'} textDecoration={o.underline?'underline':'none'}>{o.content}</text>;}case 'barcode':return <BarcodeVector item={o}/>;case 'image':return <image x={o.x} y={o.y} width={o.width} height={o.height} href={o.content} preserveAspectRatio="xMidYMid meet"/>;case 'box':return <rect x={o.x} y={o.y} width={o.width} height={o.height} fill="none" stroke="black" strokeWidth="0.2"/>;case 'line':{const p=linePoints(o);return <line x1={p.startX} y1={p.startY} x2={p.endX} y2={p.endY} stroke="black" strokeWidth="0.2"/>;}}}
 import type {AlignmentGuideline} from './guidelines';
 
+function springPath(x1: number, y1: number, x2: number, y2: number, isCentered = false): string {
+ const dx = x2 - x1;
+ const dy = y2 - y1;
+ const dist = Math.hypot(dx, dy);
+ if (dist < 4 || !isCentered) return `M ${x1} ${y1} L ${x2} ${y2}`;
+ const ux = dx / dist;
+ const uy = dy / dist;
+ const px = -uy;
+ const py = ux;
+ const lead = Math.min(2, dist * 0.15);
+ const span = dist - lead * 2;
+ const coils = Math.max(3, Math.min(8, Math.floor(span / 2)));
+ const step = span / (coils * 2);
+ const amp = 0.8;
+
+ let d = `M ${x1} ${y1} L ${x1 + ux * lead} ${y1 + uy * lead}`;
+ let cx = x1 + ux * lead;
+ let cy = y1 + uy * lead;
+ for (let i = 0; i < coils * 2; i++) {
+  const sign = (i % 2 === 0) ? 1 : -1;
+  cx += ux * step;
+  cy += uy * step;
+  d += ` L ${cx + px * amp * sign} ${cy + py * amp * sign}`;
+ }
+ d += ` L ${x2 - ux * lead} ${y2 - uy * lead} L ${x2} ${y2}`;
+ return d;
+}
+
 function AnchorVisuals({item, doc}:{item:LabelObject;doc:LabelDocument}){
- if(!item.anchors)return null;
  const visuals: React.JSX.Element[] = [];
- const {x,y,width:w,height:h,anchors}=item;
+ const {x,y,width:w,height:h,anchors={}}=item;
+ const isHCentered = Boolean(anchors.left && anchors.right);
+ const isVCentered = Boolean(anchors.top && anchors.bottom);
  const sides = ['top','bottom','left','right'] as const;
+
  for(const side of sides){
   const a = anchors[side];
   if(!a)continue;
@@ -65,17 +95,32 @@ function AnchorVisuals({item, doc}:{item:LabelObject;doc:LabelDocument}){
   const midX = (sx + tx) / 2;
   const midY = (sy + ty) / 2;
   const label = a.margin === 'auto' ? 'auto' : `${a.margin}mm`;
+  const isCentered = (side==='left'||side==='right') ? isHCentered : isVCentered;
+  const pathD = springPath(sx, sy, tx, ty, isCentered);
+
   visuals.push(
    <g key={`anchor-${side}`} data-editor-only="true" pointerEvents="none">
-    <line x1={sx} y1={sy} x2={tx} y2={ty} className="canvas-anchor-line"/>
-    <circle cx={sx} cy={sy} r="0.4" fill="#00866c"/>
-    <circle cx={tx} cy={ty} r="0.5" fill="#fff" stroke="#00866c" strokeWidth="0.2"/>
+    <path d={pathD} className={`canvas-anchor-line ${isCentered ? 'spring' : ''}`} fill="none"/>
+    <circle cx={sx} cy={sy} r="0.5" fill="#00866c"/>
+    <circle cx={tx} cy={ty} r="0.6" fill="#fff" stroke="#00866c" strokeWidth="0.25"/>
     {Math.hypot(tx-sx, ty-sy) > 2.5 && (
-     <text x={midX} y={midY + (side==='left'||side==='right'?-0.5:0.4)} className="canvas-anchor-badge">{label}</text>
+     <text x={midX} y={midY + (side==='left'||side==='right'?-0.6:0.5)} className="canvas-anchor-badge">{label}</text>
     )}
    </g>
   );
  }
+
+ // 4 Android Studio circular constraint handles on the object perimeter
+ const hr = 0.9;
+ visuals.push(
+  <g key="anchor-handles" data-editor-only="true" pointerEvents="none">
+   <circle cx={x + w/2} cy={y} r={hr} className={`canvas-anchor-node ${anchors.top ? 'linked' : ''}`}/>
+   <circle cx={x + w/2} cy={y + h} r={hr} className={`canvas-anchor-node ${anchors.bottom ? 'linked' : ''}`}/>
+   <circle cx={x} cy={y + h/2} r={hr} className={`canvas-anchor-node ${anchors.left ? 'linked' : ''}`}/>
+   <circle cx={x + w} cy={y + h/2} r={hr} className={`canvas-anchor-node ${anchors.right ? 'linked' : ''}`}/>
+  </g>
+ );
+
  return <>{visuals}</>;
 }
 

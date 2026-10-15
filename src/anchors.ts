@@ -265,3 +265,40 @@ export function updateAnchorsOnMove(item: LabelObject, newX: number, newY: numbe
 
   return next;
 }
+
+export function calculateCurrentMargin(side: AnchorSide, target: AnchorTarget, targetEdge: AnchorSide, item: LabelObject, doc: Pick<LabelDocument, 'width' | 'height' | 'objects'>): number {
+  if (target === 'parent') {
+    if (side === 'left') {
+      return Number(Math.max(0, targetEdge === 'right' ? item.x - doc.width : item.x).toFixed(1));
+    }
+    if (side === 'right') {
+      return Number(Math.max(0, targetEdge === 'left' ? -(item.x + item.width) : doc.width - (item.x + item.width)).toFixed(1));
+    }
+    if (side === 'top') {
+      return Number(Math.max(0, targetEdge === 'bottom' ? item.y - doc.height : item.y).toFixed(1));
+    }
+    if (side === 'bottom') {
+      return Number(Math.max(0, targetEdge === 'top' ? -(item.y + item.height) : doc.height - (item.y + item.height)).toFixed(1));
+    }
+  } else {
+    const tObj = doc.objects.find(o => o.id === target);
+    if (!tObj) return 0;
+    if (side === 'left') {
+      const tx = targetEdge === 'right' ? tObj.x + tObj.width : tObj.x;
+      return Number(Math.max(0, item.x - tx).toFixed(1));
+    }
+    if (side === 'right') {
+      const tx = targetEdge === 'left' ? tObj.x : tObj.x + tObj.width;
+      return Number(Math.max(0, tx - (item.x + item.width)).toFixed(1));
+    }
+    if (side === 'top') {
+      const ty = targetEdge === 'bottom' ? tObj.y + tObj.height : tObj.y;
+      return Number(Math.max(0, item.y - ty).toFixed(1));
+    }
+    if (side === 'bottom') {
+      const ty = targetEdge === 'top' ? tObj.y : tObj.y + tObj.height;
+      return Number(Math.max(0, ty - (item.y + item.height)).toFixed(1));
+    }
+  }
+  return 0;
+}
