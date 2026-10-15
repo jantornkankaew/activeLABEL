@@ -843,3 +843,17 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
   - 25 Go unit tests passing (`go test ./...`).
   - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
 
+## 2026-10-15 — Enforce English-Only Formula Names
+
+- **Requirement**: Formula names must be strictly in English (`A-Z, a-z, 0-9, _, -`).
+  - **Rationale**: Formula evaluation and variable interpolation syntax (`{{formula:name}}`) relies on clean identifier matching (`[A-Za-z0-9_:]+`).
+- **Changes**:
+  - **Preset Recipes**: Updated all built-in formula presets to English names: `Expiry_30_Days`, `Expiry_1_Year`, `Lot_Today`, `Auto_Sequence`, `Uppercase_Text`, `Price_With_VAT`.
+  - **Default & New Formulas**: Initial default formula named `Expiry_30_Days`; new formulas created via "+ Formula" named `Formula_N`.
+  - **Input Sanitization**: Restricts formula name text field via real-time regex filtering (`replace(/[^A-Za-z0-9_\-\s]/g, '')`), stripping any non-English/Thai characters.
+  - **Save Validation**: Automatically sanitizes all formula names on save to guarantee valid English names.
+- **Verification**:
+  - 95 TypeScript unit tests passing (`npm test`).
+  - Production build passing (`npm run build`).
+  - 25 Go unit tests passing (`go test ./...`).
+  - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.

@@ -42,7 +42,7 @@ type PresetRecipe = {
 const PRESET_RECIPES: PresetRecipe[] = [
   {
     id: 'exp_30_days',
-    name: 'วันหมดอายุ (+30 วัน)',
+    name: 'Expiry_30_Days',
     desc: 'วันปัจจุบัน + 30 วัน (เช่น 14/11/2026)',
     blocks: [
       {
@@ -55,7 +55,7 @@ const PRESET_RECIPES: PresetRecipe[] = [
   },
   {
     id: 'exp_1_year',
-    name: 'วันหมดอายุ (+1 ปี)',
+    name: 'Expiry_1_Year',
     desc: 'วันปัจจุบัน + 1 ปี (เช่น 15/10/2027)',
     blocks: [
       {
@@ -68,8 +68,8 @@ const PRESET_RECIPES: PresetRecipe[] = [
   },
   {
     id: 'lot_today',
-    name: 'Lot วันนี้ (LOT-YYYYMMDD)',
-    desc: 'รหัส Lot วันนี้ เช่น LOT-20261015',
+    name: 'Lot_Today',
+    desc: 'รหัส Lot วันนี้ เช่น LOT-YYYYMMDD',
     blocks: [
       {
         id: 'b1',
@@ -87,8 +87,8 @@ const PRESET_RECIPES: PresetRecipe[] = [
   },
   {
     id: 'seq_counter',
-    name: 'รหัสรันเลขอัตโนมัติ (SEQ-0001)',
-    desc: 'รันลำดับตัวเลข 4 หลัก มีคำนำหน้า',
+    name: 'Auto_Sequence',
+    desc: 'รันลำดับตัวเลข 4 หลัก มีคำนำหน้า (เช่น SEQ-0001)',
     blocks: [
       {
         id: 'b1',
@@ -106,8 +106,8 @@ const PRESET_RECIPES: PresetRecipe[] = [
   },
   {
     id: 'uppercase_text',
-    name: 'แปลงเป็นตัวพิมพ์ใหญ่',
-    desc: 'เปลี่ยนตัวอักษรภาษาอังกฤษทั้งหมดเป็นตัวพิมพ์ใหญ่',
+    name: 'Uppercase_Text',
+    desc: 'เปลี่ยนตัวอักษรเป็นตัวพิมพ์ใหญ่',
     blocks: [
       {
         id: 'b1',
@@ -119,7 +119,7 @@ const PRESET_RECIPES: PresetRecipe[] = [
   },
   {
     id: 'price_vat',
-    name: 'คำนวณราคา + VAT 7%',
+    name: 'Price_With_VAT',
     desc: 'คูณ 1.07 และปัดทศนิยม 2 ตำแหน่ง',
     blocks: [
       {
@@ -158,7 +158,7 @@ export function FormulaBuilderDialog({
     return [
       {
         id: 'formula_1',
-        name: 'วันหมดอายุ (+30 วัน)',
+        name: 'Expiry_30_Days',
         blocks: [
           {
             id: 'b1',
@@ -240,7 +240,7 @@ export function FormulaBuilderDialog({
     const newId = `formula_${list.length + 1}`;
     const newFormula: LabelFormula = {
       id: newId,
-      name: `สูตรที่ ${list.length + 1}`,
+      name: `Formula_${list.length + 1}`,
       blocks: [
         {
           id: `blk_${Date.now()}`,
@@ -802,14 +802,18 @@ export function FormulaBuilderDialog({
             {/* Top Workspace Stage Bar */}
             <div className="wb-stage-bar">
               <div className="wb-formula-name-field">
-                <span className="wb-field-label">ชื่อสูตร Word Blocks:</span>
+                <span className="wb-field-label">ชื่อสูตร (English only):</span>
                 <div className="wb-name-input-row">
                   <input
                     type="text"
                     className="wb-formula-name-input"
                     value={activeFormula?.name ?? ''}
-                    placeholder="เช่น วันหมดอายุ (+30 วัน)"
-                    onChange={(e) => updateActiveFormula({name: e.target.value})}
+                    placeholder="e.g. Expiry_Date, Lot_Number"
+                    title="กรุณาตั้งชื่อสูตรเป็นภาษาอังกฤษเท่านั้น (A-Z, a-z, 0-9, _, -)"
+                    onChange={(e) => {
+                      const englishOnly = e.target.value.replace(/[^A-Za-z0-9_\-\s]/g, '');
+                      updateActiveFormula({name: englishOnly});
+                    }}
                   />
                   {list.length > 1 && (
                     <button
@@ -1451,7 +1455,16 @@ export function FormulaBuilderDialog({
             <button
               type="button"
               className="wb-btn-save"
-              onClick={() => onSave(list)}
+              onClick={() => {
+                const sanitized = list.map((f, i) => {
+                  const cleaned = (f.name || '').replace(/[^A-Za-z0-9_\-\s]/g, '').trim();
+                  return {
+                    ...f,
+                    name: cleaned || `Formula_${i + 1}`,
+                  };
+                });
+                onSave(sanitized);
+              }}
             >
               <Check size={16} strokeWidth={2.5} />
               <span>บันทึกและนำสูตรไปใช้</span>
