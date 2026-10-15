@@ -634,4 +634,28 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
   - 25 Go unit tests passing (`go test ./...`).
   - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
 
+## 2026-10-15 — Formula Builder UX Overhaul & Spacious Layout (ปรับปรุง Formula Builder ให้ใช้งานง่าย ไม่บีบอัด)
+
+- **Modal Sizing Override Fix**:
+  - Identified that global `.modal` width was locked to 450px in `src/style.css`, severely cramping `.formula-modal` and causing block inputs and category palette to truncate.
+  - Added strict high-priority sizing rules (`width: min(900px, 95vw) !important; max-width: 900px !important; height: min(800px, 92vh) !important;`) to ensure generous breathing room across all screen sizes.
+- **1-Click Quick Presets Bar (⚡ สูตรสำเร็จรูปยอดนิยม)**:
+  - Added top preset bar allowing users to generate complete working formulas with a single click:
+    - ⚡ วันหมดอายุ (+30 วัน)
+    - ⚡ วันหมดอายุ (+1 ปี)
+    - ⚡ Lot วันนี้ (LOT-YYYYMMDD)
+    - ⚡ รหัสลำดับ (SEQ-0001)
+    - ⚡ แปลงพิมพ์ใหญ่ (UPPERCASE)
+- **Categorized Horizontal Tabs & Natural Thai Sentence Blocks**:
+  - Replaced the overwhelming vertical list of 15 buttons with 5 clean horizontal category tabs:
+    - 📅 วันที่และเวลา | 🔤 จัดการข้อความ | 🔢 ตัวเลขและลำดับ | 🔀 เงื่อนไข IF | 🔁 ทำซ้ำ Loop
+  - Filtered function chips grid with clear Thai descriptions for easy selection.
+  - Re-engineered block forms into natural Thai reading sentences (e.g. `บวกเพิ่ม: [ 30 ] วัน | รูปแบบวันที่: [ DD/MM/YYYY ⌄ ]`) rather than rigid key/value technical inputs.
+  - Added step flow indicator (`⬇ นำผลลัพธ์ส่งต่อไปยังขั้นตอนถัดไป...`) connecting LEGO blocks visually.
+  - Featured prominent Live Simulation card at the top displaying real-time outputs immediately.
+- **Verification**:
+  - 95 TypeScript unit tests passing (`npm test`).
+  - Production build passing (`npm run build`).
+  - 25 Go unit tests passing (`go test ./...`).
+  - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
 

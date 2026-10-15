@@ -1,275 +1,493 @@
 /* LEGO-style Formula Builder & Value Source Styles */
 
-.formula-modal {
-  width: 780px;
-  max-width: 95vw;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  padding: 24px;
+/* Modal Container Override */
+.modal-backdrop {
+  z-index: 100 !important;
 }
 
+.modal.formula-modal {
+  width: min(900px, 95vw) !important;
+  max-width: 900px !important;
+  height: min(800px, 92vh) !important;
+  max-height: 92vh !important;
+  padding: 20px 24px !important;
+  border-radius: 14px !important;
+  box-shadow: 0 20px 70px rgba(15, 23, 42, 0.25) !important;
+  background: #ffffff !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+/* Header */
 .formula-heading {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 16px;
-  border-bottom: 1px solid #eef0eb;
-  padding-bottom: 12px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eef2f6;
+  flex-shrink: 0;
 }
 
-.formula-heading h2 {
+.formula-heading-text h2 {
   font-size: 18px;
   font-weight: 700;
-  color: #1e293b;
+  color: #0f172a;
   margin: 0 0 4px;
 }
 
-.formula-heading p {
+.formula-heading-text p {
   font-size: 12px;
   color: #64748b;
   margin: 0;
 }
 
-.formula-manager-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: #f8fafc;
-  padding: 10px 14px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-}
-
-.formula-manager-bar label {
-  font-size: 11px;
-  font-weight: 600;
-  color: #475569;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0;
-}
-
-.formula-select-wrap {
-  flex: 1;
-  min-width: 180px;
-}
-
-.formula-select-wrap select {
-  width: 100%;
-  height: 32px;
-  border: 1px solid #cbd5e1;
+.formula-close-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px;
   border-radius: 6px;
-  padding: 0 8px;
-  font-size: 12px;
-  font-weight: 600;
-  background: #fff;
+  transition: all 0.15s;
+}
+
+.formula-close-btn:hover {
+  background: #f1f5f9;
   color: #0f172a;
 }
 
-.formula-name-input {
-  width: 200px;
-  height: 32px;
+/* Top Section: Formulas Manager, Presets, Simulation */
+.formula-top-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+/* Row 1: Formula selector & Rename */
+.formula-selector-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.formula-tabs-scroll {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  max-width: 60%;
+}
+
+.formula-tab-chip {
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #475569;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.formula-tab-chip:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.formula-tab-chip.active {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  color: #1d4ed8;
+}
+
+.formula-tab-count {
+  font-size: 10px;
+  color: #94a3b8;
+}
+
+.formula-tab-add {
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 6px;
+  border: 1px dashed #94a3b8;
+  background: transparent;
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+
+.formula-tab-add:hover {
+  background: #eff6ff;
+  border-color: #2563eb;
+}
+
+.formula-name-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.formula-name-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.formula-name-field {
+  height: 28px;
+  width: 170px;
   border: 1px solid #cbd5e1;
   border-radius: 6px;
   padding: 0 8px;
   font-size: 12px;
-  background: #fff;
-}
-
-.btn-add-formula {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  height: 32px;
-  padding: 0 12px;
-  background: #2563eb;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  font-size: 12px;
   font-weight: 600;
-  cursor: pointer;
-  transition: background .15s;
+  background: #ffffff;
+  color: #0f172a;
 }
 
-.btn-add-formula:hover {
-  background: #1d4ed8;
-}
-
-.btn-remove-formula {
+.formula-delete-btn {
+  height: 28px;
+  width: 28px;
+  padding: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  background: transparent;
-  color: #94a3b8;
   border: 1px solid #e2e8f0;
   border-radius: 6px;
+  background: #ffffff;
+  color: #94a3b8;
   cursor: pointer;
-  transition: all .15s;
 }
 
-.btn-remove-formula:hover {
+.formula-delete-btn:hover {
   background: #fef2f2;
-  color: #ef4444;
   border-color: #fca5a5;
+  color: #ef4444;
 }
 
-.formula-builder-body {
-  display: grid;
-  grid-template-columns: 240px 1fr;
-  gap: 16px;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
-
-/* LEGO Palette Column */
-.formula-palette {
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background: #f8fafc;
-  padding: 12px;
-  overflow-y: auto;
+/* Row 2: Presets Bar */
+.formula-presets-bar {
   display: flex;
-  flex-direction: column;
-  gap: 14px;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-.formula-palette h4 {
+.presets-label {
   font-size: 11px;
   font-weight: 700;
-  text-transform: uppercase;
-  color: #64748b;
-  margin: 0 0 6px;
-  letter-spacing: .05em;
-}
-
-.palette-category {
+  color: #475569;
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 4px;
 }
 
-.palette-category-title {
-  font-size: 11px;
-  font-weight: 700;
-  color: #334155;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin-bottom: 2px;
-}
-
-.palette-btn {
+.presets-pills {
   display: flex;
   align-items: center;
   gap: 6px;
-  width: 100%;
-  text-align: left;
-  padding: 6px 10px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 500;
-  color: #1e293b;
+  flex-wrap: wrap;
+}
+
+.preset-pill {
+  height: 24px;
+  padding: 0 9px;
+  border-radius: 12px;
+  border: 1px solid #fcd34d;
+  background: #fffbeb;
+  color: #92400e;
+  font-size: 10.5px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all .15s ease;
-  box-shadow: 0 1px 2px rgba(0,0,0,.02);
+  transition: all 0.15s;
 }
 
-.palette-btn:hover {
-  background: #f0fdf4;
-  border-color: #86efac;
-  color: #166534;
-  transform: translateX(2px);
+.preset-pill:hover {
+  background: #fef3c7;
+  border-color: #f59e0b;
+  transform: translateY(-1px);
 }
 
-.palette-btn.cat-datetime:hover { background: #eff6ff; border-color: #93c5fd; color: #1e40af; }
-.palette-btn.cat-string:hover { background: #faf5ff; border-color: #d8b4fe; color: #6b21a8; }
-.palette-btn.cat-numeric:hover { background: #fffbeb; border-color: #fcd34d; color: #92400e; }
-.palette-btn.cat-if:hover { background: #ecfdf5; border-color: #6ee7b7; color: #065f46; }
-.palette-btn.cat-loop:hover { background: #fdf2f8; border-color: #f472b6; color: #9d174d; }
-
-/* LEGO Blocks Stack Column */
-.formula-stage {
+/* Row 3: Live Simulation Banner */
+.formula-simulation-banner {
+  background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
+  border: 1.5px solid #a7f3d0;
+  border-radius: 8px;
+  padding: 8px 14px;
   display: flex;
-  flex-direction: column;
-  min-height: 0;
+  align-items: center;
+  justify-content: space-between;
   gap: 12px;
 }
 
-.blocks-container {
+.sim-badge-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #065f46;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sim-badge-output strong {
+  font-size: 16px;
+  font-weight: 700;
+  color: #047857;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  background: #ffffff;
+  border: 1px solid #6ee7b7;
+  padding: 3px 12px;
+  border-radius: 6px;
+}
+
+/* Function Palette Section */
+.formula-palette-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.category-tab-bar {
+  display: flex;
+  gap: 6px;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 6px;
+  overflow-x: auto;
+}
+
+.category-tab-btn {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #64748b;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s;
+}
+
+.category-tab-btn:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.category-tab-btn.active {
+  background: #1e293b;
+  color: #ffffff;
+}
+
+.category-functions-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 80px;
+  overflow-y: auto;
+  padding: 2px 0;
+}
+
+.func-add-chip {
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #1e293b;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.func-add-chip:hover {
+  transform: translateY(-1px);
+}
+
+.func-add-chip.cat-datetime:hover { background: #eff6ff; border-color: #3b82f6; color: #1d4ed8; }
+.func-add-chip.cat-string:hover { background: #faf5ff; border-color: #8b5cf6; color: #6d28d9; }
+.func-add-chip.cat-numeric:hover { background: #fffbeb; border-color: #f59e0b; color: #b45309; }
+.func-add-chip.cat-if:hover { background: #ecfdf5; border-color: #10b981; color: #047857; }
+.func-add-chip.cat-loop:hover { background: #fdf2f8; border-color: #ec4899; color: #be185d; }
+
+/* Canvas Area */
+.formula-canvas-area {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1.5px dashed #cbd5e1;
+  border-radius: 10px;
+  background: #fcfcfb;
+  overflow: hidden;
+}
+
+.canvas-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.canvas-header-bar h4 {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #334155;
+  margin: 0;
+}
+
+.canvas-tip {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.lego-blocks-scroll {
   flex: 1;
   overflow-y: auto;
-  border: 1px dashed #cbd5e1;
-  border-radius: 8px;
-  background: #ffffff;
-  padding: 12px;
+  padding: 12px 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.blocks-empty {
+/* Empty State */
+.lego-empty-canvas {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #94a3b8;
+  padding: 24px;
   text-align: center;
   gap: 8px;
-  padding: 30px;
 }
 
-.blocks-empty strong {
-  font-size: 14px;
-  color: #475569;
+.lego-empty-canvas h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #334155;
+  margin: 0;
 }
 
-.blocks-empty span {
+.lego-empty-canvas p {
   font-size: 12px;
+  color: #64748b;
+  margin: 0 0 8px;
 }
 
-/* Individual LEGO Brick Block */
+.empty-quick-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.empty-quick-actions button {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #1e293b;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.empty-quick-actions button:hover {
+  background: #f1f5f9;
+  border-color: #3b82f6;
+  color: #2563eb;
+}
+
+/* LEGO Block Card & Connecting Arrow */
+.lego-step-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lego-connector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #94a3b8;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
 .lego-block {
   position: relative;
   background: #ffffff;
   border: 1.5px solid #cbd5e1;
   border-radius: 8px;
-  padding: 10px 12px;
+  padding: 10px 14px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,.03);
-  transition: border-color .15s ease, box-shadow .15s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+  transition: all 0.15s ease;
 }
 
+/* LEGO Brick Top Stud */
 .lego-block::before {
   content: "";
   position: absolute;
-  top: -5px;
-  left: 24px;
-  width: 20px;
-  height: 5px;
+  top: -6px;
+  left: 28px;
+  width: 24px;
+  height: 6px;
   background: inherit;
   border: inherit;
   border-bottom: none;
-  border-radius: 3px 3px 0 0;
+  border-radius: 4px 4px 0 0;
 }
 
-.lego-block.cat-datetime { border-color: #93c5fd; border-left: 4px solid #3b82f6; }
-.lego-block.cat-string { border-color: #d8b4fe; border-left: 4px solid #a855f7; }
-.lego-block.cat-numeric { border-color: #fcd34d; border-left: 4px solid #f59e0b; }
-.lego-block.cat-if { border-color: #6ee7b7; border-left: 4px solid #10b981; }
-.lego-block.cat-loop { border-color: #f472b6; border-left: 4px solid #ec4899; }
+.lego-block.cat-datetime { border-color: #93c5fd; border-left: 5px solid #3b82f6; }
+.lego-block.cat-string { border-color: #d8b4fe; border-left: 5px solid #8b5cf6; }
+.lego-block.cat-numeric { border-color: #fcd34d; border-left: 5px solid #f59e0b; }
+.lego-block.cat-if { border-color: #6ee7b7; border-left: 5px solid #10b981; }
+.lego-block.cat-loop { border-color: #f472b6; border-left: 5px solid #ec4899; }
 
 .lego-block-header {
   display: flex;
@@ -277,22 +495,39 @@
   justify-content: space-between;
 }
 
-.lego-block-title {
+.lego-block-title-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 12px;
-  font-weight: 700;
-  color: #1e293b;
+  flex-wrap: wrap;
 }
 
-.lego-badge {
-  font-size: 10px;
-  font-weight: 600;
-  padding: 1px 6px;
-  border-radius: 4px;
+.lego-step-num {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
   background: #f1f5f9;
-  color: #475569;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.lego-cat-pill {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+}
+
+.lego-cat-pill.cat-datetime { background: #eff6ff; color: #1d4ed8; }
+.lego-cat-pill.cat-string { background: #faf5ff; color: #6d28d9; }
+.lego-cat-pill.cat-numeric { background: #fffbeb; color: #b45309; }
+.lego-cat-pill.cat-if { background: #ecfdf5; color: #047857; }
+.lego-cat-pill.cat-loop { background: #fdf2f8; color: #be185d; }
+
+.lego-func-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #0f172a;
 }
 
 .lego-block-actions {
@@ -301,88 +536,185 @@
   gap: 4px;
 }
 
-.lego-action-btn {
-  background: transparent;
-  border: none;
-  color: #94a3b8;
-  cursor: pointer;
-  padding: 3px;
-  border-radius: 4px;
+.block-action-btn {
+  height: 24px;
+  width: 24px;
+  padding: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s;
 }
 
-.lego-action-btn:hover {
+.block-action-btn:hover {
   background: #f1f5f9;
-  color: #1e293b;
+  color: #0f172a;
 }
 
-.lego-action-btn.delete:hover {
+.block-action-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.block-action-btn.delete:hover {
   background: #fef2f2;
+  border-color: #fca5a5;
   color: #ef4444;
 }
 
-.lego-block-fields {
+/* Block Inputs and Natural Sentence Layout */
+.lego-block-body {
+  padding-top: 4px;
+}
+
+.lego-field-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lego-field-row.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.field-intro {
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.field-unit {
+  font-size: 11.5px;
+  color: #64748b;
+}
+
+.field-separator {
+  color: #cbd5e1;
+  font-size: 12px;
+}
+
+.lego-select {
+  height: 30px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 0 8px;
+  font-size: 12px;
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.lego-input-num {
+  height: 30px;
+  width: 65px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  background: #ffffff;
+}
+
+.lego-input-text {
+  height: 30px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 0 10px;
+  font-size: 12px;
+  background: #ffffff;
+  color: #0f172a;
+  min-width: 140px;
+}
+
+.lego-input-mini {
+  height: 30px;
+  width: 45px;
+  text-align: center;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #ffffff;
+}
+
+.lego-field-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.field-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.field-sublabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.lego-hint-text {
+  margin: 0;
+  font-size: 11.5px;
+  color: #64748b;
+  font-style: italic;
+}
+
+/* IF/ELSE Container */
+.lego-if-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.if-row {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
 }
 
-.lego-field {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+.if-tag {
   font-size: 11px;
-  color: #64748b;
-}
-
-.lego-field select,
-.lego-field input {
-  height: 26px;
-  padding: 0 6px;
-  border: 1px solid #cbd5e1;
-  border-radius: 4px;
-  font-size: 11px;
-  background: #fff;
-  color: #0f172a;
-}
-
-/* Simulation Preview Card */
-.formula-simulation-card {
-  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
-  border: 1.5px solid #a7f3d0;
-  border-radius: 10px;
-  padding: 10px 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.sim-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.sim-label {
-  font-size: 10px;
   font-weight: 700;
-  text-transform: uppercase;
-  color: #065f46;
-  letter-spacing: .06em;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.sim-result {
-  font-size: 16px;
-  font-weight: 700;
+  background: #ecfdf5;
   color: #047857;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid #a7f3d0;
+}
+
+.if-results-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.if-result-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.then-tag {
+  font-size: 11px;
+  font-weight: 600;
+  color: #047857;
+  white-space: nowrap;
+}
+
+.else-tag {
+  font-size: 11px;
+  font-weight: 600;
+  color: #b45309;
+  white-space: nowrap;
 }
 
 /* Modal Bottom Actions */
@@ -390,12 +722,46 @@
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  margin-top: 14px;
   padding-top: 12px;
-  border-top: 1px solid #eef0eb;
+  border-top: 1px solid #eef2f6;
+  flex-shrink: 0;
+  margin-top: 10px;
 }
 
-/* Value source Grouped Dropdown Styling */
+.btn-cancel {
+  height: 34px;
+  padding: 0 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.btn-cancel:hover {
+  background: #f9fafb;
+}
+
+.btn-save-primary {
+  height: 34px;
+  padding: 0 20px;
+  border: none;
+  border-radius: 6px;
+  background: #059669;
+  color: #ffffff;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-save-primary:hover {
+  background: #047857;
+}
+
+/* Value source Grouped Dropdown Styling in Inspector */
 .value-source-select optgroup {
   font-weight: 700;
   color: #64748b;
@@ -407,63 +773,6 @@
   font-weight: 500;
   color: #0f172a;
   padding: 4px 8px;
-}
-
-.value-source-actions-row {
-  display: flex;
-  gap: 6px;
-  margin-top: 6px;
-}
-
-.value-source-action-btn {
-  flex: 1;
-  height: 26px;
-  border: 1px dashed #cbd5e1;
-  border-radius: 6px;
-  background: #f8fafc;
-  color: #475569;
-  font-size: 10px;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  cursor: pointer;
-  transition: all .15s;
-}
-
-.value-source-action-btn:hover {
-  background: #f1f5f9;
-  border-color: #94a3b8;
-  color: #1e293b;
-}
-
-/* Insert Formula Tag in Variables Dialog */
-.var-formula-helper {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 4px;
-}
-
-.var-formula-helper span {
-  font-size: 10px;
-  color: #64748b;
-}
-
-.var-formula-pill {
-  font-size: 10px;
-  background: #eff6ff;
-  color: #2563eb;
-  border: 1px solid #bfdbfe;
-  border-radius: 4px;
-  padding: 2px 6px;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.var-formula-pill:hover {
-  background: #dbeafe;
 }
 
 /* Formula & Variable Inspector Widgets */
@@ -523,7 +832,7 @@
   font-weight: 600;
   color: #166534;
   text-transform: uppercase;
-  letter-spacing: .04em;
+  letter-spacing: 0.04em;
 }
 
 .binding-preview-badge.formula-preview .badge-label {
@@ -556,7 +865,7 @@
   align-items: center;
   justify-content: center;
   gap: 4px;
-  transition: all .15s ease;
+  transition: all 0.15s ease;
 }
 
 .edit-formula-btn:hover {
@@ -586,7 +895,7 @@
   align-items: center;
   justify-content: center;
   gap: 4px;
-  transition: all .15s;
+  transition: all 0.15s;
 }
 
 .btn-shortcut:hover {
@@ -595,3 +904,29 @@
   color: #1d4ed8;
 }
 
+.var-formula-helper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.var-formula-helper span {
+  font-size: 10px;
+  color: #64748b;
+}
+
+.var-formula-pill {
+  font-size: 10px;
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+  border-radius: 4px;
+  padding: 2px 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.var-formula-pill:hover {
+  background: #dbeafe;
+}
