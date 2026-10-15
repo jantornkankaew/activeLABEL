@@ -555,3 +555,15 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
   - Production build passing (`npm run build`).
   - 25 Go unit tests passing (`go test ./...`).
   - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
+
+## 2026-10-15 — Align Ratio Combobox and Bar Height Fields (ปรับระดับความสูงและเส้นขอบของช่อง Ratio และ Bar Height ให้เท่ากันพอดี)
+
+- **Exact Vertical and Dimensional Alignment**:
+  - Matched `.as-ratio-combobox` height (`32px`), border radius (`8px`), border (`1px solid #d5d8dc`), and box shadow (`0 1px 2px rgba(0,0,0,.02)`) exactly with the inspector's input specification.
+  - Eliminated extra top margin on `.as-ratio-wrap` so both `Ratio (%)` and `Bar height (%)` labels share identical `gap: 5px`, ensuring top edges align at the exact same pixel.
+  - Aligned grid items with `align-items: start; gap: 10px; margin-bottom: 10px;`.
+- **Verification**:
+  - 88 TypeScript unit tests passing (`npm test`).
+  - Production build passing (`npm run build`).
+  - 25 Go unit tests passing (`go test ./...`).
+  - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
