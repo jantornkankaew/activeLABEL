@@ -3,9 +3,10 @@ import {sizeText,type LabelDocument,type LabelObject} from './core';
 import {snapCoordinate} from './canvasGeometry';
 export type ResizeHandle='nw'|'n'|'ne'|'e'|'se'|'s'|'sw'|'w';
 export const resizeHandles:ResizeHandle[]=['nw','n','ne','e','se','s','sw','w'];
+function resizeLinearBarHeight(o:LabelObject,handle:'n'|'s',dy:number){const top=o.y,bottom=o.y+o.height,profile=barcodeProfile(o.symbology,o.content),magnification=barcodeMagnification(o)/100,nonBars=(profile.height-profile.barHeightMm)*magnification,minHeight=nonBars+profile.barHeightMm*magnification*.1,maxHeight=profile.height*magnification,desired=o.height+(handle==='n'?-dy:dy),height=Math.max(minHeight,Math.min(maxHeight,desired));o.barHeightScale=Number(Math.max(10,Math.min(100,(height-nonBars)/(profile.barHeightMm*magnification)*100)).toFixed(2));o.height=barcodeHeight(o);o.y=handle==='n'?bottom-o.height:top;return o;}
 export function resizeObject(original:LabelObject,handle:ResizeHandle,dx:number,dy:number,doc:LabelDocument,snap=false,step=1):LabelObject{
  const o={...original};const sx=handle.includes('w')?-1:handle.includes('e')?1:0,sy=handle.includes('n')?-1:handle.includes('s')?1:0;
- if(o.kind==='barcode'&&handle==='n'&&isLinearBarcode(o.symbology)){const bottom=o.y+o.height,profile=barcodeProfile(o.symbology,o.content),magnification=barcodeMagnification(o)/100,nonBars=(profile.height-profile.barHeightMm)*magnification,minHeight=nonBars+profile.barHeightMm*magnification*.1;const height=Math.max(minHeight,Math.min(barcodeHeight(o),o.height-dy));o.barHeightScale=Number(Math.max(10,Math.min(100,(height-nonBars)/(profile.barHeightMm*magnification)*100)).toFixed(2));o.height=barcodeHeight(o);o.y=bottom-o.height;return o;}
+ if(o.kind==='barcode'&&(handle==='n'||handle==='s')&&isLinearBarcode(o.symbology))return resizeLinearBarHeight(o,handle,dy);
  const anchorX=o.x+o.width*(sx<0?1:sx>0?0:.5),anchorY=o.y+o.height*(sy<0?1:sy>0?0:.5);
  let width=Math.max(.1,o.width+sx*dx),height=Math.max(.1,o.height+sy*dy);
  if(o.kind==='box'||(o.kind==='text'&&o.autoSize===false)){

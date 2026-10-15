@@ -31,7 +31,7 @@ Document variables have a name, label, default value and optional **Ask before p
 
 Barcode type/data changes apply automatically when valid. Invalid drafts remain editable with an inline error and an explicit checksum correction or sample-data button; existing payloads are never replaced silently. Pending invalid drafts block printing and survive switching selection in the open editor. Available types: Code 128, Code 39, Code 93, EAN-13, EAN-8, UPC-A, UPC-E, Interleaved 2 of 5, QR, Data Matrix and PDF417. Barcode aspect ratio is locked to its encoded geometry. Rulers track the pointer in the selected unit on both axes.
 
-Every 1D barcode also has an independent 10–100% bar-height control. Drag the top-centre handle downward to shorten bars while width, module size, magnification and the bottom edge stay fixed. Top-edge styles include Flat, Wave, Zigzag, Sawtooth and Bubble; the vector shape is retained in JSON, Share links, SVG export and print output.
+Every 1D barcode also has an independent 10–100% bar-height control. Drag either the top-centre or bottom-centre handle to shorten or restore the bars while width, module size and magnification stay fixed; the opposite edge remains anchored. Top-edge styles include Flat, Wave, Zigzag, Sawtooth and Bubble; the vector shape is retained in JSON, Share links, SVG export and print output.
 
 The **File** menu provides New label, Open file, Export JSON and Export SVG. Open labels appear as stable tabs below the header. The standalone website saves jobs in this browser; the embedded app uses ChatGPT widget state. Download JSON as a portable backup. Clearing browser data or losing widget state can remove saved jobs; this is not shared cloud account storage.
 
