@@ -443,4 +443,26 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
   - 25 Go unit tests passing (`go test ./...`).
   - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
 
+## 2026-10-15 — Compact Sleek Arrowheads & Movable Target Connection Handles (ปรับลูกศรให้เล็กลงและสามารถลากย้ายจุดเชื่อมต่อที่ปลายลูกศรได้)
+
+- **Compact Sleek Arrowheads**:
+  - Reduced oversized arrowhead dimensions in `springPath` and `bezierWirePath`:
+    - `arrowLen` reduced from `1.4mm` to `0.65mm` (more than 50% sleeker).
+    - `arrowW` reduced from `1.0mm` (2mm span) to `0.4mm` (0.8mm total span).
+    - Arrowhead stroke width refined to `1.3px` for crisp, sharp vector rendering.
+  - Arrowheads now sit cleanly behind target anchor dots without overwhelming the canvas or text.
+- **Interactive, Movable Target Connection Point**:
+  - Made the target anchor point at the tip of the arrow interactive with `.canvas-anchor-target-handle` and `hitR` hit area.
+  - Users can now click and drag directly from the arrow tip / connection point:
+    - Dragging the target point moves the connection wire with magnetic target snapping to other objects or parent edges.
+    - Dropping on a new target reconnects the constraint to that target with the new physical margin.
+    - Dragging away into empty space or clicking to toggle deletes/disconnects the constraint.
+    - While dragging, the old static wire is hidden and replaced by real-time responsive wire feedback.
+- **Verification**:
+  - 88 TypeScript unit tests passing (`npm test`).
+  - Production build passing (`npm run build`).
+  - 25 Go unit tests passing (`go test ./...`).
+  - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
+
+
 

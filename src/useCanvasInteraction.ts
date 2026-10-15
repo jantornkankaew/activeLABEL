@@ -207,13 +207,18 @@ export function useCanvasInteraction(doc:LabelDocument|null,select:(id:string)=>
      };
      commit([{op:'update',id:current.item.id,changes:{anchors:updated}}],doc.revision);
     }
-   } else if(current.moved&&current.target){
+   } else if(current.moved&&current.target?.isSnapped){
     const margin=calculateCurrentMargin(current.side,current.target.targetId,current.target.targetEdge,current.item,doc);
     const updated={
      ...(current.item.anchors??{}),
      [current.side]:{target:current.target.targetId,targetEdge:current.target.targetEdge,margin}
     };
     commit([{op:'update',id:current.item.id,changes:{anchors:updated}}],doc.revision);
+   } else if(current.moved&&!current.target?.isSnapped&&current.item.anchors?.[current.side]){
+    const updated={...(current.item.anchors??{})};
+    delete updated[current.side];
+    const clean=Object.keys(updated).length>0?updated:undefined;
+    commit([{op:'update',id:current.item.id,changes:{anchors:clean}}],doc.revision);
    }
    anchorDrag.current=null;
    setActiveAnchorDrag(null);

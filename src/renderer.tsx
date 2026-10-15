@@ -28,8 +28,8 @@ function springPath(x1: number, y1: number, x2: number, y2: number, isCentered =
  const uy = dy / dist;
  const px = -uy;
  const py = ux;
- const arrowLen = Math.min(1.4, dist * 0.25);
- const arrowW = Math.min(1.0, dist * 0.2);
+ const arrowLen = Math.min(0.65, Math.max(0.35, dist * 0.12));
+ const arrowW = Math.min(0.4, Math.max(0.22, dist * 0.08));
 
  const ax = x2 - ux * arrowLen;
  const ay = y2 - uy * arrowLen;
@@ -95,8 +95,8 @@ export function bezierWirePath(
  const uy = vArrY / arrDist;
  const px = -uy;
  const py = ux;
- const arrowLen = Math.min(1.4, Math.max(0.8, dist * 0.2));
- const arrowW = Math.min(1.0, Math.max(0.6, dist * 0.15));
+ const arrowLen = Math.min(0.65, Math.max(0.35, dist * 0.12));
+ const arrowW = Math.min(0.4, Math.max(0.22, dist * 0.08));
  const ax = tx - ux * arrowLen;
  const ay = ty - uy * arrowLen;
  const arrowD = `M ${ax + px * arrowW} ${ay + py * arrowW} L ${tx} ${ty} L ${ax - px * arrowW} ${ay - py * arrowW}`;
@@ -132,6 +132,7 @@ function AnchorVisuals({
  for(const side of sides){
   const a = anchors[side];
   if(!a)continue;
+  if(activeAnchorDrag?.sourceId === item.id && activeAnchorDrag?.sourceSide === side)continue;
   const sp = getAnchorPoint(item, side);
   const sx = sp.x;
   const sy = sp.y;
@@ -180,7 +181,7 @@ function AnchorVisuals({
   }
 
   visuals.push(
-   <g key={`anchor-${side}`} data-editor-only="true" pointerEvents="none">
+   <g key={`anchor-${side}`} data-editor-only="true">
     {/* Target Object Highlight when anchored to another object */}
     {a.target !== 'parent' && (() => {
      const t = doc.objects.find(o => o.id === a.target);
@@ -198,6 +199,7 @@ function AnchorVisuals({
        strokeDasharray="3 2"
        rx={0.8}
        vectorEffect="non-scaling-stroke"
+       pointerEvents="none"
       />
      );
     })()}
@@ -210,27 +212,60 @@ function AnchorVisuals({
      stroke="#2196F3"
      strokeWidth={1.8}
      vectorEffect="non-scaling-stroke"
+     pointerEvents="none"
     />
     {arrowD && (
      <path
       d={arrowD}
       fill="none"
       stroke="#2196F3"
-      strokeWidth={1.8}
+      strokeWidth={1.3}
       strokeLinecap="round"
       strokeLinejoin="round"
       vectorEffect="non-scaling-stroke"
+      pointerEvents="none"
      />
     )}
 
     {/* Source anchor dot */}
-    <circle cx={sx} cy={sy} r={hr} fill="#2196F3" stroke="#fff" strokeWidth={1.2} vectorEffect="non-scaling-stroke"/>
+    <circle cx={sx} cy={sy} r={hr} fill="#2196F3" stroke="#fff" strokeWidth={1.2} vectorEffect="non-scaling-stroke" pointerEvents="none"/>
 
-    {/* Target anchor dot */}
-    <circle cx={tx} cy={ty} r={hr * 1.15} fill="#2196F3" stroke="#fff" strokeWidth={1.5} vectorEffect="non-scaling-stroke"/>
+    {/* Target anchor handle / connection point */}
+    <g
+     className="canvas-anchor-target-handle"
+     data-id={item.id}
+     data-side={side}
+     style={{cursor:'grab'}}
+    >
+     <circle
+      cx={tx}
+      cy={ty}
+      r={hitR}
+      data-id={item.id}
+      data-side={side}
+      fill="transparent"
+      pointerEvents="all"
+      style={{cursor:'grab'}}
+      onPointerDown={e => {
+       e.stopPropagation();
+       onAnchorPointerDown?.(e, side);
+      }}
+      aria-label={`Constraint target handle ${side}`}
+     />
+     <circle
+      cx={tx}
+      cy={ty}
+      r={hr * 1.15}
+      fill="#2196F3"
+      stroke="#fff"
+      strokeWidth={1.5}
+      vectorEffect="non-scaling-stroke"
+      pointerEvents="none"
+     />
+    </g>
 
     {Math.hypot(tx-sx, ty-sy) > 2 && (
-     <g transform={`translate(${midX}, ${midY})`}>
+     <g transform={`translate(${midX}, ${midY})`} pointerEvents="none">
       <rect
        x={-14 / pixelScale}
        y={-6.5 / pixelScale}
@@ -487,7 +522,7 @@ function AnchorVisuals({
      <path
       d={dragArrowD}
       stroke="#2196F3"
-      strokeWidth={1.8}
+      strokeWidth={1.3}
       strokeLinecap="round"
       strokeLinejoin="round"
       fill="none"

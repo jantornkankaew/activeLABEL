@@ -103,6 +103,9 @@
 .canvas-anchor-badge{font-family:system-ui,-apple-system,sans-serif;fill:#2196F3;stroke:#fff;stroke-width:.35px;paint-order:stroke;pointer-events:none;text-anchor:middle;font-weight:700}
 .canvas-anchor-handle-wrap{cursor:crosshair}
 .canvas-anchor-handle-wrap:hover circle[stroke]{stroke:#1565C0;stroke-width:2px}
+.canvas-anchor-target-handle{cursor:grab}
+.canvas-anchor-target-handle:hover circle[stroke]{stroke:#1565C0;stroke-width:2.5px}
+.canvas-anchor-target-handle:active{cursor:grabbing}
 .canvas-edge-resize{stroke:transparent;pointer-events:stroke;cursor:ns-resize;transition:stroke .15s ease}
 .canvas-edge-resize:hover{stroke:rgba(50,132,255,0.45)}
 .canvas-edge-resize-ew{stroke:transparent;pointer-events:stroke;cursor:ew-resize;transition:stroke .15s ease}
