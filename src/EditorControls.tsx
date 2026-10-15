@@ -4,15 +4,23 @@ import {displayMeasurement,rulerTicks} from './units';
 import type {BarcodeDraft} from './useBarcodeDrafts';
 import {useEffect,useRef,useState, type CSSProperties, type RefObject, type ReactNode} from 'react';
 import {barcodeTypes,barcodeProfile,barcodeMagnification,barcodeScaleLimits,isLinearBarcode,validateBarcode,barcodeSuggestion,type BarTopStyle,type Symbology} from './barcodes';
+import {ChevronDown} from 'lucide-react';
 import {fontNames,type FontName} from './typography';
 import type {LabelDocument,LabelObject} from './core';
 import './editor-controls.css';
 
-export function FontPicker({item,disabled,onUpdate}:{item:LabelObject;disabled?:boolean;onUpdate:(changes:Partial<LabelObject>)=>void}) {
- return <label>Font family<select aria-label="Font name" value={item.fontName??'Noto Sans'} disabled={disabled} onChange={e=>onUpdate({fontName:e.target.value as FontName})}><optgroup label="Bundled · consistent print">{fontNames.slice(0,9).map(name=><option key={name}>{name}</option>)}</optgroup><optgroup label="System fonts">{fontNames.slice(9).map(name=><option key={name}>{name}</option>)}</optgroup></select></label>;
+export function FontPicker({item,disabled,onUpdate,hideLabel}:{item:LabelObject;disabled?:boolean;onUpdate:(changes:Partial<LabelObject>)=>void;hideLabel?:boolean}) {
+ const select=<select aria-label="Font name" value={item.fontName??'Noto Sans'} disabled={disabled} onChange={e=>onUpdate({fontName:e.target.value as FontName})}><optgroup label="Bundled · consistent print">{fontNames.slice(0,9).map(name=><option key={name}>{name}</option>)}</optgroup><optgroup label="System fonts">{fontNames.slice(9).map(name=><option key={name}>{name}</option>)}</optgroup></select>;
+ if(hideLabel)return <div className="font-family-select" title="Font family">{select}<ChevronDown size={11} className="select-arrow-icon"/></div>;
+ return <label>Font family{select}</label>;
 }
 const fontPointSizes=[6,7,8,9,10,11,12,14,16,18,20,22,24,26,28,32,36,40,48,60,72,96];
-export function FontSizePicker({item,disabled,onUpdate}:{item:LabelObject;disabled?:boolean;onUpdate:(changes:Partial<LabelObject>)=>void}){const points=Number((item.fontSize*72/25.4).toFixed(1));const choose=(value:number)=>{if(Number.isFinite(value)&&value>0)onUpdate({fontSize:value*25.4/72});};return <label>Size (pt)<span className="editable-preset font-size-preset"><input aria-label="Font size" type="number" min="1" max="850" step="0.5" value={points} disabled={disabled} onChange={e=>choose(Number(e.target.value))}/><select aria-label="Font size presets" title="Choose font size" value="" disabled={disabled} onChange={e=>choose(Number(e.target.value))}><option value="" disabled></option>{fontPointSizes.map(size=><option key={size} value={size}>{size} pt</option>)}</select></span></label>;}
+export function FontSizePicker({item,disabled,onUpdate,hideLabel}:{item:LabelObject;disabled?:boolean;onUpdate:(changes:Partial<LabelObject>)=>void;hideLabel?:boolean}){
+ const points=Number((item.fontSize*72/25.4).toFixed(1));
+ const choose=(value:number)=>{if(Number.isFinite(value)&&value>0)onUpdate({fontSize:value*25.4/72});};
+ if(hideLabel)return <div className="unified-font-size-control" title="Font size (pt)"><input aria-label="Font size" type="text" inputMode="decimal" key={points} defaultValue={points} onBlur={e=>{const val=Number(e.currentTarget.value);if(Number.isFinite(val)&&val>0)choose(val);else e.currentTarget.value=String(points);}} onKeyDown={e=>{if(e.key==='Enter')e.currentTarget.blur();}} disabled={disabled}/><div className="font-size-arrow-select" title="Choose font size"><ChevronDown size={11} className="font-size-arrow-icon"/><select aria-label="Font size presets" title="Choose font size" value="" disabled={disabled} onChange={e=>choose(Number(e.target.value))}><option value="" disabled></option>{fontPointSizes.map(size=><option key={size} value={size}>{size} pt</option>)}</select></div></div>;
+ return <label>Size (pt)<span className="editable-preset font-size-preset"><input aria-label="Font size" type="number" min="1" max="850" step="0.5" value={points} disabled={disabled} onChange={e=>choose(Number(e.target.value))}/><select aria-label="Font size presets" title="Choose font size" value="" disabled={disabled} onChange={e=>choose(Number(e.target.value))}><option value="" disabled></option>{fontPointSizes.map(size=><option key={size} value={size}>{size} pt</option>)}</select></span></label>;
+}
 export function BarcodeEditor({item,doc,disabled,onUpdate,draft,onDraftChange}:{item:LabelObject;doc:LabelDocument;disabled?:boolean;onUpdate:(changes:Partial<LabelObject>)=>boolean|void;draft?:BarcodeDraft;onDraftChange?:(draft:BarcodeDraft)=>void}) {
  const {settings}=useMeasurements();const profile=barcodeProfile(item.symbology,item.content);const scale=barcodeMagnification(item);const limits=barcodeScaleLimits(item.symbology);
  const [sizeError,setSizeError]=useState('');const [scaleDraft,setScaleDraft]=useState(String(Number(scale.toFixed(2))));

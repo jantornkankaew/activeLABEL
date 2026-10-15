@@ -213,5 +213,17 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
 - Guidelines are marked with `data-editor-only="true"` and are cleanly stripped from SVG export and print output.
 - Verification: 78 TypeScript tests passing, production build passing.
 
+## 2026-10-15 — Floating quick property controls refactor (minimal & elegant)
+
+- Redesigned the floating object property bar (`.context-bar`) with a modern frosted-glass pill aesthetic (`rgba(255, 255, 255, 0.94)`, `backdrop-filter: blur(14px)`, `box-shadow`, subtle borders).
+- Eliminated vertical label clutter ("Font family", "Size (pt)", "Text align") to align all quick controls horizontally at a consistent 30px height.
+- Implemented `.font-family-select` with integrated chevron indicator and smooth dropdown styling.
+- Created `.unified-font-size-control` matching the bottom zoom control stepper: number input paired seamlessly with a `ChevronDown` preset dropdown menu.
+- Converted Bold (B), Italic (I), and Underline (U) into a unified `.quick-btn-group` segmented pill with active teal highlights (`.chosen`).
+- Converted "Auto size" checkbox into the tactile `.switch-toggle` with animated sliding knob.
+- Unified text alignment buttons into a cohesive segmented icon group (`.quick-btn-group`).
+- Added subtle vertical separators (`.context-divider`) and refined the Properties button (`.context-prop-btn`).
+- Verification: 78 TypeScript tests passing, production build passing.
+
 
 
