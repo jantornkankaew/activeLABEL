@@ -48,6 +48,8 @@ jobs:
       - name: Build for the repository Pages path
         env:
           VITE_SHARE_SERVICE_URL: ${{ vars.VITE_SHARE_SERVICE_URL }}
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
         run: npm run build -- --base=/labelcraft/
       - uses: actions/setup-go@v5
         with:

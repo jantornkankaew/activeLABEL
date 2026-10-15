@@ -33,7 +33,9 @@ Barcode type/data changes apply automatically when valid. Invalid drafts remain 
 
 Every 1D barcode also has an independent 10–100% bar-height control. Drag either the top-centre or bottom-centre handle to shorten or restore the bars while width, module size and magnification stay fixed; the opposite edge remains anchored. Top-edge styles include Flat, Wave, Zigzag, Sawtooth and Bubble; the vector shape is retained in JSON, Share links, SVG export and print output.
 
-The **File** menu provides New label, Open file, Export JSON and Export SVG. Open labels appear as stable tabs below the header. The standalone website saves jobs in this browser; the embedded app uses ChatGPT widget state. Download JSON as a portable backup. Clearing browser data or losing widget state can remove saved jobs; this is not shared cloud account storage.
+The **File** menu provides New label, Open file, Export JSON and Export SVG. Open labels appear as stable tabs below the header. When `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are configured, the standalone website requires GitHub sign-in and autosaves documents, variables, settings and the active document to the user's cloud workspace. Row-level security isolates every account. Without those deployment variables it retains the local browser workflow. Download JSON remains a portable backup.
+
+To enable cloud workspaces, create a Supabase project, enable the GitHub auth provider, run `supabase/migrations/20261015000000_cloud_workspace.sql`, and add the site URL plus `https://jantornkankaew.github.io/labelcraft/` to the Auth redirect URLs. Add `VITE_SUPABASE_URL` and the publishable/anon key as GitHub Actions repository variables; they are public browser configuration, while the service-role key must never be added to the frontend.
 
 Each label file is self-contained. Objects, fonts, variables and remembered print values, unit, DPI, grid visibility, snap and grid spacing autosave with that document and travel in JSON and Share links. Opening another label restores its own settings. Application concerns such as AI connections and credentials remain outside label files.
 
