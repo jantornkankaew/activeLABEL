@@ -24,6 +24,21 @@ func toolSchemas() (map[string]any, map[string]any) {
 	properties := map[string]any{"barcodeScale": number, "line": line, "id": id, "name": text, "kind": map[string]any{"enum": []string{"text", "barcode", "line", "box"}}, "x": number, "y": number, "width": number, "height": number, "content": text, "template": text, "fontSize": number, "fontName": fonts, "bold": map[string]any{"type": "boolean"}, "italic": map[string]any{"type": "boolean"}, "underline": map[string]any{"type": "boolean"}, "autoSize": map[string]any{"type": "boolean"}, "textAlign": map[string]any{"enum": []string{"left", "center", "right"}}, "locked": map[string]any{"type": "boolean"}, "symbology": map[string]any{"enum": []string{"code128", "code39", "code93", "ean13", "ean8", "upca", "upce", "interleaved2of5", "qrcode", "datamatrix", "pdf417"}}}
 	properties["barHeightScale"] = number
 	properties["barTopStyle"] = map[string]any{"enum": []string{"flat", "wave", "zigzag", "sawtooth", "bubble"}}
+	anchorConstraint := objectSchema(map[string]any{
+		"target":     map[string]any{"type": "string"},
+		"targetEdge": map[string]any{"enum": []string{"top", "bottom", "left", "right"}},
+		"margin": map[string]any{"oneOf": []any{
+			map[string]any{"type": "number"},
+			map[string]any{"const": "auto"},
+		}},
+	}, "target", "targetEdge", "margin")
+	anchors := objectSchema(map[string]any{
+		"top":    anchorConstraint,
+		"bottom": anchorConstraint,
+		"left":   anchorConstraint,
+		"right":  anchorConstraint,
+	})
+	properties["anchors"] = anchors
 	labelObject := objectSchema(properties, "id", "name", "kind", "x", "y", "width", "height", "content", "fontSize", "bold", "locked", "symbology")
 	variable := objectSchema(map[string]any{"name": id, "label": map[string]any{"type": "string", "maxLength": 80}, "value": map[string]any{"type": "string", "maxLength": 300}, "prompt": map[string]any{"type": "boolean"}}, "name", "label", "value", "prompt")
 	settings := objectSchema(map[string]any{"unit": map[string]any{"enum": []string{"mm", "cm", "inch", "dot"}}, "dpi": map[string]any{"enum": []int{203, 300, 600}}, "gridVisible": map[string]any{"type": "boolean"}, "snapToGrid": map[string]any{"type": "boolean"}, "gridStep": map[string]any{"type": "number", "exclusiveMinimum": 0}}, "unit", "dpi", "gridVisible", "snapToGrid", "gridStep")
@@ -31,6 +46,7 @@ func toolSchemas() (map[string]any, map[string]any) {
 	changes := objectSchema(map[string]any{"barcodeScale": number, "line": line, "name": text, "x": number, "y": number, "width": number, "height": number, "content": text, "template": text, "fontSize": number, "fontName": fonts, "bold": map[string]any{"type": "boolean"}, "italic": map[string]any{"type": "boolean"}, "underline": map[string]any{"type": "boolean"}, "autoSize": map[string]any{"type": "boolean"}, "textAlign": properties["textAlign"], "symbology": properties["symbology"]})
 	changes["properties"].(map[string]any)["barHeightScale"] = number
 	changes["properties"].(map[string]any)["barTopStyle"] = properties["barTopStyle"]
+	changes["properties"].(map[string]any)["anchors"] = anchors
 	commands := map[string]any{"type": "array", "minItems": 1, "maxItems": 20, "items": map[string]any{"oneOf": []any{
 		objectSchema(map[string]any{"op": map[string]any{"const": "add"}, "object": objectSchema(properties, "id", "name", "kind", "x", "y", "width", "height", "content")}, "op", "object"),
 		objectSchema(map[string]any{"op": map[string]any{"const": "update"}, "id": id, "changes": changes}, "op", "id", "changes"),

@@ -88,3 +88,49 @@
 .atelier .property-remove:hover{background:#fdf3f2;border-color:#eecbc6}
 @media(max-width:700px){.atelier .properties-popover{width:min(320px,calc(100% - 24px));right:12px;bottom:145px;max-height:calc(100% - 170px)}}
 .canvas-guideline{stroke:#8b5cf6;stroke-width:1px;pointer-events:none}
+.canvas-anchor-line{stroke:#00866c;stroke-width:.3px;stroke-dasharray:1 1;pointer-events:none}
+.canvas-anchor-badge{font-size:1.1px;font-family:Arial,sans-serif;fill:#00866c;stroke:#fff;stroke-width:.25px;paint-order:stroke;pointer-events:none;text-anchor:middle}
+.atelier .anchor-controls{display:flex;flex-direction:column;gap:8px}
+.atelier .anchor-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px}
+.atelier .anchor-header h4{margin:0!important;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#70757a}
+.atelier .anchor-quick-actions{display:flex;align-items:center;gap:4px}
+.atelier .anchor-pill-btn{height:22px;padding:0 6px;font-size:10px;font-weight:600;border-radius:6px;border:1px solid #dcdfd8;background:#fff;color:#50555a;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:background .15s}
+.atelier .anchor-pill-btn:hover{background:#f0f2ed;color:#202124}
+.atelier .anchor-pill-btn.danger-pill{color:#b43b32;border-color:#f2dedb}
+.atelier .anchor-pill-btn.danger-pill:hover{background:#fdf3f2}
+.atelier .constraint-widget-container{display:flex;justify-content:center;padding:10px 0;background:#fafaf8;border:1px solid #eef0eb;border-radius:10px}
+.atelier .constraint-blueprint{width:180px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.atelier .blueprint-top,.atelier .blueprint-bottom{display:flex;flex-direction:column;align-items:center;gap:2px}
+.atelier .blueprint-middle{display:flex;align-items:center;justify-content:space-between;width:100%;gap:4px}
+.atelier .blueprint-left,.atelier .blueprint-right{display:flex;align-items:center;gap:4px}
+.atelier .blueprint-center-box{width:76px;height:48px;background:#fff;border:1.5px solid #00866c;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,134,108,.08)}
+.atelier .blueprint-item-name{font-size:10px;font-weight:600;color:#202124;max-width:68px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.atelier .blueprint-item-size{font-size:9px;color:#70757a}
+.atelier .anchor-node{width:18px;height:18px;border-radius:50%;border:1.5px dashed #a0a5aa;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:all .15s}
+.atelier .anchor-node.linked{border-style:solid;border-color:#00866c;background:#e6f3ef}
+.atelier .anchor-node.active{box-shadow:0 0 0 2px rgba(0,134,108,.25)}
+.atelier .anchor-dot{width:6px;height:6px;border-radius:50%;background:#00866c}
+.atelier .anchor-plus{font-size:11px;line-height:1;color:#80858a;font-weight:700}
+.atelier .blueprint-margin-badge{font-size:9px;font-weight:600;color:#50555a;background:#fff;border:1px solid #d5d8dc;border-radius:4px;padding:1px 5px;cursor:pointer;min-width:18px;text-align:center;transition:all .15s}
+.atelier .blueprint-margin-badge.active{border-color:#00866c;color:#00866c;background:#f0f8f5}
+.atelier .anchor-side-tabs{width:100%;display:flex;height:28px}
+.atelier .anchor-side-tabs button{flex:1;font-size:11px;position:relative;padding:0}
+.atelier .anchor-tab-dot{width:5px;height:5px;border-radius:50%;background:#00866c;position:absolute;top:4px;right:4px}
+.atelier .anchor-side-config{background:#fff;border:1px solid #eef0eb;border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:10px}
+.atelier .anchor-field-row{display:flex;align-items:flex-end;gap:8px}
+.atelier .anchor-field-row label{flex:1;margin:0!important;display:flex;flex-direction:column;gap:4px}
+.atelier .anchor-field-row label span{font-size:10px;font-weight:600;color:#70757a;text-transform:uppercase;letter-spacing:.05em}
+.atelier .unlink-btn{height:32px;width:32px;border-radius:8px;border:1px solid #f2dedb;background:#fff;color:#b43b32;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background .15s}
+.atelier .unlink-btn:hover{background:#fdf3f2}
+.atelier .anchor-margin-control{display:flex;flex-direction:column;gap:6px}
+.atelier .anchor-margin-header{display:flex;align-items:center;justify-content:space-between}
+.atelier .anchor-margin-header small{font-size:10px;font-weight:600;color:#70757a;text-transform:uppercase}
+.atelier .auto-toggle-btn{height:20px;padding:0 8px;font-size:10px;font-weight:600;border-radius:10px;border:1px solid #d5d8dc;background:#fff;color:#50555a;cursor:pointer;transition:all .15s}
+.atelier .auto-toggle-btn.chosen{background:#00866c;color:#fff;border-color:#00866c}
+.atelier .margin-input-row{display:flex;align-items:center;gap:8px}
+.atelier .margin-presets{flex:1;display:flex;height:28px}
+.atelier .margin-presets button{flex:1;padding:0;font-size:11px}
+.atelier .margin-input-wrap{position:relative;width:76px}
+.atelier .margin-input-wrap input{width:100%;height:28px!important;padding:0 22px 0 6px!important;font-size:11px!important}
+.atelier .margin-input-wrap .unit-label{position:absolute;right:6px;top:7px;font-size:9px;color:#80858a;pointer-events:none}
+.atelier .auto-margin-badge{padding:6px 10px;background:#e6f3ef;border:1px solid #b6ded4;border-radius:6px;color:#007a62;font-size:11px;font-weight:500;text-align:center}

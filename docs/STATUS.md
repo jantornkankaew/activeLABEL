@@ -235,5 +235,18 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
 - Styled the Lock button (`.lock-btn`) and Remove button (`.property-remove`) with subtle iconography and cohesive hover states.
 - Verification: 78 TypeScript tests passing, production build passing.
 
+## 2026-10-15 — Android Studio-style Anchor constraint system & layout solver
+
+- Removed "Align to label" (`AlignmentControls`) from the Object Properties panel as requested.
+- Built a ConstraintLayout-style Anchor constraint system (`src/anchors.ts` and `src/AnchorControls.tsx`):
+  - Each side of an object (top, bottom, left, right) can anchor to either the label (`parent`) or to any other object in the document.
+  - Supports configurable margin/padding distances in mm (presets 0, 2, 4, 8 mm and custom numeric input) as well as `auto` margins (for automatic centering and flexible distribution).
+  - Built an Android Studio-style visual Constraint Blueprint widget with interactive circular anchor nodes, margin badges, quick centering buttons (`H-Center`, `V-Center`, `Maximize`), and side tabs.
+  - Implemented an iterative layout solver in `src/anchors.ts` (`solveAnchors`) that automatically repositions dependent objects when target objects move, resize, or when the document dimensions change (`op: 'resize'`).
+  - Added canvas visual anchor guidelines in `src/renderer.tsx` showing dashed teal constraint lines (`.canvas-anchor-line`), source/target dots, and margin badges on the label canvas for the selected object (tagged `data-editor-only="true"` and omitted from SVG/print).
+  - Synchronized canvas dragging in `src/useCanvasInteraction.ts` to update anchor margins when moving constrained objects.
+  - Synchronized Go MCP tool schema in `internal/chatgptapp/server.go` to support `anchors` in `labelcraft_propose_edit`.
+  - Verification: 84 TypeScript unit tests passing (including 6 new tests in `tests/anchors.test.ts`), production build passing, 25 Go unit tests passing, and printbridge cross-compilation passing for all 6 targets.
+
 
 

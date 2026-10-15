@@ -4,6 +4,7 @@ import {useEffect,useRef,useState,type PointerEvent} from 'react';
 import type {Command,LabelDocument,LabelObject} from './core';
 import {snapCoordinate} from './canvasGeometry';
 import {computeAlignment,getActiveGuidelines,type AlignmentGuideline} from './guidelines';
+import {updateAnchorsOnMove} from './anchors';
 type Drag={item:LabelObject;mode:'move'|'resize';handle:ResizeHandle;x:number;y:number;rect:DOMRect;pointerId:number;documentId:string};
 export function useCanvasInteraction(doc:LabelDocument|null,select:(id:string)=>void,commit:(commands:Command[],revision?:number)=>boolean,enabled:boolean,snap:boolean,step:number){
  const drag=useRef<Drag|null>(null);const previewRef=useRef<LabelDocument|null>(null);const [preview,setPreview]=useState<LabelDocument|null>(null);
@@ -34,7 +35,7 @@ export function useCanvasInteraction(doc:LabelDocument|null,select:(id:string)=>
 
   previewRef.current=next;setPreview(next);
  }
- function finish(){const current=drag.current;const next=previewRef.current;if(doc&&current&&next&&current.documentId===doc.id){const item=next.objects.find(o=>o.id===current.item.id)!;const changes=current.mode==='move'?{x:item.x,y:item.y}:{x:item.x,y:item.y,width:item.width,height:item.height,...(item.line?{line:item.line}:{}),...(item.kind==='barcode'?{barcodeScale:item.barcodeScale,barHeightScale:item.barHeightScale}:{}),...(item.kind==='text'?{fontSize:item.fontSize}:{})};if(Object.entries(changes).some(([key,value])=>current.item[key as keyof LabelObject]!==value))commit([{op:'update',id:item.id,changes}],doc.revision);}drag.current=null;previewRef.current=null;setPreview(null);setGuidelines([]);}
+ function finish(){const current=drag.current;const next=previewRef.current;if(doc&&current&&next&&current.documentId===doc.id){const item=next.objects.find(o=>o.id===current.item.id)!;const updatedAnchors=current.mode==='move'?updateAnchorsOnMove(current.item,item.x,item.y,doc):undefined;const changes=current.mode==='move'?{x:item.x,y:item.y,...(updatedAnchors?{anchors:updatedAnchors}:{})}:{x:item.x,y:item.y,width:item.width,height:item.height,...(item.line?{line:item.line}:{}),...(item.kind==='barcode'?{barcodeScale:item.barcodeScale,barHeightScale:item.barHeightScale}:{}),...(item.kind==='text'?{fontSize:item.fontSize}:{})};if(Object.entries(changes).some(([key,value])=>current.item[key as keyof LabelObject]!==value))commit([{op:'update',id:item.id,changes}],doc.revision);}drag.current=null;previewRef.current=null;setPreview(null);setGuidelines([]);}
  function cancel(){drag.current=null;previewRef.current=null;setPreview(null);setGuidelines([]);}
  return {preview,guidelines,onPointerDown:(e:PointerEvent<SVGGElement>)=>start(e,'move'),onResizeStart:(e:PointerEvent<SVGRectElement>)=>start(e,'resize'),onPointerMove:move,onPointerUp:finish,onPointerCancel:cancel};
 }
