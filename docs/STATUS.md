@@ -579,3 +579,42 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
   - Production build passing (`npm run build`).
   - 25 Go unit tests passing (`go test ./...`).
   - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
+
+## 2026-10-15 — Value Source Redesign & LEGO Formula Builder (ออกแบบ Value Source ใหม่หมด พร้อมตัวสร้างสูตร Formula แบบ LEGO)
+
+- **Unified Value Source Grouped Dropdown with Dividers**:
+  - Completely redesigned "Value source" selector in the property inspector into a structured grouped list:
+    - **Fixed value**
+    - Divider (`──────────`)
+    - **Variable** group (listing all defined variables + `+ Variable` shortcut)
+    - Divider (`──────────`)
+    - **Formula** group (listing all created formulas + `+ Formula` shortcut)
+  - Selecting `+ Variable` directly opens `VariablesDialog`.
+  - Selecting `+ Formula` opens `FormulaBuilderDialog`.
+  - Contextual inspector panel shows prefix/suffix for variables, or formula details card (with name, block count, live preview badge, and `✏️ Edit Formula` button) when a formula is active.
+  - Added 1-click action pills (`+ Variable`, `+ Formula`) below the dropdown for quick management.
+- **Variables with Multi-Formula Composition**:
+  - Variables can now compose and interpolate values from multiple formulas simultaneously via `{{formula:FormulaName}}` or `{{formula:FormulaId}}`.
+  - In `VariablesDialog`, added one-click formula helper pills (`+ Combine Formula: [+ Exp Date]`) to easily insert formula tags into default variable values.
+  - Added live preview in `VariablesDialog` to display the evaluated formula string in real time.
+- **LEGO-Style Visual Formula Builder (`FormulaBuilderDialog`)**:
+  - Interactive modular builder where users construct formulas without typing code:
+    - **DateTime Function**: `now` (current date/time), `format_date` (presets or custom mask), `add_days` (add/subtract days for expiry calculations), `add_months`, `add_years`, `date_part` (day, month, year, weekday).
+    - **String Function**: `concat` (combine text/variables), `pad_start` (zero/char padding), `pad_end`, `substring` (slice text), `uppercase`, `lowercase`, `replace`, `trim`.
+    - **Numeric Function**: `counter` (sequence generator with pad), `math_op` (+, -, *, /), `round` (decimal rounding).
+    - **Condition (IF)**: if/else branching with comparison operators (`==`, `!=`, `>`, `<`, `>=`, `<=`, `contains`, `empty`).
+    - **LOOP / Repeat**: repeats text or patterns N times.
+  - Formula variables integration: blocks can pull values from document variables (`fromVariable`) or static inputs.
+  - Visual LEGO-brick block styling (`.lego-block` with top studs, category border accents, move up/down reordering, remove buttons).
+  - Real-time live simulation card (`.formula-simulation-card`) displaying the simulated result dynamically as blocks are added or modified.
+  - Multi-formula manager: create, name, duplicate, and delete multiple independent formulas per document.
+- **Architecture & Transaction Engine**:
+  - Added `LabelFormula` and `FormulaBlock` schemas to `LabelDocument.formulas`.
+  - Added `setFormulas` operation to `Command` and `apply` transaction engine in `src/core.ts`.
+  - Updated Go MCP schema in `internal/chatgptapp/server.go` with `formulaBlock` and `formula` schemas.
+- **Verification**:
+  - 94 TypeScript unit tests passing (`npm test`, including 6 new comprehensive formula evaluation and interpolation suites).
+  - Production build passing (`npm run build`).
+  - 25 Go unit tests passing (`go test ./...`).
+  - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
+
