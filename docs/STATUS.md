@@ -476,3 +476,16 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
   - Production build passing (`npm run build`).
   - 25 Go unit tests passing (`go test ./...`).
   - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
+
+## 2026-10-15 — Fix Constraint Row Delete Button Hover Contrast (แก้ปุ่ม X ลบ Constraint พื้นหลังกลืนกับตัว X เมื่อเอาเม้าส์ชี้)
+
+- **Contrast & Specificity Fix for `.as-as-row-del`**:
+  - Identified root cause: `.atelier button:hover` (`background: #eeede9`) had higher CSS specificity than `.as-as-row-del:hover`, causing the delete button's hover background to become light beige/grey while `.as-as-row-del:hover` turned the `X` icon white (`#ffffff`), making the `X` invisible against the light background.
+  - Added scoped `.atelier .as-as-row-del:hover` and `.atelier button.as-as-row-del:hover` rules with `background: #ef4444 !important; color: #ffffff !important;` and `stroke: currentColor !important;`.
+  - Added active feedback (`#dc2626`) and explicit non-hover transparent background with `#94a3b8` slate icon.
+  - Also protected `.as-accordion-toggle` and `.as-as-auto-toggle` against unwanted `.atelier button:hover` background overrides.
+- **Verification**:
+  - 88 TypeScript unit tests passing (`npm test`).
+  - Production build passing (`npm run build`).
+  - 25 Go unit tests passing (`go test ./...`).
+  - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
