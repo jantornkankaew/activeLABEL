@@ -411,16 +411,36 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
 - **Authentic Android Studio Layout**:
   - Center Box: clean transparent 64×54px frame with 1px border (`#5a5d63`), 4 inward T-shaped I-beams with center opening, and removed inner text labels to match Android Studio's design.
   - Anchor Nodes: 11px solid gray circles (`#7a7f8d`) on constrained borders, vertical dotted connector leading to 18px blue circular `+` button on unconstrained edges.
-  - Comboboxes: compact dark `#1e1f22` inputs with blue focus/active border (`#3871e0`).
-  - Bias Slider: track with dark circular badge displaying `(50)` format.
+  - Comboboxes: compact inputs with blue focus/active border (`#3871e0`).
+  - Bias Slider: track with circular badge displaying `(50)` format.
 - **Android Studio Syntax in Constraints List**:
   - Implemented `ConstraintLinkIcon` (authentic S-curve wire glyph connecting two nodes).
   - Formatted constraint rows in true Android Studio syntax: `Start → StartOf parent (0mm)`, `End → EndOf parent (0mm)`, `Top → BottomOf Brand (8mm)`.
   - Added dimension entries `Width (42.0mm)` and `Height (8.0mm)`.
-  - Interactive row selection (`selected` class highlighted in slate-blue `#2b3344`) with inline target, edge, and margin editors.
+  - Interactive row selection with inline target, edge, and margin editors.
 - **Verification**:
   - 88 TypeScript unit tests passing (`tests/*.test.ts`).
   - Production build passing (`tsc --noEmit && vite build`).
   - 25 Go unit tests passing (`go test ./...`).
   - Print bridge cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
+
+## 2026-10-15 — Streamlined Barcode Property Inspector & App-wide Light Theme Conversion (ปรับ Property ของ Barcode และเปลี่ยนธีมสีเป็นสีปกติ)
+
+- **Redesigned Barcode Property Inspector & Eliminated Redundancies**:
+  - Removed duplicate 4-button ratio row (`[50%, 100%, 150%, 200%]`); all ratio presets are now accessible via the integrated preset dropdown next to the `Ratio (%)` input.
+  - Removed floating dimension readout from the Barcode editor; physical dimensions (`🔒 W × H mm · สัดส่วนคงที่ N%`) are now unified inside the "Position & size" inspector panel alongside X and Y coordinates.
+  - Clean 2-column layout for linear barcodes placing `Ratio (%)` and `Bar height (%)` side-by-side, followed by `Top style`.
+  - Polished collapsible "Technical details" section with clean key-value layout.
+  - Preserved full keyboard accessibility and symbology validation feedback.
+- **Full Light Theme Conversion for Constraint Layout Widget**:
+  - Converted all `.as-*` components from dark/black backgrounds (`#1e1f22`, `#2b2d30`, `#313438`) to the application's clean light surface theme (`#ffffff` / `#fafaf8` / `#e5e4df`).
+  - Center view rendered with subtle `#f8f9fa` canvas tint and `#c4c9d0` boundary.
+  - Margin comboboxes and inputs styled with clean white background, `#d5d8dc` border, and royal blue focus ring (`#2563eb`).
+  - Constraints list styled with clean white background, `#f1f5f9` dividers, `#f8fafc` row hover, and `#eff6ff` selection highlight.
+- **Verification**:
+  - 88 TypeScript unit tests passing (`npm test`).
+  - Production build passing (`npm run build`).
+  - 25 Go unit tests passing (`go test ./...`).
+  - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
+
 
