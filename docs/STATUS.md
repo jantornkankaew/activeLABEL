@@ -675,3 +675,28 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
   - Production build passing (`npm run build`).
   - 25 Go unit tests passing (`go test ./...`).
   - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
+
+## 2026-10-15 — Reimagined 2-Column Visual LEGO Builder (คิดใหม่ ทำใหม่: ตัวต่อ LEGO สายพาน 2 คอลัมน์)
+
+- **Eliminated Header Clutter (No More Stacked Bars)**:
+  - Replaced the 5 vertically stacked toolbars with a single, streamlined top app bar containing:
+    - Formula switcher dropdown and inline rename field.
+    - Prominent, high-contrast final live result badge (`🎯 ผลลัพธ์สุดท้าย: SEQ-0001`).
+    - Clean close modal action.
+- **Dedicated 2-Column Workspace**:
+  - **Left Sidebar (~290px LEGO Toolbox)**:
+    - Quick 1-click recipe templates at top (`⚡ วันหมดอายุ 30 วัน`, `⚡ Lot วันนี้`, `⚡ เลขรัน 0001`, `⚡ UPPERCASE`).
+    - Organized piece categories with distinct color-coded chips (📅 วันที่, 🔤 ข้อความ, 🔢 ตัวเลข, 🔀 เงื่อนไข, 🔁 ทำซ้ำ).
+    - Categorized piece cards with descriptive text and 1-click `[+ เพิ่มชิ้นนี้]` button that instantly snaps the piece onto the chain.
+  - **Right Main Canvas (LEGO Baseplate Workspace)**:
+    - Subtle blueprint dot grid background for genuine tactile feel.
+    - True 3D embossed LEGO studs on each brick (`○ ○ ○ ○ ○ ○`).
+    - Color-coded borders and accents per category.
+    - High-contrast, tactile action buttons (Up `▲`, Down `▼`, and Red `🗑️ ลบ`) resolving previous faint/empty icon issues.
+    - Flow connector with downward arrow (`⬇ ส่งผลลัพธ์ไปยังชิ้นถัดไป`) between bricks.
+    - **Live Step-by-Step Output Footer**: Every single brick dynamically displays its intermediate calculated result (`✨ ผลลัพธ์ของขั้นตอนนี้: [ ... ]`), giving instant visual feedback on how each block transforms the data.
+- **Verification**:
+  - 95 TypeScript unit tests passing (`npm test`).
+  - Production build passing (`npm run build`).
+  - 25 Go unit tests passing (`go test ./...`).
+  - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
