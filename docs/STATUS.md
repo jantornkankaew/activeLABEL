@@ -248,5 +248,14 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
   - Synchronized Go MCP tool schema in `internal/chatgptapp/server.go` to support `anchors` in `labelcraft_propose_edit`.
   - Verification: 84 TypeScript unit tests passing (including 6 new tests in `tests/anchors.test.ts`), production build passing, 25 Go unit tests passing, and printbridge cross-compilation passing for all 6 targets.
 
+## 2026-10-15 — Fix typography frame gaps and switch alignment in Object Properties
+
+- Fixed the empty gap inside the Style button group border: set `.type-row .quick-btn-group button` to `flex: 1`, distributing Bold, Italic, and Underline evenly across 3 equal segments without empty white space on the right.
+- Fixed the gap in the font size control: set `.type-row .unified-font-size-control input` to `flex: 1` with centered text, docking the chevron arrow selector on the right at a consistent 26px width.
+- Balanced Font Size and Style into an equal 50/50 two-column grid (`grid-template-columns: 1fr 1fr; gap: 10px;`) at matching 32px heights.
+- Fixed the vertical text wrapping on "Auto size": forced `.switch-toggle` to `flex-direction: row !important; align-items: center !important;` so the switch pill and label sit horizontally side-by-side.
+- Vertically aligned the Auto size switch with the text alignment icon group in a refined card container.
+- Verification: 84 TypeScript tests passing, production build passing.
+
 
 

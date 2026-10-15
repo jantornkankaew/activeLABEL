@@ -65,13 +65,23 @@
 .atelier .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .atelier .field-grid label{font-size:10px;font-weight:500;color:#656a70}
 .atelier .property-measure{margin:6px 0 0!important;color:#7d8288!important;font-size:10px!important}
-.atelier .typography-section .font-family-select{width:100%}
-.atelier .typography-section .font-family-select select{width:100%}
-.atelier .type-row{display:grid;grid-template-columns:104px 1fr;gap:8px;align-items:end;margin-top:8px}
-.atelier .type-row>label{margin:0}
-.atelier .type-row .unified-font-size-control{width:100%}
-.atelier .text-frame-controls{margin:10px 0 0;padding:8px 10px;border:1px solid #eef0eb;border-radius:8px;background:#fafaf8;display:flex;align-items:center;justify-content:space-between;gap:8px}
-.atelier .text-frame-controls .switch-toggle{margin:0}
+.atelier .typography-section .font-family-select{width:100%;height:32px}
+.atelier .typography-section .font-family-select select{width:100%;height:100%}
+.atelier .type-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start;margin-top:10px}
+.atelier .type-row>label{margin:0!important;display:flex;flex-direction:column;gap:5px;font-size:11px;font-weight:500;color:#50555a}
+.atelier .type-row .unified-font-size-control{width:100%;height:32px;display:flex;align-items:stretch;background:#fff;border:1px solid #d5d8dc;border-radius:8px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.02)}
+.atelier .type-row .unified-font-size-control input{flex:1;width:100%;min-width:0;height:100%;text-align:center;border:0;background:transparent;font-size:12px;font-weight:500;color:#202124;padding:0 4px;margin:0;outline:none}
+.atelier .type-row .font-size-arrow-select{width:26px;height:100%;flex-shrink:0;border-left:1px solid #f0f1f2;display:flex;align-items:center;justify-content:center;position:relative;background:#fafaf8;cursor:pointer;transition:background .15s}
+.atelier .type-row .font-size-arrow-select:hover{background:#f0f1ee}
+.atelier .type-row .quick-btn-group{width:100%;height:32px;display:flex;align-items:stretch;background:#fff;border:1px solid #d5d8dc;border-radius:8px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.02)}
+.atelier .type-row .quick-btn-group button{flex:1;min-width:0;height:100%!important;min-height:100%!important;padding:0;border:0;border-right:1px solid #f0f1f2;background:transparent;color:#55595f;font-size:13px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s,color .15s}
+.atelier .type-row .quick-btn-group button:last-child{border-right:0}
+.atelier .type-row .quick-btn-group button:hover{background:#f0f1ee;color:#1a1b1d}
+.atelier .type-row .quick-btn-group button.chosen{background:#e6f3ef;color:#007a62;font-weight:600}
+.atelier .text-frame-controls{margin:10px 0 0;padding:8px 12px;border:1px solid #eef0eb;border-radius:8px;background:#fafaf8;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px}
+.atelier .text-frame-controls .switch-toggle,.atelier .inspector .switch-toggle{display:inline-flex!important;flex-direction:row!important;align-items:center!important;gap:8px!important;margin:0!important;cursor:pointer}
+.atelier .text-frame-controls .quick-btn-group{height:30px;display:inline-flex;align-items:stretch;flex-shrink:0}
+.atelier .text-frame-controls .quick-btn-group button{width:30px;min-width:30px;height:100%!important;padding:0;display:inline-flex;align-items:center;justify-content:center}
 .atelier .text-align-group{flex-shrink:0}
 .atelier .layout-section{padding-top:12px}
 .atelier .alignment-controls{margin:0}
