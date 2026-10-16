@@ -334,4 +334,56 @@ test('numeric and string block slots accept {{varName}} variable tokens', () => 
   );
 });
 
+test('serialIndex advances counter and change_variable across serial labels', () => {
+  const formulas: LabelFormula[] = [
+    {
+      id: 'seq_counter',
+      name: 'Auto_Sequence',
+      blocks: [
+        {
+          id: 'b1',
+          category: 'numeric',
+          functionName: 'counter',
+          params: {start: 1, padZeros: 4},
+        },
+        {
+          id: 'b2',
+          category: 'string',
+          functionName: 'concat',
+          params: {prefix: 'SEQ-', append: ''},
+        },
+      ],
+    },
+    {
+      id: 'sku_inc',
+      name: 'SKU_Inc',
+      blocks: [
+        {
+          id: 'b1',
+          category: 'string',
+          functionName: 'change_variable',
+          params: {variableName: 'sku', delta: 1},
+        },
+      ],
+    },
+  ];
+  const variables = [{name: 'sku', label: 'SKU', value: 'A50000', prompt: false}];
+
+  const first = resolveVariableValuesWithFormulas(variables, formulas, {}, new Date(), 0);
+  assert.equal(first['seq_counter'], 'SEQ-0001');
+  assert.equal(first['sku'], 'A50001');
+  assert.equal(first['serial'], '1');
+
+  const second = resolveVariableValuesWithFormulas(variables, formulas, {}, new Date(), 1);
+  assert.equal(second['seq_counter'], 'SEQ-0002');
+  assert.equal(second['sku'], 'A50002');
+  assert.equal(second['serial'], '2');
+
+  const tenth = resolveVariableValuesWithFormulas(variables, formulas, {}, new Date(), 9);
+  assert.equal(tenth['seq_counter'], 'SEQ-0010');
+  assert.equal(tenth['sku'], 'A50010');
+  assert.equal(tenth['serial'], '10');
+});
+
+
 

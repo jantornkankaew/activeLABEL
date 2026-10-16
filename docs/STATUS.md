@@ -924,4 +924,28 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
   - 25 Go unit tests passing (`go test ./...`).
   - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
 
+## 2026-10-16 — Print Dialog Redesign: Copies, Serial Count, Serial Preview Navigator, and Label DPI
+
+- **Issues Addressed**:
+  - Users requested a redesigned Print Dialog with:
+    1. **Copies (`จำนวน Copy`)**: Number of copies per label (`1–100`).
+    2. **Serial (`จำนวน Serial`)**: Number of sequential serial labels (`1–500`).
+    3. **Removal of the `Label DPI` selector**: Use the label's own configured DPI (`doc.settings.dpi`) directly without a redundant dropdown in the Print Dialog.
+    4. **Interactive Serial Preview Navigator**: When a serial count is specified, allow previewing each serial label before printing with First (`|◀`), Previous (`◀`), direct label number input (`ฉลากใบที่ [ N ] / M`), Next (`▶`), and Last (`▶|`) navigation controls.
+- **Fixes**:
+  - **Formula & Variable Serial Engine (`src/formulaEngine.ts`, `src/variables.ts`)**:
+    - Updated `counter` block evaluation to offset by `__serial_index__` (`start + serialOffset * step`) and `change_variable` (`incrementValueString`) to increment both numeric values and alphanumeric strings with trailing digits (e.g. `A50001` -> `A50002`) across serial iterations `0..serialIndex`.
+    - Updated `resolveVariableValuesWithFormulas`, `variableValues`, and `resolveDocument` to accept `serialIndex = 0`.
+  - **Print Dialog & Multi-Serial Print Engine (`src/PrintDialog.tsx`, `src/printing.ts`, `src/print-dialog.css`)**:
+    - Added `.print-quantity-bar` with stepper and numeric inputs for `จำนวน Copy` (`1–100`) and `จำนวน Serial` (`1–500`).
+    - Added `.print-serial-nav` below the label proof with First (`ChevronsLeft`), Previous (`ChevronLeft`), direct jump-to-label number input (`serial-jump-input`), Next (`ChevronRight`), and Last (`ChevronsRight`) controls.
+    - Removed the `Label DPI` dropdown and used `doc.settings?.dpi ?? defaultDocumentSettings.dpi` directly for preflight and read-only display (`55 × 35 mm · 203 DPI`).
+    - Updated `openSystemPrint` to accept `string | string[]` so all `serialCount` vector label SVGs are rendered and repeated `copies` times each (`serialCount * copies` total sheets).
+- **Verification**:
+  - 98 TypeScript unit tests passing (`npm test`).
+  - Production build passing (`npm run build`).
+  - 25 Go unit tests passing (`go test ./...`).
+  - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
+
+
 

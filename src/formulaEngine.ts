@@ -225,6 +225,28 @@ export function formatDate(date: Date, pattern: string): string {
     .replace(/ss/g, ss);
 }
 
+function incrementValueString(raw: string, delta: number): string {
+  const trimmed = raw.trim();
+  const numVal = Number(trimmed);
+  if (trimmed !== '' && Number.isFinite(numVal)) {
+    if (/^0\d+$/.test(trimmed)) {
+      const next = Math.max(0, Math.round(numVal + delta));
+      return String(next).padStart(trimmed.length, '0');
+    }
+    return String(numVal + delta);
+  }
+  const trailingMatch = /^(.*?)(\d+)$/.exec(trimmed);
+  if (trailingMatch) {
+    const [, prefix, digits] = trailingMatch;
+    const next = Math.max(0, parseInt(digits, 10) + Math.round(delta));
+    const padded = digits.startsWith('0')
+      ? String(next).padStart(digits.length, '0')
+      : String(next);
+    return `${prefix}${padded}`;
+  }
+  return String((parseFloat(trimmed) || 0) + delta);
+}
+
 export function evaluateBlock(
   block: FormulaBlock,
   input: string,
@@ -296,9 +318,8 @@ export function evaluateBlock(
         const varName = String(block.params.variableName ?? '').trim();
         const currentRaw =
           varName && variables[varName] !== undefined ? variables[varName] : input;
-        const baseNum = parseFloat(currentRaw) || 0;
         const delta = resolveNum(block.params.delta ?? 1, 0);
-        const nextVal = String(baseNum + delta);
+        const nextVal = incrementValueString(currentRaw, delta);
         if (varName) {
           variables[varName] = nextVal;
         }
@@ -353,9 +374,8 @@ export function evaluateBlock(
         const varName = String(block.params.variableName ?? '').trim();
         const currentRaw =
           varName && variables[varName] !== undefined ? variables[varName] : input;
-        const baseNum = parseFloat(currentRaw) || 0;
         const delta = resolveNum(block.params.delta ?? 1, 0);
-        const nextVal = String(baseNum + delta);
+        const nextVal = incrementValueString(currentRaw, delta);
         if (varName) {
           variables[varName] = nextVal;
         }
@@ -367,8 +387,11 @@ export function evaluateBlock(
 
       if (block.functionName === 'counter') {
         const start = resolveNum(block.params.start, 1);
+        const step = resolveNum(block.params.step, 1);
+        const serialOffset = resolveNum(variables.__serial_index__, 0);
+        const val = start + serialOffset * step;
         const pad = resolveNum(block.params.padZeros, 0);
-        const s = String(start);
+        const s = String(val);
         return pad > 0 ? s.padStart(pad, '0') : s;
       }
       if (block.functionName === 'math_op') {
@@ -474,7 +497,8 @@ export function resolveVariableValuesWithFormulas(
   variables: LabelVariable[] = [],
   formulas: LabelFormula[] = [],
   overrides: Record<string, string> = {},
-  now: Date = new Date()
+  now: Date = new Date(),
+  serialIndex = 0
 ): Record<string, string> {
   const initialVars: Record<string, string> = {};
   for (const v of variables) {
@@ -485,12 +509,20 @@ export function resolveVariableValuesWithFormulas(
   }
 
   const runtimeVars: Record<string, string> = {...initialVars};
-  const formulaValues = evaluateAllFormulas(formulas, runtimeVars, now);
+  const steps = Math.max(0, Math.min(2000, Math.floor(serialIndex)));
+  let formulaValues: Record<string, string> = {};
+  for (let s = 0; s <= steps; s++) {
+    runtimeVars.__serial_index__ = String(s);
+    if (!('serial' in overrides) && !variables.some((v) => v.name === 'serial')) {
+      runtimeVars.serial = String(s + 1);
+    }
+    formulaValues = evaluateAllFormulas(formulas, runtimeVars, now);
+  }
+
   const resolvedVariables: Record<string, string> = {};
 
   for (const v of variables) {
     const wasMutatedByFormula =
-      !(v.name in overrides) &&
       runtimeVars[v.name] !== undefined &&
       runtimeVars[v.name] !== initialVars[v.name];
 
