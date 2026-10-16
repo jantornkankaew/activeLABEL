@@ -105,14 +105,13 @@
 /* Professional minimal property inspector */
 .atelier .properties-popover{position:absolute;right:24px;bottom:150px;width:320px;border-radius:16px;background:rgba(255,255,255,.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid #e5e4df;box-shadow:0 16px 40px rgba(32,33,36,.1),0 2px 6px rgba(32,33,36,.04);max-height:calc(100% - 48px);overflow-y:auto;z-index:7}
 .atelier .properties-popover .inspector{margin:0;padding:0}
-.atelier .close-properties{position:absolute;right:12px;top:12px;width:28px;height:28px;padding:0;border:0;border-radius:6px;background:transparent;color:#70747a;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s,color .15s;z-index:2}
-.atelier .close-properties:hover{background:#f0f1ee;color:#202124}
-.atelier .property-header{display:flex;align-items:center;justify-content:space-between;padding:14px 44px 14px 18px;border-bottom:1px solid #f0f1ec}
-.atelier .property-header>div{display:flex;align-items:center;gap:8px}
+.atelier .property-header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 12px 18px;border-bottom:1px solid #f0f1ec}
+.atelier .property-header>div:first-child{display:flex;align-items:center;gap:8px}
 .atelier .property-header h3{padding:0;margin:0;font-size:14px;font-weight:600;color:#202124}
 .atelier .property-header span{padding:2px 7px;border-radius:6px;background:#f0f1ee;color:#55595d;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
-.atelier .property-header .lock-btn{position:absolute;right:44px;top:12px;width:28px;height:28px;padding:0;border:0;border-radius:6px;background:transparent;color:#70747a;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s,color .15s}
-.atelier .property-header .lock-btn:hover{background:#f0f1ee;color:#202124}
+.atelier .property-header-actions{display:flex;align-items:center;gap:4px}
+.atelier .property-header-actions button{width:28px!important;min-width:28px!important;height:28px!important;min-height:28px!important;padding:0!important;border:0!important;border-radius:6px!important;background:transparent!important;color:#70747a!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;cursor:pointer!important;transition:background .15s,color .15s!important}
+.atelier .property-header-actions button:hover{background:#f0f1ee!important;color:#202124!important}
 .atelier .property-section{padding:14px 18px;border-bottom:1px solid #f0f1ec}
 .atelier .property-section>h4{margin:0 0 10px;color:#70757a;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase}
 .atelier .property-section-header{display:flex;align-items:center;justify-content:space-between;margin:0 0 10px}
@@ -335,14 +334,6 @@
     -webkit-backdrop-filter:blur(14px);
     z-index:4;
     border-bottom:1px solid #f0f1ec;
-    padding-top:max(14px, calc(14px + env(safe-area-inset-top, 0px)));
-  }
-  .atelier .close-properties{
-    top:max(12px, calc(12px + env(safe-area-inset-top, 0px)))!important;
-    right:12px!important;
-  }
-  .atelier .property-header .lock-btn{
-    top:max(12px, calc(12px + env(safe-area-inset-top, 0px)))!important;
-    right:44px!important;
+    padding-top:max(12px, calc(12px + env(safe-area-inset-top, 0px)));
   }
 }

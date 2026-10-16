@@ -1,5 +1,16 @@
 # Implementation status
 
+## 2026-10-16 — Properties Header Direct Close Button (`X`) Next to Lock Icon
+
+- **Properties Drawer Header Layout (`src/App.tsx`, `src/atelier.css`)**:
+  - **Co-located Actions in Header (`.property-header-actions`)**: Moved the Close (`X`) button directly inside `<header className="property-header">` alongside the Lock/Unlock button using a dedicated flex group.
+  - **Guaranteed Visibility**: Eliminated z-index/overflow conflicts where the sticky header previously obscured the independently-positioned close button. The `X` button is now permanently visible side-by-side with the lock button on the top-right of the drawer on both desktop and mobile viewports.
+- **Verification**:
+  - 104 TypeScript tests passed (`bash scripts/rtk-exec.sh npm test`).
+  - Production build passed (`bash scripts/rtk-exec.sh npm run build`).
+  - All 25 Go tests in 8 packages passed (`bash scripts/rtk-exec.sh go test ./...`).
+  - Desktop print bridge cross-compiled for 6 OS/architecture targets with `scripts/build-printbridge.sh`.
+
 ## 2026-10-16 — Print Dialog Floating HUD, Watermark Specs, Minimal Nav & Excel Variable Grid
 
 - **Enhanced Print Dialog UX (`src/PrintDialog.tsx`, `src/print-dialog.css`)**:
