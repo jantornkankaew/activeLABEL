@@ -1,5 +1,17 @@
 # Implementation status
 
+## 2026-10-16 — Mobile Side-Drawer Slide-Out Object Properties Panel
+
+- **Right Side-Drawer for Mobile Viewport (`src/App.tsx`, `src/atelier.css`)**:
+  - **Slide-out Animation from Right (`drawerSlideInRight`)**: On screens <= 700px, `.properties-popover` now slides smoothly out from the right viewport edge (`width: min(340px, 88vw); height: 100dvh; border-radius: 20px 0 0 20px`), preserving a visible dimmed canvas area on the left so the user retains visual context of their label.
+  - **Interactive Dark Backdrop with Blur (`properties-backdrop`)**: Added a frosted backdrop overlay (`background: rgba(15,23,42,0.36); backdrop-filter: blur(3px)`) that dismisses the properties drawer immediately when tapped.
+  - **Sticky Header & Mobile Ergonomics**: The drawer header ("Properties [KIND]", lock button, and close `X` button) sticks to the top during scrolling with safe-area notch awareness, ensuring quick closing and lock/unlock operations on mobile devices.
+- **Verification**:
+  - 104 TypeScript tests passed (`bash scripts/rtk-exec.sh npm test`).
+  - Production build passed (`bash scripts/rtk-exec.sh npm run build`).
+  - All 25 Go tests in 8 packages passed (`bash scripts/rtk-exec.sh go test ./...`).
+  - Desktop print bridge cross-compiled for 6 OS/architecture targets with `scripts/build-printbridge.sh`.
+
 ## 2026-10-16 — Bottom Canvas Toolbar Simplification & Zero-Scroll Mobile Fit
 
 - **Streamlined Bottom Toolbar (`src/DesignSurface.tsx`, `src/atelier.css`)**:
