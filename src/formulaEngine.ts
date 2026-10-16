@@ -76,6 +76,24 @@ export const FUNCTION_CATALOG: {
         defaultParams: {variableName: ''},
       },
       {
+        name: 'set_variable',
+        label: 'กำหนดค่าตัวแปร (Set Variable)',
+        description: 'กำหนดค่าให้ตัวแปรเป็นค่าที่ระบุหรือผลลัพธ์จากบล็อกก่อนหน้า',
+        defaultParams: {variableName: '', mode: 'custom', value: ''},
+      },
+      {
+        name: 'change_variable',
+        label: 'เปลี่ยนค่าตัวแปร (Change Variable)',
+        description: 'เพิ่มหรือลดค่าตัวแปรตัวเลขตามจำนวนที่ระบุ',
+        defaultParams: {variableName: '', delta: 1},
+      },
+      {
+        name: 'set_value',
+        label: 'กำหนดค่าตั้งต้น (Set Value)',
+        description: 'กำหนดค่าข้อความหรือตัวเลขตั้งต้นให้กับสายสูตร',
+        defaultParams: {value: ''},
+      },
+      {
         name: 'concat',
         label: 'Combine / Append Text',
         description: 'Appends prefix, suffix, or another variable',
@@ -257,6 +275,30 @@ export function evaluateBlock(
         const varName = block.params.variableName || '';
         return variables[varName] !== undefined ? variables[varName] : (varName ? `[${varName}]` : input);
       }
+      if (block.functionName === 'set_variable') {
+        const varName = String(block.params.variableName ?? '').trim();
+        const mode = block.params.mode || 'custom';
+        const nextVal = mode === 'current' ? input : resolve(block.params.value ?? '');
+        if (varName) {
+          variables[varName] = nextVal;
+        }
+        return nextVal;
+      }
+      if (block.functionName === 'change_variable') {
+        const varName = String(block.params.variableName ?? '').trim();
+        const currentRaw =
+          varName && variables[varName] !== undefined ? variables[varName] : input;
+        const baseNum = parseFloat(currentRaw) || 0;
+        const delta = Number(block.params.delta ?? 1) || 0;
+        const nextVal = String(baseNum + delta);
+        if (varName) {
+          variables[varName] = nextVal;
+        }
+        return nextVal;
+      }
+      if (block.functionName === 'set_value') {
+        return resolve(block.params.value ?? '');
+      }
       if (block.params.source) {
         text = resolve(block.params.source);
       }
@@ -299,6 +341,19 @@ export function evaluateBlock(
     }
 
     case 'numeric': {
+      if (block.functionName === 'change_variable') {
+        const varName = String(block.params.variableName ?? '').trim();
+        const currentRaw =
+          varName && variables[varName] !== undefined ? variables[varName] : input;
+        const baseNum = parseFloat(currentRaw) || 0;
+        const delta = Number(block.params.delta ?? 1) || 0;
+        const nextVal = String(baseNum + delta);
+        if (varName) {
+          variables[varName] = nextVal;
+        }
+        return nextVal;
+      }
+
       let num = parseFloat(input);
       if (isNaN(num)) num = 0;
 
@@ -386,12 +441,23 @@ export function evaluateAllFormulas(
   now: Date = new Date()
 ): Record<string, string> {
   const results: Record<string, string> = {};
+  const runtimeVars: Record<string, string> = {...variables};
   for (const f of formulas) {
-    const val = evaluateFormula(f, {...variables, ...results}, now);
+    const val = evaluateFormula(f, runtimeVars, now);
     results[f.id] = val;
     results[`formula:${f.id}`] = val;
     results[`formula:${f.name}`] = val;
     results[f.name] = val;
+    runtimeVars[f.id] = val;
+    runtimeVars[`formula:${f.id}`] = val;
+    runtimeVars[`formula:${f.name}`] = val;
+    runtimeVars[f.name] = val;
+  }
+  for (const [k, v] of Object.entries(runtimeVars)) {
+    variables[k] = v;
+    if (!(k in results)) {
+      results[k] = v;
+    }
   }
   return results;
 }
@@ -402,18 +468,35 @@ export function resolveVariableValuesWithFormulas(
   overrides: Record<string, string> = {},
   now: Date = new Date()
 ): Record<string, string> {
-  const formulaValues = evaluateAllFormulas(formulas, {}, now);
+  const initialVars: Record<string, string> = {};
+  for (const v of variables) {
+    initialVars[v.name] = overrides[v.name] ?? v.value ?? '';
+  }
+  for (const [k, val] of Object.entries(overrides)) {
+    initialVars[k] = val;
+  }
+
+  const runtimeVars: Record<string, string> = {...initialVars};
+  const formulaValues = evaluateAllFormulas(formulas, runtimeVars, now);
   const resolvedVariables: Record<string, string> = {};
 
   for (const v of variables) {
-    const rawValue = overrides[v.name] ?? v.value ?? '';
+    const wasMutatedByFormula =
+      !(v.name in overrides) &&
+      runtimeVars[v.name] !== undefined &&
+      runtimeVars[v.name] !== initialVars[v.name];
+
+    const rawValue = wasMutatedByFormula
+      ? runtimeVars[v.name]
+      : (overrides[v.name] ?? v.value ?? '');
+
     const interpolated = rawValue.replace(/\{\{\s*([A-Za-z0-9_:]+)\s*\}\}/g, (_, key) => {
       if (key in formulaValues) return formulaValues[key];
       if (key.startsWith('formula:')) {
         const fKey = key.slice(8);
         return formulaValues[fKey] ?? '';
       }
-      return resolvedVariables[key] ?? '';
+      return resolvedVariables[key] ?? runtimeVars[key] ?? '';
     });
     resolvedVariables[v.name] = interpolated;
   }

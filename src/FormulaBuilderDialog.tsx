@@ -147,7 +147,7 @@ export function FormulaBuilderDialog({
   formulas: LabelFormula[];
   variables: LabelVariable[];
   initialFormulaId?: string;
-  onSave: (formulas: LabelFormula[]) => void;
+  onSave: (formulas: LabelFormula[], updatedVariables?: LabelVariable[]) => void;
   onClose: () => void;
 }) {
   const [list, setList] = useState<LabelFormula[]>(() => {
@@ -169,6 +169,12 @@ export function FormulaBuilderDialog({
       },
     ];
   });
+
+  const [localVariables, setLocalVariables] = useState<LabelVariable[]>(() =>
+    variables && variables.length > 0 ? structuredClone(variables) : []
+  );
+  const [newVarName, setNewVarName] = useState('');
+  const [newVarValue, setNewVarValue] = useState('');
 
   const [activeId, setActiveId] = useState<string>(() => {
     if (initialFormulaId && list.some((f) => f.id === initialFormulaId)) {
@@ -203,11 +209,11 @@ export function FormulaBuilderDialog({
   // Map variables
   const varMap = useMemo(() => {
     const map: Record<string, string> = {};
-    for (const v of variables) {
-      map[v.name] = v.value || `[${v.label || v.name}]`;
+    for (const v of localVariables) {
+      map[v.name] = v.value !== '' ? v.value : '';
     }
     return map;
-  }, [variables]);
+  }, [localVariables]);
 
   // Compute intermediate step-by-step results for EACH block
   const stepOutputs = useMemo(() => {
@@ -215,9 +221,10 @@ export function FormulaBuilderDialog({
     let current = '';
     const outputs: string[] = [];
     const now = new Date();
+    const runtimeVars: Record<string, string> = {...varMap};
     for (const block of activeFormula.blocks) {
       try {
-        current = evaluateBlock(block, current, varMap, now);
+        current = evaluateBlock(block, current, runtimeVars, now);
         outputs.push(current || '(ค่าว่าง)');
       } catch {
         outputs.push('(เกิดข้อผิดพลาด)');
@@ -336,6 +343,59 @@ export function FormulaBuilderDialog({
     navigator.clipboard?.writeText(finalResult).catch(() => {});
     setCopied(true);
     setTimeout(() => setCopied(false), 1600);
+  }
+
+  function sanitizeVarKey(raw: string): string {
+    const cleaned = raw.replace(/[^A-Za-z0-9_]/g, '').slice(0, 31);
+    if (!cleaned) return '';
+    return /^[A-Za-z_]/.test(cleaned) ? cleaned : `v_${cleaned}`.slice(0, 31);
+  }
+
+  function ensureDefaultVariable(): string {
+    if (localVariables.length > 0) {
+      return localVariables[0].name;
+    }
+    const defaultVar: LabelVariable = {
+      name: 'my_var',
+      label: 'my_var',
+      value: '100',
+      prompt: true,
+    };
+    setLocalVariables([defaultVar]);
+    return defaultVar.name;
+  }
+
+  function createOrSetLocalVariable() {
+    const fallbackName = `var_${localVariables.length + 1}`;
+    const key = sanitizeVarKey(newVarName.trim()) || fallbackName;
+    const val = newVarValue;
+    setLocalVariables((prev) => {
+      const existingIdx = prev.findIndex((v) => v.name === key);
+      if (existingIdx >= 0) {
+        return prev.map((v, idx) => (idx === existingIdx ? {...v, value: val} : v));
+      }
+      return [
+        ...prev,
+        {
+          name: key,
+          label: key,
+          value: val,
+          prompt: true,
+        },
+      ];
+    });
+    setNewVarName('');
+    setNewVarValue('');
+  }
+
+  function updateLocalVarValue(name: string, val: string) {
+    setLocalVariables((prev) =>
+      prev.map((v) => (v.name === name ? {...v, value: val} : v))
+    );
+  }
+
+  function deleteLocalVar(name: string) {
+    setLocalVariables((prev) => prev.filter((v) => v.name !== name));
   }
 
   // Insert variable into the latest text block or append variable block
@@ -479,47 +539,191 @@ export function FormulaBuilderDialog({
                     <span>บล็อกคำสั่งตัวแปร (Variable Blocks)</span>
                   </div>
 
-                  {/* Document Variables as Clickable Reporter Pills */}
-                  {variables && variables.length > 0 ? (
-                    <div className="wb-reporter-pills-shelf">
-                      <span className="shelf-label">คลิกตัวแปรเพื่อเพิ่มลงในสูตร:</span>
-                      <div className="shelf-pills">
-                        {variables.map((v) => (
-                          <button
-                            key={v.name}
-                            type="button"
-                            className="wb-pill-reporter"
-                            onClick={() => insertVariableAsBlock(v.name)}
-                            title={`คลิกเพื่อใส่ตัวแปร {{${v.name}}} = "${v.value || ''}"`}
-                          >
-                            <span className="pill-dot" />
-                            <span>{v.label || v.name}</span>
-                          </button>
+                  {/* Quick Create & Set Variable Value Shelf */}
+                  <div className="wb-reporter-pills-shelf">
+                    <span className="shelf-label">สร้างตัวแปรใหม่ / กำหนดค่าตัวแปร:</span>
+                    <div className="wb-var-create-row">
+                      <input
+                        type="text"
+                        className="wb-var-create-input name"
+                        placeholder="ชื่อตัวแปร (เช่น price)"
+                        value={newVarName}
+                        onChange={(e) =>
+                          setNewVarName(e.target.value.replace(/[^A-Za-z0-9_]/g, ''))
+                        }
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            createOrSetLocalVariable();
+                          }
+                        }}
+                      />
+                      <span className="wb-var-eq">=</span>
+                      <input
+                        type="text"
+                        className="wb-var-create-input val"
+                        placeholder="ค่าเริ่มต้น"
+                        value={newVarValue}
+                        onChange={(e) => setNewVarValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            createOrSetLocalVariable();
+                          }
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className="wb-var-create-btn"
+                        title="สร้างตัวแปรหรือตั้งค่า"
+                        onClick={createOrSetLocalVariable}
+                      >
+                        <Plus size={12} strokeWidth={2.5} />
+                        <span>ตั้งค่า</span>
+                      </button>
+                    </div>
+
+                    {localVariables.length > 0 ? (
+                      <div className="wb-var-shelf-list">
+                        {localVariables.map((v) => (
+                          <div key={v.name} className="wb-var-shelf-item">
+                            <button
+                              type="button"
+                              className="wb-pill-reporter"
+                              onClick={() => insertVariableAsBlock(v.name)}
+                              title={`คลิกเพื่อดึงค่าตัวแปร ${v.name} ลงในสูตร`}
+                            >
+                              <span className="pill-dot" />
+                              <span>{v.label || v.name}</span>
+                            </button>
+                            <span className="wb-var-eq">=</span>
+                            <input
+                              type="text"
+                              className="wb-var-shelf-val-input"
+                              placeholder="ค่าตัวแปร..."
+                              value={v.value}
+                              onChange={(e) => updateLocalVarValue(v.name, e.target.value)}
+                              title={`แก้ไขค่าของตัวแปร ${v.name}`}
+                            />
+                            <button
+                              type="button"
+                              className="wb-var-shelf-set-btn"
+                              title={`เพิ่มบล็อกกำหนดค่าให้ ${v.name}`}
+                              onClick={() =>
+                                addBlock('string', 'set_variable', {
+                                  variableName: v.name,
+                                  mode: 'custom',
+                                  value: v.value || '100',
+                                })
+                              }
+                            >
+                              Set
+                            </button>
+                            <button
+                              type="button"
+                              className="wb-var-shelf-del-btn"
+                              title={`ลบตัวแปร ${v.name}`}
+                              onClick={() => deleteLocalVar(v.name)}
+                            >
+                              <X size={11} />
+                            </button>
+                          </div>
                         ))}
                       </div>
-                    </div>
-                  ) : (
-                    <p className="wb-empty-vars-hint">
-                      💡 ยังไม่มีตัวแปรในโปรเจกต์นี้ สามารถสร้างได้ที่ปุ่ม Variables ด้านบน
-                    </p>
-                  )}
+                    ) : (
+                      <span className="wb-var-empty-inline">
+                        ยังไม่มีตัวแปร พิมพ์ชื่อและค่าด้านบนแล้วกด <strong>+ ตั้งค่า</strong> หรือคลิกบล็อกด้านล่างได้เลย
+                      </span>
+                    )}
+                  </div>
 
-                  {/* Set Variable Block */}
+                  {/* 1. Set Variable to Custom Value (LEGO: set [var v] to [value]) */}
                   <div
                     className="wb-brick-preview wb-block-variable"
-                    onClick={() =>
-                      addBlock('string', 'variable', {
-                        variableName: variables[0]?.name || '',
-                      })
-                    }
+                    onClick={() => {
+                      const targetVar = ensureDefaultVariable();
+                      addBlock('string', 'set_variable', {
+                        variableName: targetVar,
+                        mode: 'custom',
+                        value: '100',
+                      });
+                    }}
                   >
-                    <span>ตั้งค่าผลลัพธ์เป็นตัวแปร</span>
+                    <span>กำหนดค่าตัวแปร</span>
                     <span className="wb-slot-dropdown">
-                      {variables[0]?.name || 'my_variable'} ▾
+                      {localVariables[0]?.name || 'my_var'} ▾
+                    </span>
+                    <span>เป็น</span>
+                    <span className="wb-slot-input">100</span>
+                  </div>
+
+                  {/* 2. Set Variable to Previous Output */}
+                  <div
+                    className="wb-brick-preview wb-block-variable"
+                    onClick={() => {
+                      const targetVar = ensureDefaultVariable();
+                      addBlock('string', 'set_variable', {
+                        variableName: targetVar,
+                        mode: 'current',
+                        value: '',
+                      });
+                    }}
+                  >
+                    <span>บันทึกผลลัพธ์ลงตัวแปร</span>
+                    <span className="wb-slot-dropdown">
+                      {localVariables[0]?.name || 'my_var'} ▾
                     </span>
                   </div>
 
-                  {/* Concat / Prefix Block */}
+                  {/* 3. Change Variable by Delta (LEGO: change [var v] by (1)) */}
+                  <div
+                    className="wb-brick-preview wb-block-variable"
+                    onClick={() => {
+                      const targetVar = ensureDefaultVariable();
+                      addBlock('string', 'change_variable', {
+                        variableName: targetVar,
+                        delta: 1,
+                      });
+                    }}
+                  >
+                    <span>เปลี่ยนค่าตัวแปร</span>
+                    <span className="wb-slot-dropdown">
+                      {localVariables[0]?.name || 'my_var'} ▾
+                    </span>
+                    <span>ทีละ</span>
+                    <span className="wb-slot-input">1</span>
+                  </div>
+
+                  {/* 4. Get Variable Value */}
+                  <div
+                    className="wb-brick-preview wb-block-variable"
+                    onClick={() => {
+                      const targetVar = ensureDefaultVariable();
+                      addBlock('string', 'variable', {
+                        variableName: targetVar,
+                      });
+                    }}
+                  >
+                    <span>ดึงค่าจากตัวแปร</span>
+                    <span className="wb-slot-dropdown">
+                      {localVariables[0]?.name || 'my_var'} ▾
+                    </span>
+                  </div>
+
+                  {/* 5. Set Initial Value */}
+                  <div
+                    className="wb-brick-preview wb-block-variable"
+                    onClick={() =>
+                      addBlock('string', 'set_value', {
+                        value: 'SAMPLE-01',
+                      })
+                    }
+                  >
+                    <span>กำหนดค่าตั้งต้นเป็น</span>
+                    <span className="wb-slot-input">SAMPLE-01</span>
+                  </div>
+
+                  {/* 6. Concat / Prefix Block */}
                   <div
                     className="wb-brick-preview wb-block-variable"
                     onClick={() =>
@@ -910,7 +1114,10 @@ export function FormulaBuilderDialog({
                     const isDragging = draggingBlockId === block.id;
 
                     const categoryClass =
-                      block.functionName === 'variable'
+                      block.functionName === 'variable' ||
+                      block.functionName === 'set_variable' ||
+                      block.functionName === 'change_variable' ||
+                      block.functionName === 'set_value'
                         ? 'wb-block-variable'
                         : block.category === 'datetime'
                         ? 'wb-block-datetime'
@@ -989,12 +1196,129 @@ export function FormulaBuilderDialog({
                                   }
                                 >
                                   <option value="">-- เลือกตัวแปร --</option>
-                                  {variables.map((v) => (
+                                  {localVariables.map((v) => (
                                     <option key={v.name} value={v.name}>
                                       {v.label || v.name} ({v.value ? `"${v.value}"` : 'ว่าง'})
                                     </option>
                                   ))}
+                                  {block.params.variableName &&
+                                    !localVariables.some(
+                                      (v) => v.name === block.params.variableName
+                                    ) && (
+                                      <option value={block.params.variableName}>
+                                        {block.params.variableName}
+                                      </option>
+                                    )}
                                 </select>
+                              </div>
+                            )}
+
+                            {/* set_variable */}
+                            {block.functionName === 'set_variable' && (
+                              <div className="wb-block-inline-fields">
+                                <span>กำหนดค่าตัวแปร</span>
+                                <select
+                                  className="wb-slot-dropdown"
+                                  value={block.params.variableName ?? ''}
+                                  onChange={(e) =>
+                                    updateBlock(block.id, {variableName: e.target.value})
+                                  }
+                                >
+                                  <option value="">-- เลือกตัวแปร --</option>
+                                  {localVariables.map((v) => (
+                                    <option key={v.name} value={v.name}>
+                                      {v.label || v.name}
+                                    </option>
+                                  ))}
+                                  {block.params.variableName &&
+                                    !localVariables.some(
+                                      (v) => v.name === block.params.variableName
+                                    ) && (
+                                      <option value={block.params.variableName}>
+                                        {block.params.variableName}
+                                      </option>
+                                    )}
+                                </select>
+                                <span>เป็น</span>
+                                <select
+                                  className="wb-slot-dropdown"
+                                  style={{minWidth: 112}}
+                                  value={block.params.mode ?? 'custom'}
+                                  onChange={(e) =>
+                                    updateBlock(block.id, {mode: e.target.value})
+                                  }
+                                >
+                                  <option value="custom">ค่าที่ระบุ</option>
+                                  <option value="current">ผลลัพธ์ก่อนหน้า</option>
+                                </select>
+                                {(block.params.mode ?? 'custom') === 'custom' && (
+                                  <input
+                                    type="text"
+                                    className="wb-slot-input"
+                                    style={{width: 120}}
+                                    placeholder="ใส่ค่าตัวแปร..."
+                                    value={block.params.value ?? ''}
+                                    onChange={(e) =>
+                                      updateBlock(block.id, {value: e.target.value})
+                                    }
+                                  />
+                                )}
+                              </div>
+                            )}
+
+                            {/* change_variable */}
+                            {block.functionName === 'change_variable' && (
+                              <div className="wb-block-inline-fields">
+                                <span>เปลี่ยนค่าตัวแปร</span>
+                                <select
+                                  className="wb-slot-dropdown"
+                                  value={block.params.variableName ?? ''}
+                                  onChange={(e) =>
+                                    updateBlock(block.id, {variableName: e.target.value})
+                                  }
+                                >
+                                  <option value="">-- เลือกตัวแปร --</option>
+                                  {localVariables.map((v) => (
+                                    <option key={v.name} value={v.name}>
+                                      {v.label || v.name}
+                                    </option>
+                                  ))}
+                                  {block.params.variableName &&
+                                    !localVariables.some(
+                                      (v) => v.name === block.params.variableName
+                                    ) && (
+                                      <option value={block.params.variableName}>
+                                        {block.params.variableName}
+                                      </option>
+                                    )}
+                                </select>
+                                <span>เพิ่ม/ลดทีละ</span>
+                                <input
+                                  type="number"
+                                  step="any"
+                                  className="wb-slot-input num"
+                                  value={block.params.delta ?? 1}
+                                  onChange={(e) =>
+                                    updateBlock(block.id, {delta: Number(e.target.value)})
+                                  }
+                                />
+                              </div>
+                            )}
+
+                            {/* set_value */}
+                            {block.functionName === 'set_value' && (
+                              <div className="wb-block-inline-fields">
+                                <span>กำหนดค่าตั้งต้นเป็น</span>
+                                <input
+                                  type="text"
+                                  className="wb-slot-input"
+                                  style={{width: 130}}
+                                  placeholder="ข้อความ/ตัวเลข..."
+                                  value={block.params.value ?? ''}
+                                  onChange={(e) =>
+                                    updateBlock(block.id, {value: e.target.value})
+                                  }
+                                />
                               </div>
                             )}
 
@@ -1487,7 +1811,45 @@ export function FormulaBuilderDialog({
                     name: cleaned || `Formula_${i + 1}`,
                   };
                 });
-                onSave(sanitized);
+
+                const varList = [...localVariables];
+                if (newVarName.trim()) {
+                  const pendingKey = sanitizeVarKey(newVarName.trim());
+                  if (pendingKey && !varList.some((v) => v.name === pendingKey)) {
+                    varList.push({
+                      name: pendingKey,
+                      label: pendingKey,
+                      value: newVarValue.slice(0, 300),
+                      prompt: true,
+                    });
+                  }
+                }
+                for (const f of sanitized) {
+                  for (const b of f.blocks) {
+                    if (
+                      (b.functionName === 'set_variable' ||
+                        b.functionName === 'change_variable' ||
+                        b.functionName === 'variable') &&
+                      b.params.variableName
+                    ) {
+                      const vKey = sanitizeVarKey(String(b.params.variableName));
+                      if (vKey && !varList.some((v) => v.name === vKey)) {
+                        varList.push({
+                          name: vKey,
+                          label: vKey,
+                          value:
+                            b.functionName === 'set_variable' &&
+                            (b.params.mode ?? 'custom') === 'custom'
+                              ? String(b.params.value ?? '').slice(0, 300)
+                              : '',
+                          prompt: true,
+                        });
+                      }
+                    }
+                  }
+                }
+
+                onSave(sanitized, varList);
               }}
             >
               <Check size={16} strokeWidth={2.5} />

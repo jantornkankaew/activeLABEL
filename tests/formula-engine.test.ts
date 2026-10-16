@@ -239,3 +239,47 @@ test('variable can use values from multiple formulas', () => {
   const resolved = resolveVariableValuesWithFormulas(variables, formulas, {}, baseTime);
   assert.equal(resolved['lot_id'], 'LOT-20261015-0007');
 });
+
+test('set_variable, change_variable, and set_value mutate and propagate variable values', () => {
+  const formula: LabelFormula = {
+    id: 'f_var_ops',
+    name: 'Var_Ops',
+    blocks: [
+      {
+        id: 'b1',
+        category: 'string',
+        functionName: 'set_variable',
+        params: {variableName: 'price', mode: 'custom', value: '100'},
+      },
+      {
+        id: 'b2',
+        category: 'string',
+        functionName: 'change_variable',
+        params: {variableName: 'price', delta: 25},
+      },
+      {
+        id: 'b3',
+        category: 'string',
+        functionName: 'concat',
+        params: {prefix: 'THB ', append: '.00'},
+      },
+      {
+        id: 'b4',
+        category: 'string',
+        functionName: 'set_variable',
+        params: {variableName: 'formatted_price', mode: 'current', value: ''},
+      },
+    ],
+  };
+
+  const variables = [
+    {name: 'price', label: 'Price', value: '50', prompt: true},
+    {name: 'formatted_price', label: 'Formatted', value: '', prompt: false},
+  ];
+
+  const resolved = resolveVariableValuesWithFormulas(variables, [formula]);
+  assert.equal(resolved['f_var_ops'], 'THB 125.00');
+  assert.equal(resolved['price'], '125');
+  assert.equal(resolved['formatted_price'], 'THB 125.00');
+});
+

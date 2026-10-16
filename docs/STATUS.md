@@ -887,3 +887,21 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
   - 25 Go unit tests passing (`go test ./...`).
   - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
 
+## 2026-10-16 — Variable Setter Blocks (`set_variable`, `change_variable`, `set_value`) & Inline Variable Management in LEGO® Word Blocks Studio
+
+- **Issues Addressed**:
+  - The Variables (`ตัวแปร`) category previously only read variable values (`functionName: 'variable'`) and lacked blocks to set or modify variable values (`set [variable v] to [...]`, `change [variable v] by (...)`).
+  - `resolveVariableValuesWithFormulas` previously passed an empty `{}` variable map into `evaluateAllFormulas`, preventing formulas from reading initial document variables or propagating mutated variable values back to the label document.
+- **Fixes**:
+  - **Formula Engine (`src/formulaEngine.ts`)**:
+    - Added `set_variable` (`mode: 'custom' | 'current'`, `value`), `change_variable` (`delta`), and `set_value` (`value`).
+    - Updated `evaluateAllFormulas` and `resolveVariableValuesWithFormulas` to pass initial document variables into formula evaluation and propagate variable mutations across blocks, formulas, and resolved label variables.
+  - **LEGO® Word Blocks UI (`src/FormulaBuilderDialog.tsx`, `src/App.tsx`, `src/formula.css`)**:
+    - Added inline variable creation and direct value editing in the `ตัวแปร` palette shelf (`[ชื่อตัวแปร] = [ค่าเริ่มต้น] [+ ตั้งค่า]`), plus per-variable value input, quick `Set` block insertion, and delete button.
+    - Added Orange Variable Blocks in the palette and canvas: `กำหนดค่าตัวแปร [v] เป็น [ค่าที่ระบุ / ผลลัพธ์ก่อนหน้า]` (`set_variable`), `เปลี่ยนค่าตัวแปร [v] เพิ่ม/ลดทีละ [...]` (`change_variable`), `ดึงค่าจากตัวแปร [v]` (`variable`), and `กำหนดค่าตั้งต้นเป็น [...]` (`set_value`).
+    - Connected `FormulaBuilderDialog` `onSave` to commit both `setFormulas` and `setVariables` atomically in `App.tsx`.
+- **Verification**:
+  - 96 TypeScript unit tests passing (`npm test`).
+  - Production build passing (`npm run build`).
+  - 25 Go unit tests passing (`go test ./...`).
+  - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
