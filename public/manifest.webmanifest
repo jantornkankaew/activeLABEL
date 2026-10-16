@@ -1,18 +1,42 @@
 {
+  "id": "/",
   "name": "LabelCraft — Label Designer",
   "short_name": "LabelCraft",
   "description": "Offline-capable Label Designer with formula engine and system printing",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#f8f9fa",
+  "background_color": "#ffffff",
   "theme_color": "#08745b",
   "orientation": "any",
+  "categories": ["utilities", "productivity", "graphics"],
   "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "New Label",
+      "short_name": "New",
+      "description": "Create a new label",
+      "url": "/?action=new",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }

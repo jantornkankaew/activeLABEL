@@ -1,5 +1,19 @@
 # Implementation status
 
+## 2026-10-16 — Chrome Desktop PWA Installation & App Manifest Compliance
+
+- **PWA Installation Experience for Google Chrome (`index.html`, `public/manifest.webmanifest`, `src/usePwaInstall.ts`, `src/PwaInstallDialog.tsx`)**:
+  - **Standardized PWA Assets**: Generated verified 192x192 and 512x512 PNG app icons (`public/icon-192.png`, `public/icon-512.png`) and added them to `public/manifest.webmanifest`, `index.html` (with `apple-touch-icon`), and Service Worker precache.
+  - **Installability Criteria**: Configured `id`, `start_url`, `scope`, `display: standalone`, `theme_color`, categories, and app shortcuts to fulfill Chrome's desktop installability criteria.
+  - **In-App Install Action**: Added a prominent "ติดตั้งแอป" (Install App) button in the top header and File menu (`FileMenu.tsx`). Captures the `beforeinstallprompt` event to trigger Chrome's native install dialog directly.
+  - **Install Guidance Modal**: Added `PwaInstallDialog.tsx` showing desktop benefits and Chrome Omnibox install instructions when triggered before the native prompt fires.
+  - **Standalone Mode Awareness**: Automatically detects when running as an installed standalone app (`display-mode: standalone`) and gracefully hides the install buttons to keep the canvas clean.
+- **Verification**:
+  - 104 TypeScript tests passed (`bash scripts/rtk-exec.sh npm test`).
+  - Production build passed (`bash scripts/rtk-exec.sh npm run build`).
+  - All 25 Go tests in 8 packages passed (`bash scripts/rtk-exec.sh go test ./...`).
+  - Desktop print bridge cross-compiled for 6 OS/architecture targets with `scripts/build-printbridge.sh`.
+
 ## 2026-10-16 — Minimal Network Status Popover, Offline Duration & Last Sync Timestamp
 
 - **Minimal Network Popover & Status Badge (`src/NetworkStatusBadge.tsx` & `src/network-status.css`)**:
