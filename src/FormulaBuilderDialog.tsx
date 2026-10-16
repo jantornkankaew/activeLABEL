@@ -325,6 +325,149 @@ export function FormulaBuilderDialog({
 
   const [draggingBlockId, setDraggingBlockId] = useState<string | null>(null);
   const draggedBlockIdRef = useRef<string | null>(null);
+  const draggedVarNameRef = useRef<string | null>(null);
+  const [hoveredSlotKey, setHoveredSlotKey] = useState<string | null>(null);
+
+  function startVariableDrag(e: React.DragEvent, varName: string) {
+    draggedVarNameRef.current = varName;
+    draggedBlockIdRef.current = null;
+    e.dataTransfer.effectAllowed = 'copy';
+    e.dataTransfer.setData('application/x-labelcraft-var', varName);
+    e.dataTransfer.setData('text/plain', `{{${varName}}}`);
+  }
+
+  function endVariableDrag() {
+    draggedVarNameRef.current = null;
+    setHoveredSlotKey(null);
+  }
+
+  function extractDroppedVariable(e: React.DragEvent): string | null {
+    if (draggedVarNameRef.current) return draggedVarNameRef.current;
+    const customVar = e.dataTransfer.getData('application/x-labelcraft-var');
+    if (customVar) return customVar;
+    const plain = e.dataTransfer.getData('text/plain') || '';
+    const m = plain.match(/^\{\{\s*([A-Za-z0-9_]+)\s*\}\}$/);
+    return m ? m[1] : null;
+  }
+
+  function renderSlotInput(
+    blockId: string,
+    paramKey: string,
+    currentValue: any,
+    options: {
+      type?: 'text' | 'number';
+      className?: string;
+      style?: React.CSSProperties;
+      placeholder?: string;
+      clearValue?: any;
+      min?: number;
+      max?: number;
+      step?: string;
+    } = {}
+  ) {
+    const {
+      type = 'text',
+      className = 'wb-slot-input',
+      style,
+      placeholder,
+      clearValue = type === 'number' ? 0 : '',
+      min,
+      max,
+      step,
+    } = options;
+
+    const rawStr = String(currentValue ?? '');
+    const varMatch = rawStr.match(/^\{\{\s*([A-Za-z0-9_]+)\s*\}\}$/);
+    const boundVarName = varMatch ? varMatch[1] : null;
+    const slotKey = `${blockId}:${paramKey}`;
+    const isDropOver = hoveredSlotKey === slotKey;
+
+    const handleSlotDragOver = (e: React.DragEvent) => {
+      if (!draggedVarNameRef.current && !e.dataTransfer.types.includes('application/x-labelcraft-var')) {
+        return;
+      }
+      e.preventDefault();
+      e.stopPropagation();
+      e.dataTransfer.dropEffect = 'copy';
+      if (hoveredSlotKey !== slotKey) {
+        setHoveredSlotKey(slotKey);
+      }
+    };
+
+    const handleSlotDragLeave = (e: React.DragEvent) => {
+      e.stopPropagation();
+      if (hoveredSlotKey === slotKey) {
+        setHoveredSlotKey(null);
+      }
+    };
+
+    const handleSlotDrop = (e: React.DragEvent) => {
+      const droppedVar = extractDroppedVariable(e);
+      if (!droppedVar) return;
+      e.preventDefault();
+      e.stopPropagation();
+      updateBlock(blockId, {[paramKey]: `{{${droppedVar}}}`});
+      draggedVarNameRef.current = null;
+      setHoveredSlotKey(null);
+    };
+
+    if (boundVarName) {
+      const foundVar = localVariables.find((v) => v.name === boundVarName);
+      return (
+        <span
+          className={`wb-slot-var-chip ${isDropOver ? 'is-drop-over' : ''}`}
+          onDragOver={handleSlotDragOver}
+          onDragLeave={handleSlotDragLeave}
+          onDrop={handleSlotDrop}
+          title={
+            foundVar
+              ? `ใช้ค่าจากตัวแปร "${boundVarName}" (ปัจจุบัน = "${foundVar.value}") — ลากตัวแปรอื่นทับเพื่อเปลี่ยน หรือกด × เพื่อเอาออก`
+              : `ใช้ค่าจากตัวแปร "${boundVarName}" — กด × เพื่อเอาออก`
+          }
+        >
+          <span className="wb-slot-var-dot" />
+          <span className="wb-slot-var-name">{boundVarName}</span>
+          <button
+            type="button"
+            className="wb-slot-var-clear"
+            title={`นำตัวแปร ${boundVarName} ออกจากช่องนี้`}
+            onClick={(e) => {
+              e.stopPropagation();
+              updateBlock(blockId, {[paramKey]: clearValue});
+            }}
+          >
+            <X size={10} strokeWidth={3} />
+          </button>
+        </span>
+      );
+    }
+
+    return (
+      <span
+        className={`wb-slot-drop-wrap ${isDropOver ? 'is-drop-over' : ''}`}
+        onDragOver={handleSlotDragOver}
+        onDragLeave={handleSlotDragLeave}
+        onDrop={handleSlotDrop}
+        title="พิมพ์ค่าได้โดยตรง หรือลากตัวแปรมาวางในช่องนี้"
+      >
+        <input
+          type={type}
+          step={step}
+          min={min}
+          max={max}
+          className={className}
+          style={style}
+          placeholder={placeholder}
+          value={currentValue ?? clearValue}
+          onChange={(e) =>
+            updateBlock(blockId, {
+              [paramKey]: type === 'number' ? Number(e.target.value) : e.target.value,
+            })
+          }
+        />
+      </span>
+    );
+  }
 
   function reorderBlock(sourceId: string, targetId: string) {
     if (!activeFormula || sourceId === targetId) return;
@@ -590,8 +733,11 @@ export function FormulaBuilderDialog({
                             <button
                               type="button"
                               className="wb-pill-reporter"
+                              draggable
+                              onDragStart={(e) => startVariableDrag(e, v.name)}
+                              onDragEnd={endVariableDrag}
                               onClick={() => insertVariableAsBlock(v.name)}
-                              title={`คลิกเพื่อดึงค่าตัวแปร ${v.name} ลงในสูตร`}
+                              title={`ลากไปวางในช่องรับค่าของบล็อก หรือคลิกเพื่อดึงค่าตัวแปร ${v.name} ลงในสูตร`}
                             >
                               <span className="pill-dot" />
                               <span>{v.label || v.name}</span>
@@ -1062,21 +1208,25 @@ export function FormulaBuilderDialog({
             </div>
 
             {/* Quick Variable Bar (If Project Variables Exist) */}
-            {variables && variables.length > 0 && (
+            {localVariables.length > 0 && (
               <div className="wb-variables-ribbon">
                 <span className="ribbon-title">
                   <VariableIcon size={12} color="#ff8c1a" />
-                  <strong>ตัวแปรในโปรเจกต์:</strong>
+                  <strong>ตัวแปร (ลากใส่ช่องรับค่าได้):</strong>
                 </span>
                 <div className="ribbon-pills">
-                  {variables.map((v) => (
+                  {localVariables.map((v) => (
                     <button
                       key={v.name}
                       type="button"
                       className="wb-pill-reporter mini"
+                      draggable
+                      onDragStart={(e) => startVariableDrag(e, v.name)}
+                      onDragEnd={endVariableDrag}
                       onClick={() => insertVariableAsBlock(v.name)}
-                      title={`คลิกเพื่อต่อบล็อกตัวแปร "${v.name}" = "${v.value || ''}"`}
+                      title={`ลากไปวางในช่องรับค่าของบล็อกใดก็ได้ หรือคลิกเพื่อต่อบล็อกตัวแปร "${v.name}" = "${v.value || ''}"`}
                     >
+                      <span className="pill-dot" />
                       <span>{v.name}</span>
                       <small>="{v.value || ''}"</small>
                     </button>
@@ -1140,7 +1290,8 @@ export function FormulaBuilderDialog({
                             target.tagName === 'INPUT' ||
                             target.tagName === 'SELECT' ||
                             target.tagName === 'BUTTON' ||
-                            target.tagName === 'OPTION'
+                            target.tagName === 'OPTION' ||
+                            target.closest('.wb-slot-var-chip')
                           ) {
                             e.currentTarget.draggable = false;
                           } else {
@@ -1151,12 +1302,14 @@ export function FormulaBuilderDialog({
                           e.currentTarget.draggable = true;
                         }}
                         onDragStart={(e) => {
+                          if (draggedVarNameRef.current) return;
                           draggedBlockIdRef.current = block.id;
                           setDraggingBlockId(block.id);
                           e.dataTransfer.effectAllowed = 'move';
                           e.dataTransfer.setData('text/plain', block.id);
                         }}
                         onDragOver={(e) => {
+                          if (draggedVarNameRef.current || !draggedBlockIdRef.current) return;
                           e.preventDefault();
                           e.dataTransfer.dropEffect = 'move';
                           const sourceId = draggedBlockIdRef.current;
@@ -1165,6 +1318,7 @@ export function FormulaBuilderDialog({
                           }
                         }}
                         onDrop={(e) => {
+                          if (draggedVarNameRef.current) return;
                           e.preventDefault();
                           draggedBlockIdRef.current = null;
                           setDraggingBlockId(null);
@@ -1251,18 +1405,13 @@ export function FormulaBuilderDialog({
                                   <option value="custom">ค่าที่ระบุ</option>
                                   <option value="current">ผลลัพธ์ก่อนหน้า</option>
                                 </select>
-                                {(block.params.mode ?? 'custom') === 'custom' && (
-                                  <input
-                                    type="text"
-                                    className="wb-slot-input"
-                                    style={{width: 120}}
-                                    placeholder="ใส่ค่าตัวแปร..."
-                                    value={block.params.value ?? ''}
-                                    onChange={(e) =>
-                                      updateBlock(block.id, {value: e.target.value})
-                                    }
-                                  />
-                                )}
+                                {(block.params.mode ?? 'custom') === 'custom' &&
+                                  renderSlotInput(block.id, 'value', block.params.value ?? '', {
+                                    type: 'text',
+                                    style: {width: 120},
+                                    placeholder: 'ใส่ค่าตัวแปร...',
+                                    clearValue: '',
+                                  })}
                               </div>
                             )}
 
@@ -1293,15 +1442,12 @@ export function FormulaBuilderDialog({
                                     )}
                                 </select>
                                 <span>เพิ่ม/ลดทีละ</span>
-                                <input
-                                  type="number"
-                                  step="any"
-                                  className="wb-slot-input num"
-                                  value={block.params.delta ?? 1}
-                                  onChange={(e) =>
-                                    updateBlock(block.id, {delta: Number(e.target.value)})
-                                  }
-                                />
+                                {renderSlotInput(block.id, 'delta', block.params.delta ?? 1, {
+                                  type: 'number',
+                                  step: 'any',
+                                  className: 'wb-slot-input num',
+                                  clearValue: 1,
+                                })}
                               </div>
                             )}
 
@@ -1309,16 +1455,12 @@ export function FormulaBuilderDialog({
                             {block.functionName === 'set_value' && (
                               <div className="wb-block-inline-fields">
                                 <span>กำหนดค่าตั้งต้นเป็น</span>
-                                <input
-                                  type="text"
-                                  className="wb-slot-input"
-                                  style={{width: 130}}
-                                  placeholder="ข้อความ/ตัวเลข..."
-                                  value={block.params.value ?? ''}
-                                  onChange={(e) =>
-                                    updateBlock(block.id, {value: e.target.value})
-                                  }
-                                />
+                                {renderSlotInput(block.id, 'value', block.params.value ?? '', {
+                                  type: 'text',
+                                  style: {width: 130},
+                                  placeholder: 'ข้อความ/ตัวเลข...',
+                                  clearValue: '',
+                                })}
                               </div>
                             )}
 
@@ -1346,14 +1488,11 @@ export function FormulaBuilderDialog({
                             {block.functionName === 'add_days' && (
                               <div className="wb-block-inline-fields">
                                 <span>วันที่ปัจจุบัน +</span>
-                                <input
-                                  type="number"
-                                  className="wb-slot-input num"
-                                  value={block.params.days ?? 30}
-                                  onChange={(e) =>
-                                    updateBlock(block.id, {days: Number(e.target.value)})
-                                  }
-                                />
+                                {renderSlotInput(block.id, 'days', block.params.days ?? 30, {
+                                  type: 'number',
+                                  className: 'wb-slot-input num',
+                                  clearValue: 30,
+                                })}
                                 <span>วัน รูปแบบ</span>
                                 <select
                                   className="wb-slot-dropdown"
@@ -1374,14 +1513,11 @@ export function FormulaBuilderDialog({
                             {block.functionName === 'add_months' && (
                               <div className="wb-block-inline-fields">
                                 <span>วันที่ปัจจุบัน +</span>
-                                <input
-                                  type="number"
-                                  className="wb-slot-input num"
-                                  value={block.params.months ?? 1}
-                                  onChange={(e) =>
-                                    updateBlock(block.id, {months: Number(e.target.value)})
-                                  }
-                                />
+                                {renderSlotInput(block.id, 'months', block.params.months ?? 1, {
+                                  type: 'number',
+                                  className: 'wb-slot-input num',
+                                  clearValue: 1,
+                                })}
                                 <span>เดือน รูปแบบ</span>
                                 <select
                                   className="wb-slot-dropdown"
@@ -1401,14 +1537,11 @@ export function FormulaBuilderDialog({
                             {block.functionName === 'add_years' && (
                               <div className="wb-block-inline-fields">
                                 <span>วันที่ปัจจุบัน +</span>
-                                <input
-                                  type="number"
-                                  className="wb-slot-input num"
-                                  value={block.params.years ?? 1}
-                                  onChange={(e) =>
-                                    updateBlock(block.id, {years: Number(e.target.value)})
-                                  }
-                                />
+                                {renderSlotInput(block.id, 'years', block.params.years ?? 1, {
+                                  type: 'number',
+                                  className: 'wb-slot-input num',
+                                  clearValue: 1,
+                                })}
                                 <span>ปี รูปแบบ</span>
                                 <select
                                   className="wb-slot-dropdown"
@@ -1428,15 +1561,16 @@ export function FormulaBuilderDialog({
                             {block.functionName === 'format_date' && (
                               <div className="wb-block-inline-fields">
                                 <span>แปลงรูปแบบวันที่เป็น</span>
-                                <input
-                                  type="text"
-                                  className="wb-slot-input"
-                                  style={{width: 120}}
-                                  value={block.params.format ?? 'DD/MM/YYYY'}
-                                  onChange={(e) =>
-                                    updateBlock(block.id, {format: e.target.value})
+                                {renderSlotInput(
+                                  block.id,
+                                  'format',
+                                  block.params.format ?? 'DD/MM/YYYY',
+                                  {
+                                    type: 'text',
+                                    style: {width: 120},
+                                    clearValue: 'DD/MM/YYYY',
                                   }
-                                />
+                                )}
                               </div>
                             )}
 
@@ -1463,27 +1597,19 @@ export function FormulaBuilderDialog({
                             {block.functionName === 'concat' && (
                               <div className="wb-block-inline-fields">
                                 <span>เติมข้อความนำหน้า</span>
-                                <input
-                                  type="text"
-                                  className="wb-slot-input"
-                                  placeholder="เช่น LOT-"
-                                  style={{width: 110}}
-                                  value={block.params.prefix ?? ''}
-                                  onChange={(e) =>
-                                    updateBlock(block.id, {prefix: e.target.value})
-                                  }
-                                />
+                                {renderSlotInput(block.id, 'prefix', block.params.prefix ?? '', {
+                                  type: 'text',
+                                  placeholder: 'เช่น LOT-',
+                                  style: {width: 110},
+                                  clearValue: '',
+                                })}
                                 <span>และต่อท้ายด้วย</span>
-                                <input
-                                  type="text"
-                                  className="wb-slot-input"
-                                  placeholder="เช่น -TH"
-                                  style={{width: 110}}
-                                  value={block.params.append ?? ''}
-                                  onChange={(e) =>
-                                    updateBlock(block.id, {append: e.target.value})
-                                  }
-                                />
+                                {renderSlotInput(block.id, 'append', block.params.append ?? '', {
+                                  type: 'text',
+                                  placeholder: 'เช่น -TH',
+                                  style: {width: 110},
+                                  clearValue: '',
+                                })}
                               </div>
                             )}
 
@@ -1491,23 +1617,17 @@ export function FormulaBuilderDialog({
                             {block.functionName === 'pad_start' && (
                               <div className="wb-block-inline-fields">
                                 <span>เติมตัวอักษร</span>
-                                <input
-                                  type="text"
-                                  className="wb-slot-input mini"
-                                  value={block.params.char ?? '0'}
-                                  onChange={(e) =>
-                                    updateBlock(block.id, {char: e.target.value})
-                                  }
-                                />
+                                {renderSlotInput(block.id, 'char', block.params.char ?? '0', {
+                                  type: 'text',
+                                  className: 'wb-slot-input mini',
+                                  clearValue: '0',
+                                })}
                                 <span>ด้านหน้าให้ครบ</span>
-                                <input
-                                  type="number"
-                                  className="wb-slot-input num"
-                                  value={block.params.length ?? 4}
-                                  onChange={(e) =>
-                                    updateBlock(block.id, {length: Number(e.target.value)})
-                                  }
-                                />
+                                {renderSlotInput(block.id, 'length', block.params.length ?? 4, {
+                                  type: 'number',
+                                  className: 'wb-slot-input num',
+                                  clearValue: 4,
+                                })}
                                 <span>หลัก</span>
                               </div>
                             )}
@@ -1533,23 +1653,17 @@ export function FormulaBuilderDialog({
                             {block.functionName === 'substring' && (
                               <div className="wb-block-inline-fields">
                                 <span>ตัดข้อความเริ่มตัวที่</span>
-                                <input
-                                  type="number"
-                                  className="wb-slot-input num"
-                                  value={block.params.start ?? 0}
-                                  onChange={(e) =>
-                                    updateBlock(block.id, {start: Number(e.target.value)})
-                                  }
-                                />
+                                {renderSlotInput(block.id, 'start', block.params.start ?? 0, {
+                                  type: 'number',
+                                  className: 'wb-slot-input num',
+                                  clearValue: 0,
+                                })}
                                 <span>ยาว</span>
-                                <input
-                                  type="number"
-                                  className="wb-slot-input num"
-                                  value={block.params.length ?? 5}
-                                  onChange={(e) =>
-                                    updateBlock(block.id, {length: Number(e.target.value)})
-                                  }
-                                />
+                                {renderSlotInput(block.id, 'length', block.params.length ?? 5, {
+                                  type: 'number',
+                                  className: 'wb-slot-input num',
+                                  clearValue: 5,
+                                })}
                                 <span>ตัวอักษร</span>
                               </div>
                             )}
@@ -1558,25 +1672,17 @@ export function FormulaBuilderDialog({
                             {block.functionName === 'replace' && (
                               <div className="wb-block-inline-fields">
                                 <span>ค้นหาคำว่า</span>
-                                <input
-                                  type="text"
-                                  className="wb-slot-input"
-                                  style={{width: 110}}
-                                  value={block.params.search ?? ''}
-                                  onChange={(e) =>
-                                    updateBlock(block.id, {search: e.target.value})
-                                  }
-                                />
+                                {renderSlotInput(block.id, 'search', block.params.search ?? '', {
+                                  type: 'text',
+                                  style: {width: 110},
+                                  clearValue: '',
+                                })}
                                 <span>แทนที่ด้วย</span>
-                                <input
-                                  type="text"
-                                  className="wb-slot-input"
-                                  style={{width: 110}}
-                                  value={block.params.replace ?? ''}
-                                  onChange={(e) =>
-                                    updateBlock(block.id, {replace: e.target.value})
-                                  }
-                                />
+                                {renderSlotInput(block.id, 'replace', block.params.replace ?? '', {
+                                  type: 'text',
+                                  style: {width: 110},
+                                  clearValue: '',
+                                })}
                               </div>
                             )}
 
@@ -1584,25 +1690,17 @@ export function FormulaBuilderDialog({
                             {block.functionName === 'counter' && (
                               <div className="wb-block-inline-fields">
                                 <span>รันเลขอัตโนมัติ เริ่มที่</span>
-                                <input
-                                  type="number"
-                                  className="wb-slot-input num"
-                                  value={block.params.start ?? 1}
-                                  onChange={(e) =>
-                                    updateBlock(block.id, {start: Number(e.target.value)})
-                                  }
-                                />
+                                {renderSlotInput(block.id, 'start', block.params.start ?? 1, {
+                                  type: 'number',
+                                  className: 'wb-slot-input num',
+                                  clearValue: 1,
+                                })}
                                 <span>เติม 0 ครบ</span>
-                                <input
-                                  type="number"
-                                  className="wb-slot-input num"
-                                  value={block.params.padZeros ?? 4}
-                                  onChange={(e) =>
-                                    updateBlock(block.id, {
-                                      padZeros: Number(e.target.value),
-                                    })
-                                  }
-                                />
+                                {renderSlotInput(block.id, 'padZeros', block.params.padZeros ?? 4, {
+                                  type: 'number',
+                                  className: 'wb-slot-input num',
+                                  clearValue: 4,
+                                })}
                                 <span>หลัก</span>
                               </div>
                             )}
@@ -1624,17 +1722,12 @@ export function FormulaBuilderDialog({
                                   <option value="div">÷ หาร</option>
                                 </select>
                                 <span>ด้วยเลข</span>
-                                <input
-                                  type="number"
-                                  step="any"
-                                  className="wb-slot-input num"
-                                  value={block.params.value ?? 10}
-                                  onChange={(e) =>
-                                    updateBlock(block.id, {
-                                      value: Number(e.target.value),
-                                    })
-                                  }
-                                />
+                                {renderSlotInput(block.id, 'value', block.params.value ?? 10, {
+                                  type: 'number',
+                                  step: 'any',
+                                  className: 'wb-slot-input num',
+                                  clearValue: 10,
+                                })}
                               </div>
                             )}
 
@@ -1642,18 +1735,13 @@ export function FormulaBuilderDialog({
                             {block.functionName === 'round' && (
                               <div className="wb-block-inline-fields">
                                 <span>ปัดเศษทศนิยม</span>
-                                <input
-                                  type="number"
-                                  className="wb-slot-input num"
-                                  value={block.params.decimals ?? 2}
-                                  min={0}
-                                  max={6}
-                                  onChange={(e) =>
-                                    updateBlock(block.id, {
-                                      decimals: Number(e.target.value),
-                                    })
-                                  }
-                                />
+                                {renderSlotInput(block.id, 'decimals', block.params.decimals ?? 2, {
+                                  type: 'number',
+                                  className: 'wb-slot-input num',
+                                  min: 0,
+                                  max: 6,
+                                  clearValue: 2,
+                                })}
                                 <span>ตำแหน่ง</span>
                               </div>
                             )}
@@ -1680,17 +1768,12 @@ export function FormulaBuilderDialog({
                                   </select>
                                   {(block.params.operator === 'equals' ||
                                     block.params.operator === 'not_equals' ||
-                                    block.params.operator === 'contains') && (
-                                    <input
-                                      type="text"
-                                      className="wb-slot-input"
-                                      style={{width: 110}}
-                                      value={block.params.target ?? ''}
-                                      onChange={(e) =>
-                                        updateBlock(block.id, {target: e.target.value})
-                                      }
-                                    />
-                                  )}
+                                    block.params.operator === 'contains') &&
+                                    renderSlotInput(block.id, 'target', block.params.target ?? '', {
+                                      type: 'text',
+                                      style: {width: 110},
+                                      clearValue: '',
+                                    })}
                                   <span>&gt; แล้ว:</span>
                                 </div>
                                 <div
@@ -1698,25 +1781,27 @@ export function FormulaBuilderDialog({
                                   style={{paddingLeft: 14}}
                                 >
                                   <span>จริงให้ส่งค่า</span>
-                                  <input
-                                    type="text"
-                                    className="wb-slot-input"
-                                    style={{width: 125}}
-                                    value={block.params.thenValue ?? 'พร้อมจำหน่าย'}
-                                    onChange={(e) =>
-                                      updateBlock(block.id, {thenValue: e.target.value})
+                                  {renderSlotInput(
+                                    block.id,
+                                    'thenValue',
+                                    block.params.thenValue ?? 'พร้อมจำหน่าย',
+                                    {
+                                      type: 'text',
+                                      style: {width: 125},
+                                      clearValue: 'พร้อมจำหน่าย',
                                     }
-                                  />
+                                  )}
                                   <span>มิฉะนั้น</span>
-                                  <input
-                                    type="text"
-                                    className="wb-slot-input"
-                                    style={{width: 125}}
-                                    value={block.params.elseValue ?? 'สินค้าหมด'}
-                                    onChange={(e) =>
-                                      updateBlock(block.id, {elseValue: e.target.value})
+                                  {renderSlotInput(
+                                    block.id,
+                                    'elseValue',
+                                    block.params.elseValue ?? 'สินค้าหมด',
+                                    {
+                                      type: 'text',
+                                      style: {width: 125},
+                                      clearValue: 'สินค้าหมด',
                                     }
-                                  />
+                                  )}
                                 </div>
                               </div>
                             )}
@@ -1725,24 +1810,17 @@ export function FormulaBuilderDialog({
                             {block.functionName === 'repeat' && (
                               <div className="wb-block-inline-fields">
                                 <span>ทำซ้ำข้อความ</span>
-                                <input
-                                  type="text"
-                                  className="wb-slot-input"
-                                  style={{width: 90}}
-                                  value={block.params.text ?? '*'}
-                                  onChange={(e) =>
-                                    updateBlock(block.id, {text: e.target.value})
-                                  }
-                                />
+                                {renderSlotInput(block.id, 'text', block.params.text ?? '*', {
+                                  type: 'text',
+                                  style: {width: 90},
+                                  clearValue: '*',
+                                })}
                                 <span>จำนวน</span>
-                                <input
-                                  type="number"
-                                  className="wb-slot-input num"
-                                  value={block.params.times ?? 5}
-                                  onChange={(e) =>
-                                    updateBlock(block.id, {times: Number(e.target.value)})
-                                  }
-                                />
+                                {renderSlotInput(block.id, 'times', block.params.times ?? 5, {
+                                  type: 'number',
+                                  className: 'wb-slot-input num',
+                                  clearValue: 5,
+                                })}
                                 <span>ครั้ง</span>
                               </div>
                             )}

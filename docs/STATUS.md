@@ -905,3 +905,21 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
   - Production build passing (`npm run build`).
   - 25 Go unit tests passing (`go test ./...`).
   - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
+
+## 2026-10-16 — Drag-and-Drop Variable Reporter Pills into Any Block Input Slot (`×` to Remove)
+
+- **Issues Addressed**:
+  - Users requested the ability to use a variable's value inside any editable input slot of any LEGO® Word Block by dragging a variable reporter pill directly into that slot, and to remove the variable from the slot using an `×` button beside the variable name.
+- **Fixes**:
+  - **Formula Engine (`src/formulaEngine.ts`)**:
+    - Added `resolveNum` helper and template resolution (`resolveTemplate`) across all numeric and string block parameters (`days`, `months`, `years`, `format`, `delta`, `length`, `char`, `start`, `padZeros`, `value`, `decimals`, `times`) so any slot storing `{{varName}}` dynamically evaluates the variable's runtime value.
+  - **LEGO® Word Blocks UI (`src/FormulaBuilderDialog.tsx`, `src/formula.css`)**:
+    - Made variable reporter pills (`.wb-pill-reporter`) in both the left `ตัวแปร` palette and the top `.wb-variables-ribbon` draggable (`draggable={true}`, `startVariableDrag`, `endVariableDrag`).
+    - Upgraded all 21 editable input slots across all blocks (`set_variable`, `change_variable`, `set_value`, `add_days`, `add_months`, `add_years`, `format_date`, `concat`, `pad_start`, `substring`, `replace`, `counter`, `math_op`, `round`, `if_else`, `repeat`) to `renderSlotInput(...)`.
+    - Dropping a variable onto any input slot binds `{{varName}}` and renders an embedded orange variable chip (`[ ● varName [×] ]`) with an `×` clear button that removes the variable and restores the standard input field.
+- **Verification**:
+  - 97 TypeScript unit tests passing (`npm test`).
+  - Production build passing (`npm run build`).
+  - 25 Go unit tests passing (`go test ./...`).
+  - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
+

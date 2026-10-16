@@ -283,3 +283,55 @@ test('set_variable, change_variable, and set_value mutate and propagate variable
   assert.equal(resolved['formatted_price'], 'THB 125.00');
 });
 
+test('numeric and string block slots accept {{varName}} variable tokens', () => {
+  const baseTime = new Date(2026, 0, 1); // 2026-01-01
+  const dateFormula: LabelFormula = {
+    id: 'f_exp_var',
+    name: 'Expiry_From_Var',
+    blocks: [
+      {
+        id: 'b1',
+        category: 'datetime',
+        functionName: 'add_days',
+        params: {days: '{{shelf_days}}', format: 'YYYY-MM-DD'},
+      },
+    ],
+  };
+  assert.equal(evaluateFormula(dateFormula, {shelf_days: '14'}, baseTime), '2026-01-15');
+
+  const mathAndPadFormula: LabelFormula = {
+    id: 'f_math_var',
+    name: 'Math_And_Pad_Var',
+    blocks: [
+      {
+        id: 'b1',
+        category: 'string',
+        functionName: 'set_value',
+        params: {value: '{{base_price}}'},
+      },
+      {
+        id: 'b2',
+        category: 'numeric',
+        functionName: 'math_op',
+        params: {op: 'add', value: '{{shipping}}'},
+      },
+      {
+        id: 'b3',
+        category: 'string',
+        functionName: 'pad_start',
+        params: {char: '{{pad_char}}', length: '{{pad_len}}'},
+      },
+    ],
+  };
+  assert.equal(
+    evaluateFormula(mathAndPadFormula, {
+      base_price: '120',
+      shipping: '30',
+      pad_char: '0',
+      pad_len: '6',
+    }),
+    '000150'
+  );
+});
+
+

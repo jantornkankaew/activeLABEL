@@ -236,34 +236,42 @@ export function evaluateBlock(
     return val.replace(/\{\{\s*([A-Za-z0-9_]+)\s*\}\}/g, (_, key) => variables[key] ?? '');
   };
 
+  const resolveNum = (val: any, fallback = 0): number => {
+    if (typeof val === 'number') return Number.isFinite(val) ? val : fallback;
+    const str = resolve(val).trim();
+    if (!str) return fallback;
+    const parsed = Number(str);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  };
+
   switch (block.category) {
     case 'datetime': {
       let baseDate = new Date(now.getTime());
       if (input && !isNaN(Date.parse(input))) {
         baseDate = new Date(input);
       }
-      const fmt = block.params.format || 'YYYY-MM-DD';
+      const fmt = resolve(block.params.format || 'YYYY-MM-DD') || 'YYYY-MM-DD';
 
       if (block.functionName === 'now') {
         return formatDate(baseDate, fmt);
       }
       if (block.functionName === 'add_days') {
-        const d = Number(block.params.days) || 0;
+        const d = resolveNum(block.params.days, 0);
         baseDate.setDate(baseDate.getDate() + d);
         return formatDate(baseDate, fmt);
       }
       if (block.functionName === 'add_months') {
-        const m = Number(block.params.months) || 0;
+        const m = resolveNum(block.params.months, 0);
         baseDate.setMonth(baseDate.getMonth() + m);
         return formatDate(baseDate, fmt);
       }
       if (block.functionName === 'add_years') {
-        const y = Number(block.params.years) || 0;
+        const y = resolveNum(block.params.years, 0);
         baseDate.setFullYear(baseDate.getFullYear() + y);
         return formatDate(baseDate, fmt);
       }
       if (block.functionName === 'date_part') {
-        const part = block.params.part || 'YYYY';
+        const part = resolve(block.params.part || 'YYYY') || 'YYYY';
         return formatDate(baseDate, part);
       }
       return formatDate(baseDate, fmt);
@@ -289,7 +297,7 @@ export function evaluateBlock(
         const currentRaw =
           varName && variables[varName] !== undefined ? variables[varName] : input;
         const baseNum = parseFloat(currentRaw) || 0;
-        const delta = Number(block.params.delta ?? 1) || 0;
+        const delta = resolveNum(block.params.delta ?? 1, 0);
         const nextVal = String(baseNum + delta);
         if (varName) {
           variables[varName] = nextVal;
@@ -309,18 +317,18 @@ export function evaluateBlock(
         return `${prefix}${text}${append}`;
       }
       if (block.functionName === 'pad_start') {
-        const len = Number(block.params.length) || 0;
-        const char = String(block.params.char ?? '0');
+        const len = resolveNum(block.params.length, 0);
+        const char = resolve(block.params.char ?? '0') || '0';
         return text.padStart(len, char);
       }
       if (block.functionName === 'pad_end') {
-        const len = Number(block.params.length) || 0;
-        const char = String(block.params.char ?? ' ');
+        const len = resolveNum(block.params.length, 0);
+        const char = resolve(block.params.char ?? ' ') || ' ';
         return text.padEnd(len, char);
       }
       if (block.functionName === 'substring') {
-        const start = Math.max(0, Number(block.params.start) || 0);
-        const len = Number(block.params.length);
+        const start = Math.max(0, resolveNum(block.params.start, 0));
+        const len = resolveNum(block.params.length, NaN);
         return isNaN(len) || len <= 0 ? text.slice(start) : text.slice(start, start + len);
       }
       if (block.functionName === 'uppercase') {
@@ -346,7 +354,7 @@ export function evaluateBlock(
         const currentRaw =
           varName && variables[varName] !== undefined ? variables[varName] : input;
         const baseNum = parseFloat(currentRaw) || 0;
-        const delta = Number(block.params.delta ?? 1) || 0;
+        const delta = resolveNum(block.params.delta ?? 1, 0);
         const nextVal = String(baseNum + delta);
         if (varName) {
           variables[varName] = nextVal;
@@ -358,13 +366,13 @@ export function evaluateBlock(
       if (isNaN(num)) num = 0;
 
       if (block.functionName === 'counter') {
-        const start = Number(block.params.start) || 1;
-        const pad = Number(block.params.padZeros) || 0;
+        const start = resolveNum(block.params.start, 1);
+        const pad = resolveNum(block.params.padZeros, 0);
         const s = String(start);
         return pad > 0 ? s.padStart(pad, '0') : s;
       }
       if (block.functionName === 'math_op') {
-        const operand = parseFloat(resolve(block.params.value ?? '0')) || 0;
+        const operand = resolveNum(block.params.value ?? '0', 0);
         const op = block.params.op || 'add';
         let res = num;
         if (op === 'add') res += operand;
@@ -374,7 +382,7 @@ export function evaluateBlock(
         return String(res);
       }
       if (block.functionName === 'round') {
-        const dec = Math.max(0, Number(block.params.decimals) || 0);
+        const dec = Math.max(0, resolveNum(block.params.decimals, 0));
         return num.toFixed(dec);
       }
       return String(num);
@@ -407,7 +415,7 @@ export function evaluateBlock(
     case 'loop': {
       if (block.functionName === 'repeat') {
         const t = resolve(block.params.text ?? input);
-        const times = Math.max(0, Math.min(100, Number(block.params.times) || 1));
+        const times = Math.max(0, Math.min(100, resolveNum(block.params.times, 1)));
         const sep = block.params.separator ?? '';
         return Array.from({length: times}, () => t).join(sep);
       }
