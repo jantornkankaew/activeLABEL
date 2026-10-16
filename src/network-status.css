@@ -294,3 +294,29 @@
  color:#9ca3af;
  line-height:1.2;
 }
+
+/* Responsive (Mobile) */
+@media(max-width: 700px){
+ .network-status-btn{
+  height:28px;
+  min-height:28px!important;
+  padding:0 7px;
+  gap:4px;
+  font-size:11px;
+ }
+ .network-status-popover{
+  right:0;
+  left:auto;
+  width:250px;
+  max-width:calc(100vw - 20px);
+ }
+}
+
+@media(max-width: 480px){
+ .network-status-btn{
+  padding:0 6px;
+ }
+ .network-status-text{
+  display:none;
+ }
+}

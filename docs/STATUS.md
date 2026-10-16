@@ -1,5 +1,22 @@
 # Implementation status
 
+## 2026-10-16 — Mobile Responsive Overhaul & Floating Dock Optimization
+
+- **Comprehensive Mobile UI/UX Overhaul (`src/App.tsx`, `src/atelier.css`, `src/network-status.css`)**:
+  - **Zero-Overflow Header**: Streamlined header to a compact 52px height with 17px brand logo, 28px touch targets, compact network status badge, and icon-only Share/Print buttons (`.header-action-label` hidden on mobile). Prevents horizontal scrolling and button clipping on narrow phone viewports.
+  - **Consolidated Bottom Controls Docking**:
+    - Docked the horizontal canvas toolbar at `bottom: 8px` as a swipeable, glassmorphic capsule (`background: rgba(255,255,255,0.95)`, blur, card border) ensuring Grid, Snap, Spacing, Unit, DPI, and Zoom controls scroll smoothly without text cutoff or broken flex alignment.
+    - Repositioned document controls (`Layers`, `Variables`, `Formulas`, `Label Size`) to `bottom: 48px` as a sleek pill bar right above the bottom toolbar instead of floating 217px high in the middle of the label artwork.
+    - Compacted AI Composer to `bottom: 84px` with sleek pill styling and reduced textarea height, freeing up over 120px of vertical workspace for comfortable canvas panning and label editing.
+    - Positioned the selected object context bar at `bottom: 84px` with horizontal scroll support (`overflow-x: auto`) for easy thumb navigation of typography and barcode settings.
+  - **Touch-Friendly Drawing Tool Dock**: Positioned at `top: 6px` as a 32px-height pill capsule with glassmorphism backdrop and smooth horizontal scrolling.
+  - **Full-Width Bottom Sheets for Mobile**: Adjusted properties inspector and layers popovers to open as mobile bottom sheets (`bottom: 8px`, border-radius 18px, full-width with safe margins).
+- **Verification**:
+  - 104 TypeScript tests passed (`bash scripts/rtk-exec.sh npm test`).
+  - Production build passed (`bash scripts/rtk-exec.sh npm run build`).
+  - All 25 Go tests in 8 packages passed (`bash scripts/rtk-exec.sh go test ./...`).
+  - Desktop print bridge cross-compiled for 6 OS/architecture targets with `scripts/build-printbridge.sh`.
+
 ## 2026-10-16 — Browser-Native Chrome Omnibox PWA Installation & Clean UI
 
 - **Native Chrome Address Bar PWA Installation (`src/App.tsx`, `src/FileMenu.tsx`, `src/atelier.css`)**:
