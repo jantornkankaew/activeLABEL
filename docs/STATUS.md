@@ -1,5 +1,20 @@
 # Implementation status
 
+## 2026-10-16 — Immersive 3D Photo Album Preview & Tactile Deck Overhaul
+
+- **Full-Featured 3D Photo Album Experience (`src/PrintDialog.tsx` & `src/print-dialog.css`)**:
+  - **Layered 3D Stack Deck**: Displays realistic stacked cards behind the active label (`layer-deep` and `layer-next` with perspective depth, subtle rotation, and live peeking SVG of the upcoming serial label).
+  - **Tactile 3D Flip Physics**: Upgraded animation to full 3D card flips (`albumFlipNext` / `albumFlipPrev`) with 3D elevation (`translate3d`), dynamic tilt (`rotateY(-24deg)`), scale settling, and dynamic shadow expansion.
+  - **Dynamic Gloss & Specular Sweep**: Realistic specular light reflection (`photo-gloss-sweep`) glints across the surface of the photo paper on each page flip.
+  - **Vintage/Modern Photo Mounting Corners**: Decorative photo corners (`album-corner`) at all 4 edges, providing a genuine collector's photo album aesthetic.
+  - **Embossed Serial Stamp**: Embossed watermark stamp (`#01 / 10`) placed on the photo print with translucent blur and border.
+  - **Interactive Flippers & Keyboard Navigation**: Floating side arrow buttons on the album stage (`album-stage-flipper`) plus native keyboard arrow navigation (`ArrowLeft` / `ArrowRight`) and a minimal dot pagination bar (`album-dots-bar`).
+- **Verification**:
+  - 102 TypeScript tests passed (`bash scripts/rtk-exec.sh npm test`).
+  - Production build passed (`bash scripts/rtk-exec.sh npm run build`).
+  - All 25 Go tests in 8 packages passed (`bash scripts/rtk-exec.sh go test ./...`).
+  - Desktop print bridge cross-compiled for 6 OS/architecture targets with `scripts/build-printbridge.sh`.
+
 ## 2026-10-16 — Offline Support, Network Status Indicator & Automatic Cloud Re-sync
 
 - **Offline-First PWA Capabilities**:

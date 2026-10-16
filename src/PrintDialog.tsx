@@ -90,6 +90,17 @@ export function PrintDialog({
   }
  },[doc,values,clampedPreviewIndex]);
 
+ const nextResolvedDoc=useMemo(()=>{
+  if(clampedPreviewIndex+1<serialCount){
+   try{
+    return resolveDocument(doc,values,clampedPreviewIndex+1);
+   }catch{
+    return null;
+   }
+  }
+  return null;
+ },[doc,values,clampedPreviewIndex,serialCount]);
+
  const preflight=resolved.error
   ?{errors:[resolved.error],warnings:[]}
   :barcodePreflight(resolved.doc,labelDpi);
@@ -103,6 +114,11 @@ export function PrintDialog({
     e.preventDefault();
     e.stopPropagation();
     if(!preparing.current)close.current();
+   }
+   if((e.key==='ArrowLeft'||e.key==='ArrowRight')&&!(e.target instanceof HTMLInputElement||e.target instanceof HTMLTextAreaElement)){
+    e.preventDefault();
+    if(e.key==='ArrowLeft'&&clampedPreviewIndex>0)goToSerial(clampedPreviewIndex-1,'prev');
+    if(e.key==='ArrowRight'&&clampedPreviewIndex<serialCount-1)goToSerial(clampedPreviewIndex+1,'next');
    }
    if(e.key==='Tab'){
     const items=Array.from(
@@ -126,7 +142,7 @@ export function PrintDialog({
    root.removeEventListener('keydown',keys);
    previous?.focus();
   };
- },[]);
+ },[clampedPreviewIndex,serialCount]);
 
  function remember(name:string){
   const value=values[name]??'';
@@ -199,18 +215,99 @@ export function PrintDialog({
      {/* Left: Photo Album Preview Stage & Navigator */}
      <div className="print-album-viewport">
       <div className="print-album-stage">
+       {/* Floating Side Flippers */}
+       {clampedPreviewIndex>0&&(
+        <button
+         type="button"
+         className="album-stage-flipper flipper-prev"
+         aria-label="ฉลากก่อนหน้า"
+         title="ฉลากก่อนหน้า (Arrow Left)"
+         disabled={busy}
+         onClick={()=>goToSerial(clampedPreviewIndex-1,'prev')}
+        >
+         <ChevronLeft size={20}/>
+        </button>
+       )}
+
        <div
-        key={animKey}
-        ref={preview}
-        className={`print-album-card ${slideDir==='next'?'slide-next':'slide-prev'}`}
+        className="album-3d-scene"
         style={{
          aspectRatio:`${doc.width}/${doc.height}`,
          width:`min(100%, ${Math.max(180,Math.min(360,260*doc.width/doc.height))}px)`,
         }}
        >
-        <LabelSvg doc={resolved.doc} fonts={fontStyles}/>
+        {/* Background Stack Layer 2 (Deep stack) */}
+        {serialCount-clampedPreviewIndex>2&&(
+         <div className="album-stack-layer layer-deep" aria-hidden="true"/>
+        )}
+
+        {/* Background Stack Layer 1 (Next upcoming card) */}
+        {clampedPreviewIndex+1<serialCount&&(
+         <div className="album-stack-layer layer-next" aria-hidden="true">
+          {nextResolvedDoc&&(
+           <div className="album-peek-content">
+            <LabelSvg doc={nextResolvedDoc} fonts={fontStyles}/>
+           </div>
+          )}
+         </div>
+        )}
+
+        {/* Active Top Card */}
+        <div
+         key={animKey}
+         ref={preview}
+         className={`print-album-card ${slideDir==='next'?'flip-next':'flip-prev'}`}
+        >
+         {/* Gloss light sweep overlay */}
+         <div className="photo-gloss-sweep" aria-hidden="true"/>
+
+         {/* 4 Album Photo Mounting Corners */}
+         <div className="album-corner top-left" aria-hidden="true"/>
+         <div className="album-corner top-right" aria-hidden="true"/>
+         <div className="album-corner bottom-left" aria-hidden="true"/>
+         <div className="album-corner bottom-right" aria-hidden="true"/>
+
+         {/* Embossed Serial Badge Stamp */}
+         {serialCount>1&&(
+          <div className="album-serial-stamp" aria-hidden="true">
+           #{String(clampedPreviewIndex+1).padStart(Math.max(2,String(serialCount).length),'0')}
+          </div>
+         )}
+
+         <LabelSvg doc={resolved.doc} fonts={fontStyles}/>
+        </div>
        </div>
+
+       {clampedPreviewIndex<serialCount-1&&(
+        <button
+         type="button"
+         className="album-stage-flipper flipper-next"
+         aria-label="ฉลากถัดไป"
+         title="ฉลากถัดไป (Arrow Right)"
+         disabled={busy}
+         onClick={()=>goToSerial(clampedPreviewIndex+1,'next')}
+        >
+         <ChevronRight size={20}/>
+        </button>
+       )}
       </div>
+
+      {/* Album Dots Indicator (if 2 to 12 serials) */}
+      {serialCount>1&&serialCount<=12&&(
+       <div className="album-dots-bar" aria-label="Label page dots">
+        {Array.from({length:serialCount}).map((_,i)=>(
+         <button
+          key={i}
+          type="button"
+          className={`album-dot ${i===clampedPreviewIndex?'active':''}`}
+          aria-label={`ฉลากใบที่ ${i+1}`}
+          title={`ไปที่ฉลากใบที่ ${i+1}`}
+          disabled={busy}
+          onClick={()=>goToSerial(i,i>clampedPreviewIndex?'next':'prev')}
+         />
+        ))}
+       </div>
+      )}
 
       {/* Floating Serial Navigator */}
       <div className="print-serial-nav" aria-label="Serial preview navigation">
