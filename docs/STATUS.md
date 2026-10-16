@@ -1,5 +1,18 @@
 # Implementation status
 
+## 2026-10-16 — Minimal Network Status Popover, Offline Duration & Last Sync Timestamp
+
+- **Minimal Network Popover & Status Badge (`src/NetworkStatusBadge.tsx` & `src/network-status.css`)**:
+  - **Minimal Aesthetic Design**: Streamlined the popover into a clean 245px compact card removing redundant text blocks and large panels in favor of crisp, modern typography and clean key-value rows.
+  - **Live Offline Duration Tracking**: Added `offlineSince` persistence in `src/syncEngine.ts` (`labelcraft-offline-since-time`). Tracks exact timestamp when connectivity dropped, presenting clock time (e.g. `10:45:30`) and live-updating relative duration (e.g. `5 นาทีที่แล้ว` / `5m`) in both popover and header badge.
+  - **Precise Last Sync Timestamp**: Displays formatted clock time and relative time of the last successful sync with cloud/local persistence (e.g. `10:52:14 (เมื่อสักครู่)`).
+  - **Dynamic Real-Time Refresh**: Popover ticks every 2 seconds while open to update elapsed time labels without manual refresh.
+- **Verification**:
+  - 104 TypeScript tests passed (`bash scripts/rtk-exec.sh npm test`).
+  - Production build passed (`bash scripts/rtk-exec.sh npm run build`).
+  - All 25 Go tests in 8 packages passed (`bash scripts/rtk-exec.sh go test ./...`).
+  - Desktop print bridge cross-compiled for 6 OS/architecture targets with `scripts/build-printbridge.sh`.
+
 ## 2026-10-16 — Print Dialog Variable Resolution & Comprehensive Variable Display
 
 - **All Document & Formula Variables Displayed in Print Dialog (`src/PrintDialog.tsx` & `src/variables.ts`)**:

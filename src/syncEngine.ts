@@ -3,6 +3,7 @@ import type {LabelDocument} from './core';
 
 export const OFFLINE_SYNC_KEY = 'labelcraft-offline-sync-v1';
 export const LAST_SYNC_KEY = 'labelcraft-last-sync-time';
+export const OFFLINE_SINCE_KEY = 'labelcraft-offline-since-time';
 
 export interface PendingSyncItem {
   userId?: string;
@@ -93,6 +94,27 @@ export function setLastSyncTime(time: number): void {
   }
 }
 
+export function getOfflineSinceTime(): number | null {
+  try {
+    const val = localStorage.getItem(OFFLINE_SINCE_KEY);
+    return val ? Number(val) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setOfflineSinceTime(time: number | null): void {
+  try {
+    if (time === null) {
+      localStorage.removeItem(OFFLINE_SINCE_KEY);
+    } else {
+      localStorage.setItem(OFFLINE_SINCE_KEY, String(time));
+    }
+  } catch {
+    // ignore
+  }
+}
+
 export async function flushPendingSync(
   cloudSaver: (userId: string, docs: LabelDocument[], activeId: string) => Promise<void>,
   currentUserId?: string
@@ -146,7 +168,23 @@ export function useSyncEngine({
     const p = getPendingSync();
     return p ? p.documents.length : 0;
   });
-  const [lastSyncTime, setLastSyncTimeState] = useState<number | null>(() => getLastSyncTime());
+  const [lastSyncTime, setLastSyncTimeState] = useState<number | null>(() => {
+    const saved = getLastSyncTime();
+    if (saved) return saved;
+    const now = Date.now();
+    setLastSyncTime(now);
+    return now;
+  });
+  const [offlineSince, setOfflineSinceState] = useState<number | null>(() => {
+    if (!isOnline()) {
+      const saved = getOfflineSinceTime();
+      if (saved) return saved;
+      const now = Date.now();
+      setOfflineSinceTime(now);
+      return now;
+    }
+    return null;
+  });
 
   const cloudSaverRef = useRef(cloudSaver);
   cloudSaverRef.current = cloudSaver;
@@ -160,6 +198,9 @@ export function useSyncEngine({
       if (getPendingSync()) clearPendingSync();
       setPendingCount(0);
       setSyncState(isOnline() ? 'online' : 'offline');
+      const now = Date.now();
+      setLastSyncTime(now);
+      setLastSyncTimeState(now);
       return true;
     }
 
@@ -190,6 +231,8 @@ export function useSyncEngine({
     const unsubscribe = subscribeNetwork(async isNowOnline => {
       setOnline(isNowOnline);
       if (isNowOnline) {
+        setOfflineSinceState(null);
+        setOfflineSinceTime(null);
         onNoticeRef.current?.('กลับมาออนไลน์แล้ว — กำลังตรวจสอบข้อมูล');
         const pending = getPendingSync();
         if (pending && cloudSaverRef.current && userIdRef.current) {
@@ -211,6 +254,9 @@ export function useSyncEngine({
           setSyncState('online');
         }
       } else {
+        const now = Date.now();
+        setOfflineSinceState(now);
+        setOfflineSinceTime(now);
         setSyncState('offline');
         onNoticeRef.current?.('คุณกำลังใช้งานแบบออฟไลน์ — ข้อมูลจะถูกบันทึกในเครื่องอัตโนมัติ');
       }
@@ -277,6 +323,7 @@ export function useSyncEngine({
     syncState,
     pendingCount,
     lastSyncTime,
+    offlineSince,
     triggerSync,
     queueSave,
   };

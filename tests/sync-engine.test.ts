@@ -8,6 +8,8 @@ import {
   flushPendingSync,
   getLastSyncTime,
   setLastSyncTime,
+  getOfflineSinceTime,
+  setOfflineSinceTime,
   OFFLINE_SYNC_KEY,
 } from '../src/syncEngine';
 import {seed} from '../src/core';
@@ -112,4 +114,16 @@ test('flushPendingSync keeps pending queue if cloud saver throws error', async (
   assert.ok(pending.retryCount >= 2);
 
   clearPendingSync();
+});
+
+test('getOfflineSinceTime and setOfflineSinceTime correctly persist and clear offline timestamp', () => {
+  setOfflineSinceTime(null);
+  assert.equal(getOfflineSinceTime(), null);
+
+  const testTime = 1760000000000;
+  setOfflineSinceTime(testTime);
+  assert.equal(getOfflineSinceTime(), testTime);
+
+  setOfflineSinceTime(null);
+  assert.equal(getOfflineSinceTime(), null);
 });
