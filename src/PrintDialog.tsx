@@ -34,6 +34,8 @@ export function PrintDialog({
  const [serialCount,setSerialCount]=useState(1);
  const [previewIndex,setPreviewIndex]=useState(0);
  const [jumpDraft,setJumpDraft]=useState('1');
+ const [slideDir,setSlideDir]=useState<'next'|'prev'>('next');
+ const [animKey,setAnimKey]=useState(0);
  const [busy,setBusy]=useState(false);
  const [status,setStatus]=useState('');
  const preview=useRef<HTMLDivElement>(null);
@@ -54,10 +56,14 @@ export function PrintDialog({
   setJumpDraft(String(clampedPreviewIndex+1));
  },[clampedPreviewIndex,previewIndex,serialCount]);
 
- function goToSerial(index:number){
+ function goToSerial(index:number,forcedDir?:'next'|'prev'){
   const target=Math.max(0,Math.min(serialCount-1,Math.floor(index)));
-  setPreviewIndex(target);
-  setJumpDraft(String(target+1));
+  if(target!==clampedPreviewIndex){
+   setSlideDir(forcedDir??(target>clampedPreviewIndex?'next':'prev'));
+   setAnimKey(k=>k+1);
+   setPreviewIndex(target);
+   setJumpDraft(String(target+1));
+  }
  }
 
  function updateCopies(next:number){
@@ -69,6 +75,8 @@ export function PrintDialog({
   const bounded=Math.max(1,Math.min(500,Math.floor(Number.isFinite(next)?next:1)));
   setSerialCount(bounded);
   if(previewIndex>=bounded){
+   setSlideDir('prev');
+   setAnimKey(k=>k+1);
    setPreviewIndex(bounded-1);
    setJumpDraft(String(bounded));
   }
@@ -187,252 +195,267 @@ export function PrintDialog({
      </button>
     </div>
 
-    {asked.length>0&&(
-     <section className="print-variables" aria-labelledby="print-values-title">
-      <div className="print-variables-heading">
-       <h3 id="print-values-title">Before printing</h3>
-       <span>
-        {asked.length} {asked.length===1?'value':'values'}
-       </span>
+    <div className="print-dialog-body">
+     {/* Left: Photo Album Preview Stage & Navigator */}
+     <div className="print-album-viewport">
+      <div className="print-album-stage">
+       <div
+        key={animKey}
+        ref={preview}
+        className={`print-album-card ${slideDir==='next'?'slide-next':'slide-prev'}`}
+        style={{
+         aspectRatio:`${doc.width}/${doc.height}`,
+         width:`min(100%, ${Math.max(180,Math.min(360,260*doc.width/doc.height))}px)`,
+        }}
+       >
+        <LabelSvg doc={resolved.doc} fonts={fontStyles}/>
+       </div>
       </div>
-      <p>Enter the information for this label</p>
-      <div className="print-variable-grid">
-       {asked.map((variable,index)=>{
-        const empty=!(values[variable.name]??'').trim();
-        return (
-         <label key={variable.name}>
-          <span>
-           {index+1}. {variable.label||variable.name}
-           <b aria-hidden="true">*</b>
-          </span>
-          <input
-           aria-label={`Print variable ${variable.name}`}
-           required
-           aria-invalid={empty}
-           value={values[variable.name]??''}
-           placeholder={`Enter ${variable.label||variable.name}`}
-           onChange={e=>
-            setValues(current=>({...current,[variable.name]:e.target.value}))
+
+      {/* Floating Serial Navigator */}
+      <div className="print-serial-nav" aria-label="Serial preview navigation">
+       <button
+        type="button"
+        className="serial-nav-btn"
+        aria-label="ฉลากแรก"
+        title="เลื่อนไปฉลากแรก (ใบที่ 1)"
+        disabled={busy||clampedPreviewIndex<=0}
+        onClick={()=>goToSerial(0,'prev')}
+       >
+        <ChevronsLeft size={15}/>
+       </button>
+       <button
+        type="button"
+        className="serial-nav-btn"
+        aria-label="ฉลากก่อนหน้า"
+        title="ฉลากก่อนหน้า"
+        disabled={busy||clampedPreviewIndex<=0}
+        onClick={()=>goToSerial(clampedPreviewIndex-1,'prev')}
+       >
+        <ChevronLeft size={15}/>
+       </button>
+
+       <div className="serial-nav-jump">
+        <span>ฉลากใบที่</span>
+        <input
+         type="number"
+         className="serial-jump-input"
+         aria-label="ระบุหมายเลขฉลากที่ต้องการดู"
+         min={1}
+         max={serialCount}
+         disabled={busy}
+         value={jumpDraft}
+         onChange={e=>{
+          const raw=e.target.value;
+          setJumpDraft(raw);
+          const parsed=parseInt(raw,10);
+          if(Number.isFinite(parsed)&&parsed>=1&&parsed<=serialCount){
+           const target=parsed-1;
+           if(target!==clampedPreviewIndex){
+            setSlideDir(target>clampedPreviewIndex?'next':'prev');
+            setAnimKey(k=>k+1);
+            setPreviewIndex(target);
            }
-           onBlur={()=>remember(variable.name)}
-          />
-          {empty&&<small>Required</small>}
-         </label>
-        );
-       })}
-      </div>
-     </section>
-    )}
-
-    {/* Print Quantity Controls: Copies & Serials */}
-    <section className="print-quantity-bar" aria-label="Print quantity settings">
-     <div className="print-qty-field">
-      <div className="print-qty-label">
-       <strong>จำนวน Copy</strong>
-       <small>สำเนาต่อใบ</small>
-      </div>
-      <div className="print-qty-stepper">
-       <button
-        type="button"
-        className="qty-step-btn"
-        aria-label="Decrease copies"
-        disabled={busy||copies<=1}
-        onClick={()=>updateCopies(copies-1)}
-       >
-        <Minus size={13}/>
-       </button>
-       <input
-        type="number"
-        className="qty-number-input"
-        aria-label="จำนวน Copy"
-        min={1}
-        max={100}
-        disabled={busy}
-        value={copies}
-        onChange={e=>updateCopies(Number(e.target.value))}
-       />
-       <button
-        type="button"
-        className="qty-step-btn"
-        aria-label="Increase copies"
-        disabled={busy||copies>=100}
-        onClick={()=>updateCopies(copies+1)}
-       >
-        <Plus size={13}/>
-       </button>
-      </div>
-     </div>
-
-     <div className="print-qty-divider"/>
-
-     <div className="print-qty-field">
-      <div className="print-qty-label">
-       <strong>จำนวน Serial</strong>
-       <small>รันเลขต่อเนื่อง</small>
-      </div>
-      <div className="print-qty-stepper">
-       <button
-        type="button"
-        className="qty-step-btn"
-        aria-label="Decrease serial count"
-        disabled={busy||serialCount<=1}
-        onClick={()=>updateSerialCount(serialCount-1)}
-       >
-        <Minus size={13}/>
-       </button>
-       <input
-        type="number"
-        className="qty-number-input"
-        aria-label="จำนวน Serial"
-        min={1}
-        max={500}
-        disabled={busy}
-        value={serialCount}
-        onChange={e=>updateSerialCount(Number(e.target.value))}
-       />
-       <button
-        type="button"
-        className="qty-step-btn"
-        aria-label="Increase serial count"
-        disabled={busy||serialCount>=500}
-        onClick={()=>updateSerialCount(serialCount+1)}
-       >
-        <Plus size={13}/>
-       </button>
-      </div>
-     </div>
-    </section>
-
-    {/* Label Preview & Serial Navigation */}
-    <div className="print-proof">
-     <div
-      ref={preview}
-      className="print-proof-paper"
-      style={{
-       aspectRatio:`${doc.width}/${doc.height}`,
-       width:`min(100%, ${260*doc.width/doc.height}px)`,
-      }}
-     >
-      <LabelSvg doc={resolved.doc} fonts={fontStyles}/>
-     </div>
-
-     {/* Serial Preview Navigator */}
-     <div className="print-serial-nav" aria-label="Serial preview navigation">
-      <button
-       type="button"
-       className="serial-nav-btn"
-       aria-label="ฉลากแรก"
-       title="เลื่อนไปฉลากแรก (ใบที่ 1)"
-       disabled={busy||clampedPreviewIndex<=0}
-       onClick={()=>goToSerial(0)}
-      >
-       <ChevronsLeft size={15}/>
-      </button>
-      <button
-       type="button"
-       className="serial-nav-btn"
-       aria-label="ฉลากก่อนหน้า"
-       title="ฉลากก่อนหน้า"
-       disabled={busy||clampedPreviewIndex<=0}
-       onClick={()=>goToSerial(clampedPreviewIndex-1)}
-      >
-       <ChevronLeft size={15}/>
-      </button>
-
-      <div className="serial-nav-jump">
-       <span>ฉลากใบที่</span>
-       <input
-        type="number"
-        className="serial-jump-input"
-        aria-label="ระบุหมายเลขฉลากที่ต้องการดู"
-        min={1}
-        max={serialCount}
-        disabled={busy}
-        value={jumpDraft}
-        onChange={e=>{
-         const raw=e.target.value;
-         setJumpDraft(raw);
-         const parsed=parseInt(raw,10);
-         if(Number.isFinite(parsed)&&parsed>=1&&parsed<=serialCount){
-          setPreviewIndex(parsed-1);
-         }
-        }}
-        onBlur={()=>{
-         const parsed=parseInt(jumpDraft,10);
-         if(Number.isFinite(parsed)){
-          goToSerial(parsed-1);
-         }else{
-          setJumpDraft(String(clampedPreviewIndex+1));
-         }
-        }}
-        onKeyDown={e=>{
-         if(e.key==='Enter'){
-          e.preventDefault();
+          }
+         }}
+         onBlur={()=>{
           const parsed=parseInt(jumpDraft,10);
-          if(Number.isFinite(parsed))goToSerial(parsed-1);
-         }
-        }}
-       />
-       <span>/ {serialCount}</span>
+          if(Number.isFinite(parsed)){
+           goToSerial(parsed-1);
+          }else{
+           setJumpDraft(String(clampedPreviewIndex+1));
+          }
+         }}
+         onKeyDown={e=>{
+          if(e.key==='Enter'){
+           e.preventDefault();
+           const parsed=parseInt(jumpDraft,10);
+           if(Number.isFinite(parsed))goToSerial(parsed-1);
+          }
+         }}
+        />
+        <span>/ {serialCount}</span>
+       </div>
+
+       <button
+        type="button"
+        className="serial-nav-btn"
+        aria-label="ฉลากถัดไป"
+        title="ฉลากถัดไป"
+        disabled={busy||clampedPreviewIndex>=serialCount-1}
+        onClick={()=>goToSerial(clampedPreviewIndex+1,'next')}
+       >
+        <ChevronRight size={15}/>
+       </button>
+       <button
+        type="button"
+        className="serial-nav-btn"
+        aria-label="ฉลากสุดท้าย"
+        title={`เลื่อนไปฉลากสุดท้าย (ใบที่ ${serialCount})`}
+        disabled={busy||clampedPreviewIndex>=serialCount-1}
+        onClick={()=>goToSerial(serialCount-1,'next')}
+       >
+        <ChevronsRight size={15}/>
+       </button>
       </div>
 
-      <button
-       type="button"
-       className="serial-nav-btn"
-       aria-label="ฉลากถัดไป"
-       title="ฉลากถัดไป"
-       disabled={busy||clampedPreviewIndex>=serialCount-1}
-       onClick={()=>goToSerial(clampedPreviewIndex+1)}
-      >
-       <ChevronRight size={15}/>
-      </button>
-      <button
-       type="button"
-       className="serial-nav-btn"
-       aria-label="ฉลากสุดท้าย"
-       title={`เลื่อนไปฉลากสุดท้าย (ใบที่ ${serialCount})`}
-       disabled={busy||clampedPreviewIndex>=serialCount-1}
-       onClick={()=>goToSerial(serialCount-1)}
-      >
-       <ChevronsRight size={15}/>
-      </button>
+      <div className="print-specs-pill">
+       <span>{Number(doc.width.toFixed(2))} × {Number(doc.height.toFixed(2))} mm</span>
+       <span className="dot-sep">·</span>
+       <span>{labelDpi} DPI</span>
+      </div>
+     </div>
+
+     {/* Right: Controls & Variables Sidebar */}
+     <div className="print-sidebar">
+      {/* Quantity Card */}
+      <section className="print-card print-card-qty" aria-label="Print quantity settings">
+       <div className="print-card-header">
+        <h4>จำนวนพิมพ์</h4>
+        <span className="print-badge-total">รวม {totalLabels} ดวง</span>
+       </div>
+
+       <div className="print-qty-rows">
+        <div className="print-qty-row">
+         <div className="print-qty-meta">
+          <span className="print-qty-title">จำนวน Serial</span>
+          <span className="print-qty-desc">รันเลขต่อเนื่อง (ฉลาก 1..{serialCount})</span>
+         </div>
+         <div className="print-qty-stepper">
+          <button
+           type="button"
+           className="qty-step-btn"
+           aria-label="Decrease serial count"
+           disabled={busy||serialCount<=1}
+           onClick={()=>updateSerialCount(serialCount-1)}
+          >
+           <Minus size={13}/>
+          </button>
+          <input
+           type="number"
+           className="qty-number-input"
+           aria-label="จำนวน Serial"
+           min={1}
+           max={500}
+           disabled={busy}
+           value={serialCount}
+           onChange={e=>updateSerialCount(Number(e.target.value))}
+          />
+          <button
+           type="button"
+           className="qty-step-btn"
+           aria-label="Increase serial count"
+           disabled={busy||serialCount>=500}
+           onClick={()=>updateSerialCount(serialCount+1)}
+          >
+           <Plus size={13}/>
+          </button>
+         </div>
+        </div>
+
+        <div className="print-qty-row">
+         <div className="print-qty-meta">
+          <span className="print-qty-title">จำนวน Copy</span>
+          <span className="print-qty-desc">พิมพ์ซ้ำ {copies} ใบต่อฉลาก</span>
+         </div>
+         <div className="print-qty-stepper">
+          <button
+           type="button"
+           className="qty-step-btn"
+           aria-label="Decrease copies"
+           disabled={busy||copies<=1}
+           onClick={()=>updateCopies(copies-1)}
+          >
+           <Minus size={13}/>
+          </button>
+          <input
+           type="number"
+           className="qty-number-input"
+           aria-label="จำนวน Copy"
+           min={1}
+           max={100}
+           disabled={busy}
+           value={copies}
+           onChange={e=>updateCopies(Number(e.target.value))}
+          />
+          <button
+           type="button"
+           className="qty-step-btn"
+           aria-label="Increase copies"
+           disabled={busy||copies>=100}
+           onClick={()=>updateCopies(copies+1)}
+          >
+           <Plus size={13}/>
+          </button>
+         </div>
+        </div>
+       </div>
+      </section>
+
+      {/* Variables Card (Scrollable, bounded height) */}
+      {asked.length>0&&(
+       <section className="print-card print-card-vars" aria-labelledby="print-values-title">
+        <div className="print-card-header">
+         <h4 id="print-values-title">กรอกข้อมูลตัวแปร</h4>
+         <span className="print-badge-vars">{asked.length} รายการ</span>
+        </div>
+        <p className="print-card-sub">ข้อมูลตัวแปรสำหรับฉลาก (บันทึกอัตโนมัติ)</p>
+        <div className="print-variables-scroll">
+         {asked.map((variable,index)=>{
+          const empty=!(values[variable.name]??'').trim();
+          return (
+           <div key={variable.name} className="print-var-item">
+            <label htmlFor={`var-input-${variable.name}`}>
+             <span className="print-var-name">
+              {index+1}. {variable.label||variable.name}
+              <b aria-hidden="true">*</b>
+             </span>
+             <input
+              id={`var-input-${variable.name}`}
+              aria-label={`Print variable ${variable.name}`}
+              required
+              aria-invalid={empty}
+              value={values[variable.name]??''}
+              placeholder={`กรอก ${variable.label||variable.name}`}
+              onChange={e=>
+               setValues(current=>({...current,[variable.name]:e.target.value}))
+              }
+              onBlur={()=>remember(variable.name)}
+             />
+            </label>
+            {empty&&<small className="print-var-required">จำเป็นต้องกรอก</small>}
+           </div>
+          );
+         })}
+        </div>
+       </section>
+      )}
+
+      {/* Barcode & Status Alerts */}
+      {preflight.errors.length>0&&(
+       <div className="barcode-error" role="alert">
+        {preflight.errors.map(message=>(
+         <p key={message}>{message}</p>
+        ))}
+       </div>
+      )}
+      {preflight.warnings.length>0&&(
+       <details className="print-checks">
+        <summary>ตรวจบาร์โค้ด ({preflight.warnings.length})</summary>
+        {preflight.warnings.map(message=>(
+         <p key={message}>{message}</p>
+        ))}
+       </details>
+      )}
+      {status&&(
+       <p className="print-failure" role="alert">
+        {status}
+       </p>
+      )}
      </div>
     </div>
 
-    <div className="print-specs">
-     <span>
-      {Number(doc.width.toFixed(2))} × {Number(doc.height.toFixed(2))} <small>mm</small>
-      <span className="print-dpi-tag">· {labelDpi} DPI</span>
-     </span>
-     <span className="print-total-summary">
-      รวมพิมพ์ <strong>{totalLabels}</strong> ดวง
-      <small>
-       ({serialCount} Serial × {copies} Copy)
-      </small>
-     </span>
-    </div>
-
-    {preflight.errors.length>0&&(
-     <div className="barcode-error" role="alert">
-      {preflight.errors.map(message=>(
-       <p key={message}>{message}</p>
-      ))}
-     </div>
-    )}
-    {preflight.warnings.length>0&&(
-     <details className="print-checks">
-      <summary>ตรวจบาร์โค้ด ({preflight.warnings.length})</summary>
-      {preflight.warnings.map(message=>(
-       <p key={message}>{message}</p>
-      ))}
-     </details>
-    )}
-    {status&&(
-     <p className="print-failure" role="alert">
-      {status}
-     </p>
-    )}
-
+    {/* Dialog Footer with Cancel and Print buttons side-by-side */}
     <div className="print-bottom">
      <details className="print-tips">
       <summary>ตั้งค่าการพิมพ์</summary>
@@ -447,14 +470,25 @@ export function PrintDialog({
        ไม่พบเครื่องพิมพ์: Destination → See more… หรือ Print using system dialog…
       </p>
      </details>
-     <button
-      className="primary"
-      disabled={busy||preflight.errors.length>0||missingValues.length>0}
-      onClick={()=>void print()}
-     >
-      <Printer size={16}/>
-      {busy?'Preparing…':totalLabels>1?`Print (${totalLabels})…`:'Print…'}
-     </button>
+     <div className="print-footer-actions">
+      <button
+       type="button"
+       className="btn-print-cancel"
+       disabled={busy}
+       onClick={onClose}
+      >
+       ยกเลิก
+      </button>
+      <button
+       type="button"
+       className="primary btn-print-submit"
+       disabled={busy||preflight.errors.length>0||missingValues.length>0}
+       onClick={()=>void print()}
+      >
+       <Printer size={16}/>
+       {busy?'กำลังเตรียมพิมพ์…':totalLabels>1?`Print (${totalLabels} ดวง)`:'Print…'}
+      </button>
+     </div>
     </div>
    </div>
   </div>

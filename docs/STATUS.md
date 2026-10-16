@@ -1,5 +1,19 @@
 # Implementation status
 
+## 2026-10-16 — Print Dialog Redesign (Studio 2-Column, Photo Album Preview & Variable Management)
+
+- **Print Dialog Studio Redesign**:
+  - Re-architected modal into a modern 2-column layout (Left: Photo Album Preview Stage & Serial Navigator; Right: Quantity settings, scrollable Prompt Variables, Preflight alerts; Bottom: Help tips and side-by-side action buttons).
+  - **Photo Album Transition**: Label preview is presented as an album paper card with tactile directional animations (`albumSlideNext` / `albumSlidePrev` with smooth translation, subtle perspective scaling and rotation), giving a physical flip-book feel when navigating between serial labels.
+  - **Bounded Variables Scroll**: Solved layout overflow when multiple prompt variables exist by introducing a bounded, scrollable list (`max-height: 180px` with custom slim scrollbars). Variable inputs remain compact and auto-persist to document variables on blur.
+  - **Dedicated Quantity Controls**: Moved Copies and Serial count steppers into a clean top card in the right sidebar with real-time total label summary (`รวม X ดวง`).
+  - **Cancel Action**: Added a clear `ยกเลิก` (Close/Cancel) button in the footer actions directly adjacent to the `Print` button, alongside the existing modal header close button.
+- **Verification**:
+  - 98 TypeScript tests passed with `bash scripts/rtk-exec.sh npm test`.
+  - Production build passed with `bash scripts/rtk-exec.sh npm run build`.
+  - All 25 Go tests in 8 packages passed with `bash scripts/rtk-exec.sh go test ./...`.
+  - Desktop print bridge cross-compiled for `darwin-amd64`, `darwin-arm64`, `linux-amd64`, `linux-arm64`, `windows-amd64`, and `windows-arm64` using `scripts/build-printbridge.sh`.
+
 Current ChatGPT direction: Apps SDK widget + official Go MCP server, not a personal Codex connector in the website. The standalone API and demo remain. `docs/CHATGPT_APP.md` provides deployment/registration steps; preparing this repository does not deploy a public MCP endpoint or register the app in a ChatGPT account.
 
 Implemented for the embedded app: vector text/barcode/line/box editing, mm geometry, inspector/layers, manual commands through the existing engine, stateless MCP open/propose tools, server validation using the same compiled TypeScript engine, explicit Apply/Reject, barcode-change confirmation, stale-revision rejection, monotonic Undo/Redo, widget state, JSON/SVG export and a user-initiated print handoff to the standalone Chrome print route. Image upload, direct local-device access from the embedded sandbox, account storage and billing are not implemented. Chrome system printing is available through the standalone website; actual hardware output is unverified.
