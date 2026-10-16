@@ -33,22 +33,27 @@ export function PrintDialog({
   [doc.objects]
  );
  const asked=useMemo(()=>{
+  const explicitVars=new Map<string,LabelVariable>((doc.variables??[]).map(v=>[v.name,v]));
   const list:LabelVariable[]=[];
   const seen=new Set<string>();
   for(const v of doc.variables??[]){
-   if(!seen.has(v.name)){
+   if(v.prompt!==false&&!seen.has(v.name)){
     seen.add(v.name);
     list.push(v);
    }
   }
   for(const v of usedVariables(doc)){
-   if(!seen.has(v.name)){
+   const explicit=explicitVars.get(v.name);
+   if(explicit&&explicit.prompt===false)continue;
+   if(v.prompt!==false&&!seen.has(v.name)){
     seen.add(v.name);
     list.push(v);
    }
   }
   for(const obj of doc.objects){
    for(const name of variableNames(obj.template??'')){
+    const explicit=explicitVars.get(name);
+    if(explicit&&explicit.prompt===false)continue;
     if(!seen.has(name)){
      seen.add(name);
      list.push({name,label:name,value:'',prompt:true});
@@ -117,6 +122,17 @@ export function PrintDialog({
   }catch(error){
    return {doc,error:(error as Error).message};
   }
+ },[doc,values,clampedPreviewIndex]);
+
+ const prevResolvedDoc=useMemo(()=>{
+  if(clampedPreviewIndex>0){
+   try{
+    return resolveDocument(doc,values,clampedPreviewIndex-1);
+   }catch{
+    return null;
+   }
+  }
+  return null;
  },[doc,values,clampedPreviewIndex]);
 
  const nextResolvedDoc=useMemo(()=>{
@@ -271,26 +287,42 @@ export function PrintDialog({
         className="album-3d-scene"
         style={{
          aspectRatio:`${doc.width}/${doc.height}`,
-         width:`min(100%, ${Math.max(180,Math.min(360,260*doc.width/doc.height))}px)`,
+         width:`min(100%, ${Math.max(180,Math.min(340,240*doc.width/doc.height))}px)`,
         }}
        >
-        {/* Background Stack Layer 2 (Deep stack) */}
-        {serialCount-clampedPreviewIndex>2&&(
-         <div className="album-stack-layer layer-deep" aria-hidden="true"/>
-        )}
-
-        {/* Background Stack Layer 1 (Next upcoming card) */}
-        {clampedPreviewIndex+1<serialCount&&(
-         <div className="album-stack-layer layer-next" aria-hidden="true">
-          {nextResolvedDoc&&(
-           <div className="album-peek-content">
-            <LabelSvg doc={nextResolvedDoc} fonts={fontStyles}/>
-           </div>
-          )}
+        {/* Left Card (Previous Label) */}
+        {prevResolvedDoc&&(
+         <div
+          className="album-card-side album-card-prev"
+          role="button"
+          tabIndex={0}
+          aria-label={`ดูฉลากก่อนหน้า ใบที่ ${clampedPreviewIndex}`}
+          title={`คลิกเพื่อดูฉลากใบที่ ${clampedPreviewIndex}`}
+          onClick={()=>goToSerial(clampedPreviewIndex-1,'prev')}
+          onKeyDown={e=>{if(e.key==='Enter'||e.key===' ')goToSerial(clampedPreviewIndex-1,'prev');}}
+         >
+          <div className="album-side-badge">ฉลากใบที่ {clampedPreviewIndex}</div>
+          <LabelSvg doc={prevResolvedDoc} fonts={fontStyles}/>
          </div>
         )}
 
-        {/* Active Top Card */}
+        {/* Right Card (Next Label) */}
+        {nextResolvedDoc&&(
+         <div
+          className="album-card-side album-card-next"
+          role="button"
+          tabIndex={0}
+          aria-label={`ดูฉลากถัดไป ใบที่ ${clampedPreviewIndex+2}`}
+          title={`คลิกเพื่อดูฉลากใบที่ ${clampedPreviewIndex+2}`}
+          onClick={()=>goToSerial(clampedPreviewIndex+1,'next')}
+          onKeyDown={e=>{if(e.key==='Enter'||e.key===' ')goToSerial(clampedPreviewIndex+1,'next');}}
+         >
+          <div className="album-side-badge">ฉลากใบที่ {clampedPreviewIndex+2}</div>
+          <LabelSvg doc={nextResolvedDoc} fonts={fontStyles}/>
+         </div>
+        )}
+
+        {/* Active Center Card */}
         <div
          key={animKey}
          ref={preview}

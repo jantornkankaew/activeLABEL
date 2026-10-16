@@ -1,5 +1,20 @@
 # Implementation status
 
+## 2026-10-16 — Print Dialog 3D Coverflow Preview, Single-Row Variable Inputs & Prompt Filtering
+
+- **Print Dialog Enhancements (`src/PrintDialog.tsx`, `src/print-dialog.css`)**:
+  - **Selective Prompt Filtering**: Variables explicitly configured with `prompt: false` ("Ask before print" unchecked) are now completely excluded from the Print Dialog input list while preserving their default computed/formula values during print resolution.
+  - **Single-Row Variable Inputs & Compact Spacing**: Redesigned variable items into a clean horizontal row with the variable name and required asterisk on the left and input field on the right (`flex-direction: row; justify-content: space-between`). Cleaned up line spacing to maximize visible entries in the scrollable panel without clutter.
+  - **3D Coverflow Preview with Visible Neighbor Cards**:
+    - Simultaneously renders previous (`clampedPreviewIndex - 1`) and next (`clampedPreviewIndex + 1`) resolved label cards on the left and right sides in 3D perspective (`rotateY`, `translateZ`, scale 0.85, elevation shadows).
+    - Clicking either previous or next neighbor card directly navigates to it with keyboard accessibility (`Enter`/`Space`).
+    - Tuned transition timing to a silky-smooth 0.65s easing curve (`cubic-bezier(0.22, 1, 0.36, 1)`) so users can clearly see the cards glide and swap without flashing too quickly.
+- **Verification**:
+  - 104 TypeScript tests passed (`bash scripts/rtk-exec.sh npm test`).
+  - Production build passed (`bash scripts/rtk-exec.sh npm run build`).
+  - All 25 Go tests in 8 packages passed (`bash scripts/rtk-exec.sh go test ./...`).
+  - Desktop print bridge cross-compiled for 6 OS/architecture targets with `scripts/build-printbridge.sh`.
+
 ## 2026-10-16 — Mobile Responsive Overhaul & Floating Dock Optimization
 
 - **Comprehensive Mobile UI/UX Overhaul (`src/App.tsx`, `src/atelier.css`, `src/network-status.css`)**:
