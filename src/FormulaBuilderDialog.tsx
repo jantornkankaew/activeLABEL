@@ -463,7 +463,7 @@ export function FormulaBuilderDialog({
                 onClick={() => setSelectedPaletteTab('preset')}
                 title="แม่แบบสำเร็จรูป (1-Click Recipes)"
               >
-                <span className="cat-dot cat-preset">⚡</span>
+                <span className="cat-dot cat-preset" />
                 <span className="cat-strip-label">แม่แบบ</span>
               </button>
             </div>
@@ -829,32 +829,30 @@ export function FormulaBuilderDialog({
                 </div>
               </div>
 
-              {/* Scratch / SPIKE Style Stage Monitor */}
+              {/* Minimal Stage Output Badge */}
               <div className="wb-stage-monitor-card">
-                <div className="wb-monitor-header">
-                  <span className="wb-monitor-tag">
-                    <span className="wb-monitor-led" /> ผลลัพธ์สูตร (Stage Output)
-                  </span>
-                  <button
-                    type="button"
-                    className="wb-monitor-copy-btn"
-                    title="คัดลอกผลลัพธ์"
-                    onClick={copyResultToClipboard}
-                  >
-                    {copied ? (
-                      <>
-                        <Check size={11} color="#16a34a" /> คัดลอกแล้ว
-                      </>
-                    ) : (
-                      <>
-                        <Copy size={11} /> คัดลอก
-                      </>
-                    )}
-                  </button>
-                </div>
+                <span className="wb-monitor-tag">
+                  <span className="wb-monitor-led" /> ผลลัพธ์:
+                </span>
                 <div className="wb-monitor-screen">
-                  <strong>{finalResult || '(ไม่มีผลลัพธ์)'}</strong>
+                  <strong>{finalResult || '—'}</strong>
                 </div>
+                <button
+                  type="button"
+                  className="wb-monitor-copy-btn"
+                  title="คัดลอกผลลัพธ์"
+                  onClick={copyResultToClipboard}
+                >
+                  {copied ? (
+                    <>
+                      <Check size={11} color="#007a62" /> คัดลอกแล้ว
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={11} /> คัดลอก
+                    </>
+                  )}
+                </button>
               </div>
             </div>
 

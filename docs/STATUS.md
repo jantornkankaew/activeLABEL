@@ -857,3 +857,18 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
   - Production build passing (`npm run build`).
   - 25 Go unit tests passing (`go test ./...`).
   - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
+
+## 2026-10-16 — Minimal Atelier Top Bars & Category Strip in LEGO® Word Blocks Studio
+
+- **Issues Addressed**:
+  - Global `.atelier button` (`min-height: 36px; border-radius: 10px; border-color: #e5e4e1`) and `style.css` (`padding: 9px 12px; gap: 8px; background: white`) bled into `.wb-cat-strip-btn`, turning the 5 category tabs (`ตัวแปร`, `วันที่`, `ข้อความ`, `เงื่อนไข`, `แม่แบบ`) into oversized white bordered buttons that overflowed the sidebar and clipped the 5th tab (`แม่แบบ`).
+  - The dialog top header (`#2a3447`) and two-row stage monitor card felt heavy compared to LabelCraft's minimal light Atelier theme (`#faf9f6`, `#202124`, `#007a62`).
+- **Fixes**:
+  - **Minimal Segmented Category Strip (`.wb-category-strip`)**: Converted to a 5-column equal grid (`grid-template-columns: repeat(5, minmax(0, 1fr))`) with compact 28px-tall tabs (`padding: 0 4px !important; font-size: 11px !important`), 7px category dots, transparent inactive state, and subtle elevated white active pill (`#ffffff` with `#e2e2dd` border), ensuring all 5 categories fit cleanly without horizontal clipping.
+  - **Minimal Atelier Header (`.wb-studio-header`)**: Restyled header to clean `#ffffff` surface with `#e5e4e1` border, `#202124` typography, 28px-tall formula tabs using Atelier emerald teal active states (`#e6f3ef` / `#007a62`), and borderless 28×28px window action buttons.
+  - **Compact Single-Row Stage Bar (`.wb-stage-bar`)**: Inline formula name field (`height: 30px`) and single-row stage output badge (`[● ผลลัพธ์:] [ value ] [ คัดลอก ]`), plus matching minimal footer buttons.
+- **Verification**:
+  - 95 TypeScript unit tests passing (`npm test`).
+  - Production build passing (`npm run build`).
+  - 25 Go unit tests passing (`go test ./...`).
+  - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
