@@ -1,5 +1,18 @@
 # Implementation status
 
+## 2026-10-16 — Print Dialog Variable Resolution & Comprehensive Variable Display
+
+- **All Document & Formula Variables Displayed in Print Dialog (`src/PrintDialog.tsx` & `src/variables.ts`)**:
+  - **Comprehensive Variable Ingestion**: Updated Print Dialog `asked` list to resolve all project variables defined in `doc.variables`, variables utilized in formulas (`usedVariables(doc)`), and synthesized variables detected in canvas templates.
+  - **Accurate Canvas Requirement Validation**: Differentiated required variables (only variables rendered directly on canvas objects require non-empty values with `*` and validate before printing). Variables used in formulas or optional project fields are editable without blocking print if empty.
+  - **Formula Default Value Resolution**: Initialized Print Dialog values state with `variableValues(doc.variables, {}, doc.formulas)` to compute initial values through the formula engine.
+  - **Dynamic Variable Memory**: When editing variables in Print Dialog, `remember` cleanly persists updates and newly synthesized variables into `doc.variables`.
+- **Verification**:
+  - 103 TypeScript tests passed (`bash scripts/rtk-exec.sh npm test`).
+  - Production build passed (`bash scripts/rtk-exec.sh npm run build`).
+  - All 25 Go tests in 8 packages passed (`bash scripts/rtk-exec.sh go test ./...`).
+  - Desktop print bridge cross-compiled for 6 OS/architecture targets with `scripts/build-printbridge.sh`.
+
 ## 2026-10-16 — Immersive 3D Photo Album Preview & Tactile Deck Overhaul
 
 - **Full-Featured 3D Photo Album Experience (`src/PrintDialog.tsx` & `src/print-dialog.css`)**:

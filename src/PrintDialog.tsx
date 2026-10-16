@@ -11,11 +11,11 @@ import {
  Minus,
  Plus,
 } from 'lucide-react';
-import {defaultDocumentSettings,type LabelDocument,type Command} from './core';
+import {defaultDocumentSettings,type LabelDocument,type Command,type LabelVariable} from './core';
 import {LabelSvg,exportSvg} from './renderer';
 import {fontStyles} from './fontStyles';
 import {openSystemPrint} from './printing';
-import {resolveDocument,usedVariables,variableValues} from './variables';
+import {resolveDocument,usedVariables,variableNames,variableValues} from './variables';
 import './print-dialog.css';
 
 export function PrintDialog({
@@ -28,8 +28,36 @@ export function PrintDialog({
  onAdjust:(commands:Command[])=>boolean;
 }){
  const labelDpi=doc.settings?.dpi??defaultDocumentSettings.dpi;
- const asked=usedVariables(doc).filter(variable=>variable.prompt);
- const [values,setValues]=useState(()=>variableValues(doc.variables));
+ const usedOnCanvas=useMemo(
+  ()=>new Set(doc.objects.flatMap(item=>variableNames(item.template??''))),
+  [doc.objects]
+ );
+ const asked=useMemo(()=>{
+  const list:LabelVariable[]=[];
+  const seen=new Set<string>();
+  for(const v of doc.variables??[]){
+   if(!seen.has(v.name)){
+    seen.add(v.name);
+    list.push(v);
+   }
+  }
+  for(const v of usedVariables(doc)){
+   if(!seen.has(v.name)){
+    seen.add(v.name);
+    list.push(v);
+   }
+  }
+  for(const obj of doc.objects){
+   for(const name of variableNames(obj.template??'')){
+    if(!seen.has(name)){
+     seen.add(name);
+     list.push({name,label:name,value:'',prompt:true});
+    }
+   }
+  }
+  return list;
+ },[doc.variables,doc.objects,doc.formulas]);
+ const [values,setValues]=useState(()=>variableValues(doc.variables,{},doc.formulas));
  const [copies,setCopies]=useState(1);
  const [serialCount,setSerialCount]=useState(1);
  const [previewIndex,setPreviewIndex]=useState(0);
@@ -40,7 +68,8 @@ export function PrintDialog({
  const [status,setStatus]=useState('');
  const preview=useRef<HTMLDivElement>(null);
 
- const missingValues=asked.filter(variable=>!(values[variable.name]??'').trim());
+ const isRequired=(variable:LabelVariable)=>usedOnCanvas.has(variable.name);
+ const missingValues=asked.filter(variable=>isRequired(variable)&&!(values[variable.name]??'').trim());
  const dialog=useRef<HTMLDivElement>(null);
  const close=useRef(onClose);
  close.current=onClose;
@@ -146,13 +175,22 @@ export function PrintDialog({
 
  function remember(name:string){
   const value=values[name]??'';
-  const variables=(doc.variables??[]).map(variable=>
-   variable.name===name?{...variable,value}:variable
+  let found=false;
+  const variables=(doc.variables??[]).map(variable=>{
+   if(variable.name===name){
+    found=true;
+    return {...variable,value};
+   }
+   return variable;
+  });
+  if(!found){
+   variables.push({name,label:name,value,prompt:true});
+  }
+  const changed=!found||variables.some(
+   (variable,index)=>variable.value!==(doc.variables??[])[index]?.value
   );
   if(
-   variables.some(
-    (variable,index)=>variable.value!==(doc.variables??[])[index]?.value
-   )&&
+   changed&&
    !onAdjust([{op:'setVariables',variables}])
   )
    setStatus('จำค่า Variable ไม่สำเร็จ กรุณาตรวจสอบค่า');
@@ -499,18 +537,19 @@ export function PrintDialog({
         <p className="print-card-sub">ข้อมูลตัวแปรสำหรับฉลาก (บันทึกอัตโนมัติ)</p>
         <div className="print-variables-scroll">
          {asked.map((variable,index)=>{
-          const empty=!(values[variable.name]??'').trim();
+          const required=isRequired(variable);
+          const empty=required&&!(values[variable.name]??'').trim();
           return (
            <div key={variable.name} className="print-var-item">
             <label htmlFor={`var-input-${variable.name}`}>
              <span className="print-var-name">
               {index+1}. {variable.label||variable.name}
-              <b aria-hidden="true">*</b>
+              {required&&<b aria-hidden="true">*</b>}
              </span>
              <input
               id={`var-input-${variable.name}`}
               aria-label={`Print variable ${variable.name}`}
-              required
+              required={required}
               aria-invalid={empty}
               value={values[variable.name]??''}
               placeholder={`กรอก ${variable.label||variable.name}`}

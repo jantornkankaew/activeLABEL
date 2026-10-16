@@ -36,3 +36,29 @@ test('barcode formulas are revalidated with print values',()=>{
  const code=object('barcode',{id:'ean',symbology:'ean13',content:'4006381333931',template:'{{ean}}',barcodeScale:100});const doc={...seed(),width:100,height:60,variables:[{name:'ean',label:'EAN',value:'4006381333931',prompt:true}],objects:[code]};
  assert.equal(resolveDocument(doc,{ean:'5901234123457'}).objects[0].content,'5901234123457');assert.throws(()=>resolveDocument(doc,{ean:'123'}),/13 digits/);
 });
+
+test('usedVariables identifies variables referenced across formulas, variable values and objects',()=>{
+ const text=object('text',{id:'t',template:'SKU: {{sku}}',content:'SKU: ABC'});
+ const doc={
+  ...seed(),
+  variables:[
+   {name:'sku',label:'SKU',value:'ABC',prompt:true},
+   {name:'price',label:'Price',value:'100',prompt:true},
+   {name:'duration',label:'Duration',value:'10',prompt:true},
+   {name:'unused',label:'Unused',value:'xyz',prompt:false},
+  ],
+  formulas:[
+   {id:'f1',name:'F1',blocks:[
+    {id:'b1',category:'numeric' as const,functionName:'math_op',params:{op:'+',left:'{{price}}',right:'50'}},
+    {id:'b2',category:'numeric' as const,functionName:'set_variable',params:{variable:'duration',value:'20'}},
+   ]},
+  ],
+  objects:[text],
+ };
+ const names=usedVariables(doc).map(v=>v.name);
+ assert.ok(names.includes('sku'), 'sku is in canvas text');
+ assert.ok(names.includes('price'), 'price is used in formula');
+ assert.ok(names.includes('duration'), 'duration is targeted in formula block');
+ assert.equal(names.includes('unused'), false, 'unused is not referenced');
+});
+
