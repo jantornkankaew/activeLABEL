@@ -13,10 +13,10 @@ export async function openSystemPrint(doc:LabelDocument,svg:string|string[],copi
  // A same-origin print frame uses Chrome's native dialog without a popup or helper.
  const previousFocus=document.activeElement as HTMLElement|null;
  document.querySelectorAll('iframe[data-labelcraft-print]').forEach(frame=>frame.remove());
- const frame=document.createElement('iframe');frame.dataset.labelcraftPrint='';frame.title='LabelCraft print document';frame.setAttribute('aria-hidden','true');frame.tabIndex=-1;frame.style.cssText='position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;pointer-events:none;opacity:0';document.body.append(frame);
+ const frame=document.createElement('iframe');frame.dataset.labelcraftPrint='';frame.title='activeLABEL print document';frame.setAttribute('aria-hidden','true');frame.tabIndex=-1;frame.style.cssText='position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;pointer-events:none;opacity:0';document.body.append(frame);
  const printWindow=frame.contentWindow;const printDoc=frame.contentDocument;
  if(!printWindow||!printDoc){frame.remove();throw Error('เตรียมหน้าพิมพ์ไม่ได้ กรุณาลองอีกครั้ง');}
- printDoc.title=doc.title+' — LabelCraft Print';printDoc.documentElement.lang='th';const style=printDoc.createElement('style');style.textContent=printWindowCSS(doc);printDoc.head.append(style);
+ printDoc.title=doc.title+' — activeLABEL Print';printDoc.documentElement.lang='th';const style=printDoc.createElement('style');style.textContent=printWindowCSS(doc);printDoc.head.append(style);
  for(const svgEl of parsedList){for(let i=0;i<copies;i++){const sheet=printDoc.createElement('div');sheet.className='print-sheet';sheet.append(printDoc.importNode(svgEl,true));printDoc.body.append(sheet);}}
  void printDoc.body.offsetHeight; // Flush layout so the active embedded font loads have started.
  let watch:number|undefined;let deadline:number|undefined;

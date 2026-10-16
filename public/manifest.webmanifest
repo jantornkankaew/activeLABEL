@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "LabelCraft — Label Designer",
-  "short_name": "LabelCraft",
-  "description": "Offline-capable Label Designer with formula engine and system printing",
+  "name": "activeLABEL — Label Designer",
+  "short_name": "activeLABEL",
+  "description": "activeLABEL — Offline-capable Label Designer with formula engine and system printing",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

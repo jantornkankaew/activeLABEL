@@ -1,6 +1,6 @@
-# LabelCraft — Designer + Chat + Print Engine
+# activeLABEL — Designer + Chat + Print Engine
 
-Runnable technical prototype and implementation brief, 12 October 2026. Product name is a working name; trademark availability is not checked.
+Runnable technical prototype and implementation brief, 12 October 2026. Official product name: **activeLABEL** (by Active 5 Co., Ltd. — www.active5.co.th).
 
 ## What exists now
 

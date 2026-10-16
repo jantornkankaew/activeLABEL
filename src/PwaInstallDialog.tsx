@@ -18,7 +18,7 @@ export function PwaInstallDialog({
               <Laptop size={22} />
             </div>
             <div>
-              <h3 id="pwa-install-title">ติดตั้ง LabelCraft ลงบนคอมพิวเตอร์</h3>
+              <h3 id="pwa-install-title">ติดตั้ง activeLABEL ลงบนคอมพิวเตอร์</h3>
               <p>ใช้งานเหมือนแอป Desktop ทำงานรวดเร็วและออฟไลน์ 100%</p>
             </div>
           </div>
@@ -62,10 +62,10 @@ export function PwaInstallDialog({
               <h4>วิธีติดตั้งผ่าน Google Chrome:</h4>
               <ol className="pwa-steps-list">
                 <li>
-                  <strong>วิธีที่ 1 (แนะนำ):</strong> มองหาไอคอน <strong>🖥️ ติดตั้ง (Install LabelCraft)</strong> บนแถบ URL ด้านขวาของ Chrome แล้วกดคลิก
+                  <strong>วิธีที่ 1 (แนะนำ):</strong> มองหาไอคอน <strong>🖥️ ติดตั้ง (Install activeLABEL)</strong> บนแถบ URL ด้านขวาของ Chrome แล้วกดคลิก
                 </li>
                 <li>
-                  <strong>วิธีที่ 2:</strong> กดปุ่มเมนู <strong>⋮ (3 จุด)</strong> ที่มุมขวาบนของ Chrome → เลือก <strong>"บันทึกและแชร์" (Save and share)</strong> → เลือก <strong>"ติดตั้ง LabelCraft..."</strong>
+                  <strong>วิธีที่ 2:</strong> กดปุ่มเมนู <strong>⋮ (3 จุด)</strong> ที่มุมขวาบนของ Chrome → เลือก <strong>"บันทึกและแชร์" (Save and share)</strong> → เลือก <strong>"ติดตั้ง activeLABEL..."</strong>
                 </li>
               </ol>
             </div>

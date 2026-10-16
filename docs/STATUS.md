@@ -1,5 +1,18 @@
 # Implementation status
 
+## 2026-10-16 — Project Rebranding to activeLABEL
+
+- **Comprehensive Rebranding to activeLABEL (`index.html`, `public/manifest.webmanifest`, `src/App.tsx`, `src/ChatGPTWidget.tsx`, `src/PwaInstallDialog.tsx`, `src/printing.ts`, `src/ShareDialog.tsx`, `package.json`, `src/atelier.css`)**:
+  - **Modern Brand Presentation**: Refined header and splash logo to `active` (ink neutral) + `<span>LABEL</span>` (emerald green accent `#00866c`), highlighting Active 5's identity with crisp, bold typography.
+  - **PWA & Manifest Identity**: Updated `index.html` title to `activeLABEL — Label Designer`, `application-name`, Apple mobile web app metadata, and `manifest.webmanifest` (`short_name: activeLABEL`).
+  - **Dialogs & Output Files**: Updated PWA installation guidance, ChatGPT integration, native print document titles, and export filenames (`activelabel.json`).
+  - **Full Data Preservation**: Retained seamless backward compatibility for saved documents in `localStorage` by migrating and reading both `activelabel-jobs-v1` and `labelcraft-jobs-v1` keys.
+- **Verification**:
+  - 104 TypeScript tests passed (`bash scripts/rtk-exec.sh npm test`).
+  - Production build passed (`bash scripts/rtk-exec.sh npm run build`).
+  - All 25 Go tests in 8 packages passed (`bash scripts/rtk-exec.sh go test ./...`).
+  - Desktop print bridge cross-compiled for 6 OS/architecture targets with `scripts/build-printbridge.sh`.
+
 ## 2026-10-16 — Active5 Copyright & Website Link Branding
 
 - **Active5 Copyright & Website Link Integration (`src/App.tsx`, `src/DesignSurface.tsx`, `src/FileMenu.tsx`, `src/atelier.css`)**:
