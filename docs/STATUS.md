@@ -1,5 +1,17 @@
 # Implementation status
 
+## 2026-10-16 — Bottom Canvas Toolbar Simplification & Zero-Scroll Mobile Fit
+
+- **Streamlined Bottom Toolbar (`src/DesignSurface.tsx`, `src/atelier.css`)**:
+  - **Removed Redundant Text Labels**: Removed text labels ("Grid", "Snap", "Unit", "DPI", "Fit to page") from the bottom `.canvas-toolbar` controls, replacing toggle switches with clean, tactile icon toggle buttons (`⊞` for Grid, `🧲` for Snap, `⛶` for Fit to page) equipped with descriptive `title` tooltips and accessible `aria-label`s.
+  - **Compact Selects & Zoom Controls**: Streamlined unit (`mm ⌄`), DPI (`203 ⌄`), spacing (`1 mm ⌄`), and unified zoom percentage buttons into minimal, distraction-free controls.
+  - **Single-Screen Zero-Scroll Mobile Docking**: Formatted toolbar to ~310px width centered at `bottom: 8px` on screens below 700px, fitting comfortably inside any phone viewport without requiring horizontal scrolling.
+- **Verification**:
+  - 104 TypeScript tests passed (`bash scripts/rtk-exec.sh npm test`).
+  - Production build passed (`bash scripts/rtk-exec.sh npm run build`).
+  - All 25 Go tests in 8 packages passed (`bash scripts/rtk-exec.sh go test ./...`).
+  - Desktop print bridge cross-compiled for 6 OS/architecture targets with `scripts/build-printbridge.sh`.
+
 ## 2026-10-16 — Print Dialog 3D Coverflow Preview, Single-Row Variable Inputs & Prompt Filtering
 
 - **Print Dialog Enhancements (`src/PrintDialog.tsx`, `src/print-dialog.css`)**:
