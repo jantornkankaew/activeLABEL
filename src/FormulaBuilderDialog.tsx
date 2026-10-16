@@ -141,12 +141,14 @@ export function FormulaBuilderDialog({
   formulas,
   variables,
   initialFormulaId,
+  onVariablesChange,
   onSave,
   onClose,
 }: {
   formulas: LabelFormula[];
   variables: LabelVariable[];
   initialFormulaId?: string;
+  onVariablesChange?: (variables: LabelVariable[]) => void;
   onSave: (formulas: LabelFormula[], updatedVariables?: LabelVariable[]) => void;
   onClose: () => void;
 }) {
@@ -175,6 +177,11 @@ export function FormulaBuilderDialog({
   );
   const [newVarName, setNewVarName] = useState('');
   const [newVarValue, setNewVarValue] = useState('');
+
+  function commitLocalVariables(next: LabelVariable[]) {
+    setLocalVariables(next);
+    onVariablesChange?.(next);
+  }
 
   const [activeId, setActiveId] = useState<string>(() => {
     if (initialFormulaId && list.some((f) => f.id === initialFormulaId)) {
@@ -216,12 +223,14 @@ export function FormulaBuilderDialog({
   }, [localVariables]);
 
   // Compute intermediate step-by-step results for EACH block
-  const stepOutputs = useMemo(() => {
-    if (!activeFormula || !activeFormula.blocks) return [];
+  const {stepOutputs, runtimeVarMap} = useMemo(() => {
+    const runtimeVars: Record<string, string> = {...varMap};
+    if (!activeFormula || !activeFormula.blocks) {
+      return {stepOutputs: [] as string[], runtimeVarMap: runtimeVars};
+    }
     let current = '';
     const outputs: string[] = [];
     const now = new Date();
-    const runtimeVars: Record<string, string> = {...varMap};
     for (const block of activeFormula.blocks) {
       try {
         current = evaluateBlock(block, current, runtimeVars, now);
@@ -230,7 +239,7 @@ export function FormulaBuilderDialog({
         outputs.push('(เกิดข้อผิดพลาด)');
       }
     }
-    return outputs;
+    return {stepOutputs: outputs, runtimeVarMap: runtimeVars};
   }, [activeFormula, varMap]);
 
   // Final calculated result
@@ -504,7 +513,7 @@ export function FormulaBuilderDialog({
       value: '100',
       prompt: true,
     };
-    setLocalVariables([defaultVar]);
+    commitLocalVariables([defaultVar]);
     return defaultVar.name;
   }
 
@@ -512,33 +521,32 @@ export function FormulaBuilderDialog({
     const fallbackName = `var_${localVariables.length + 1}`;
     const key = sanitizeVarKey(newVarName.trim()) || fallbackName;
     const val = newVarValue;
-    setLocalVariables((prev) => {
-      const existingIdx = prev.findIndex((v) => v.name === key);
-      if (existingIdx >= 0) {
-        return prev.map((v, idx) => (idx === existingIdx ? {...v, value: val} : v));
-      }
-      return [
-        ...prev,
-        {
-          name: key,
-          label: key,
-          value: val,
-          prompt: true,
-        },
-      ];
-    });
+    const existingIdx = localVariables.findIndex((v) => v.name === key);
+    const next =
+      existingIdx >= 0
+        ? localVariables.map((v, idx) => (idx === existingIdx ? {...v, value: val} : v))
+        : [
+            ...localVariables,
+            {
+              name: key,
+              label: key,
+              value: val,
+              prompt: true,
+            },
+          ];
+    commitLocalVariables(next);
     setNewVarName('');
     setNewVarValue('');
   }
 
   function updateLocalVarValue(name: string, val: string) {
-    setLocalVariables((prev) =>
-      prev.map((v) => (v.name === name ? {...v, value: val} : v))
-    );
+    const next = localVariables.map((v) => (v.name === name ? {...v, value: val} : v));
+    commitLocalVariables(next);
   }
 
   function deleteLocalVar(name: string) {
-    setLocalVariables((prev) => prev.filter((v) => v.name !== name));
+    const next = localVariables.filter((v) => v.name !== name);
+    commitLocalVariables(next);
   }
 
   // Insert variable into the latest text block or append variable block
@@ -1212,25 +1220,28 @@ export function FormulaBuilderDialog({
               <div className="wb-variables-ribbon">
                 <span className="ribbon-title">
                   <VariableIcon size={12} color="#ff8c1a" />
-                  <strong>ตัวแปร (ลากใส่ช่องรับค่าได้):</strong>
+                  <strong>ตัวแปรในโปรเจกต์:</strong>
                 </span>
                 <div className="ribbon-pills">
-                  {localVariables.map((v) => (
-                    <button
-                      key={v.name}
-                      type="button"
-                      className="wb-pill-reporter mini"
-                      draggable
-                      onDragStart={(e) => startVariableDrag(e, v.name)}
-                      onDragEnd={endVariableDrag}
-                      onClick={() => insertVariableAsBlock(v.name)}
-                      title={`ลากไปวางในช่องรับค่าของบล็อกใดก็ได้ หรือคลิกเพื่อต่อบล็อกตัวแปร "${v.name}" = "${v.value || ''}"`}
-                    >
-                      <span className="pill-dot" />
-                      <span>{v.name}</span>
-                      <small>="{v.value || ''}"</small>
-                    </button>
-                  ))}
+                  {localVariables.map((v) => {
+                    const liveVal = runtimeVarMap[v.name] ?? v.value ?? '';
+                    return (
+                      <button
+                        key={v.name}
+                        type="button"
+                        className="wb-pill-reporter mini"
+                        draggable
+                        onDragStart={(e) => startVariableDrag(e, v.name)}
+                        onDragEnd={endVariableDrag}
+                        onClick={() => insertVariableAsBlock(v.name)}
+                        title={`ลากไปวางในช่องรับค่าของบล็อกใดก็ได้ หรือคลิกเพื่อต่อบล็อกตัวแปร "${v.name}" = "${liveVal}"`}
+                      >
+                        <span className="pill-dot" />
+                        <span>{v.name}</span>
+                        <small>="{liveVal}"</small>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}

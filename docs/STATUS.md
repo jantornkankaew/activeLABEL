@@ -917,9 +917,11 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
     - Made variable reporter pills (`.wb-pill-reporter`) in both the left `ตัวแปร` palette and the top `.wb-variables-ribbon` draggable (`draggable={true}`, `startVariableDrag`, `endVariableDrag`).
     - Upgraded all 21 editable input slots across all blocks (`set_variable`, `change_variable`, `set_value`, `add_days`, `add_months`, `add_years`, `format_date`, `concat`, `pad_start`, `substring`, `replace`, `counter`, `math_op`, `round`, `if_else`, `repeat`) to `renderSlotInput(...)`.
     - Dropping a variable onto any input slot binds `{{varName}}` and renders an embedded orange variable chip (`[ ● varName [×] ]`) with an `×` clear button that removes the variable and restores the standard input field.
+    - Updated `.wb-variables-ribbon` (`ตัวแปรในโปรเจกต์:`) to render directly from `localVariables` (with live `runtimeVarMap` values) and connected `commitLocalVariables` (`onVariablesChange`) in `App.tsx` so newly created or updated variables (e.g. `duration = 7`) appear immediately in the project variables ribbon and persist to the project document right away.
 - **Verification**:
   - 97 TypeScript unit tests passing (`npm test`).
   - Production build passing (`npm run build`).
   - 25 Go unit tests passing (`go test ./...`).
   - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
+
 
