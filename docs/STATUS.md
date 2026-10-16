@@ -4,6 +4,7 @@
 
 - **Comprehensive Rebranding to activeLABEL (`index.html`, `public/manifest.webmanifest`, `src/App.tsx`, `src/ChatGPTWidget.tsx`, `src/PwaInstallDialog.tsx`, `src/printing.ts`, `src/ShareDialog.tsx`, `package.json`, `src/atelier.css`)**:
   - **Modern Brand Presentation**: Refined header and splash logo to `active` (ink neutral) + `<span>LABEL</span>` (emerald green accent `#00866c`), highlighting Active 5's identity with crisp, bold typography.
+  - **Clean Header & Interface**: Removed copyright `© Active5` badge and `www.active5.co.th` link pill to keep the UI clean, distraction-free, and uncluttered.
   - **PWA & Manifest Identity**: Updated `index.html` title to `activeLABEL — Label Designer`, `application-name`, Apple mobile web app metadata, and `manifest.webmanifest` (`short_name: activeLABEL`).
   - **Dialogs & Output Files**: Updated PWA installation guidance, ChatGPT integration, native print document titles, and export filenames (`activelabel.json`).
   - **Full Data Preservation**: Retained seamless backward compatibility for saved documents in `localStorage` by migrating and reading both `activelabel-jobs-v1` and `labelcraft-jobs-v1` keys.
