@@ -3,8 +3,7 @@ import {
   Plus,
   Trash2,
   X,
-  ChevronUp,
-  ChevronDown,
+  GripVertical,
   Zap,
   Calendar,
   Type,
@@ -317,16 +316,18 @@ export function FormulaBuilderDialog({
     });
   }
 
-  function moveBlock(blockId: string, dir: -1 | 1) {
-    if (!activeFormula) return;
-    const idx = activeFormula.blocks.findIndex((b) => b.id === blockId);
-    if (idx < 0) return;
-    const targetIdx = idx + dir;
-    if (targetIdx < 0 || targetIdx >= activeFormula.blocks.length) return;
+  const [draggingBlockId, setDraggingBlockId] = useState<string | null>(null);
+  const draggedBlockIdRef = useRef<string | null>(null);
+
+  function reorderBlock(sourceId: string, targetId: string) {
+    if (!activeFormula || sourceId === targetId) return;
+    const fromIdx = activeFormula.blocks.findIndex((b) => b.id === sourceId);
+    const toIdx = activeFormula.blocks.findIndex((b) => b.id === targetId);
+    if (fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) return;
 
     const next = [...activeFormula.blocks];
-    const [moved] = next.splice(idx, 1);
-    next.splice(targetIdx, 0, moved);
+    const [moved] = next.splice(fromIdx, 1);
+    next.splice(toIdx, 0, moved);
     updateActiveFormula({blocks: next});
   }
 
@@ -905,9 +906,8 @@ export function FormulaBuilderDialog({
                   </div>
                 ) : (
                   activeFormula.blocks.map((block, index) => {
-                    const isFirst = index === 0;
-                    const isLast = index === activeFormula.blocks.length - 1;
                     const stepVal = stepOutputs[index] ?? '';
+                    const isDragging = draggingBlockId === block.id;
 
                     const categoryClass =
                       block.functionName === 'variable'
@@ -923,11 +923,57 @@ export function FormulaBuilderDialog({
                         : 'wb-block-control';
 
                     return (
-                      <div key={block.id} className="wb-step-row">
+                      <div
+                        key={block.id}
+                        className={`wb-step-row ${isDragging ? 'is-dragging' : ''}`}
+                        draggable
+                        onMouseDown={(e) => {
+                          const target = e.target as HTMLElement;
+                          if (
+                            target.tagName === 'INPUT' ||
+                            target.tagName === 'SELECT' ||
+                            target.tagName === 'BUTTON' ||
+                            target.tagName === 'OPTION'
+                          ) {
+                            e.currentTarget.draggable = false;
+                          } else {
+                            e.currentTarget.draggable = true;
+                          }
+                        }}
+                        onMouseUp={(e) => {
+                          e.currentTarget.draggable = true;
+                        }}
+                        onDragStart={(e) => {
+                          draggedBlockIdRef.current = block.id;
+                          setDraggingBlockId(block.id);
+                          e.dataTransfer.effectAllowed = 'move';
+                          e.dataTransfer.setData('text/plain', block.id);
+                        }}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          e.dataTransfer.dropEffect = 'move';
+                          const sourceId = draggedBlockIdRef.current;
+                          if (sourceId && sourceId !== block.id) {
+                            reorderBlock(sourceId, block.id);
+                          }
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          draggedBlockIdRef.current = null;
+                          setDraggingBlockId(null);
+                        }}
+                        onDragEnd={() => {
+                          draggedBlockIdRef.current = null;
+                          setDraggingBlockId(null);
+                        }}
+                      >
                         {/* The Interlocking Word Block */}
-                        <div className={`wb-block ${categoryClass}`}>
-                          {/* Step Index Dot */}
-                          <span className="wb-block-index">{index + 1}</span>
+                        <div className={`wb-block ${categoryClass}`} title="ลากเพื่อสลับลำดับบล็อก">
+                          {/* Drag Handle & Step Index */}
+                          <span className="wb-block-index" title="ลากเพื่อสลับลำดับ">
+                            <GripVertical size={11} strokeWidth={2.5} />
+                            {index + 1}
+                          </span>
 
                           {/* Block Content Form */}
                           <div className="wb-block-body">
@@ -1097,7 +1143,7 @@ export function FormulaBuilderDialog({
                                   type="text"
                                   className="wb-slot-input"
                                   placeholder="เช่น LOT-"
-                                  style={{width: 90}}
+                                  style={{width: 110}}
                                   value={block.params.prefix ?? ''}
                                   onChange={(e) =>
                                     updateBlock(block.id, {prefix: e.target.value})
@@ -1108,7 +1154,7 @@ export function FormulaBuilderDialog({
                                   type="text"
                                   className="wb-slot-input"
                                   placeholder="เช่น -TH"
-                                  style={{width: 90}}
+                                  style={{width: 110}}
                                   value={block.params.append ?? ''}
                                   onChange={(e) =>
                                     updateBlock(block.id, {append: e.target.value})
@@ -1191,7 +1237,7 @@ export function FormulaBuilderDialog({
                                 <input
                                   type="text"
                                   className="wb-slot-input"
-                                  style={{width: 90}}
+                                  style={{width: 110}}
                                   value={block.params.search ?? ''}
                                   onChange={(e) =>
                                     updateBlock(block.id, {search: e.target.value})
@@ -1201,7 +1247,7 @@ export function FormulaBuilderDialog({
                                 <input
                                   type="text"
                                   className="wb-slot-input"
-                                  style={{width: 90}}
+                                  style={{width: 110}}
                                   value={block.params.replace ?? ''}
                                   onChange={(e) =>
                                     updateBlock(block.id, {replace: e.target.value})
@@ -1314,7 +1360,7 @@ export function FormulaBuilderDialog({
                                     <input
                                       type="text"
                                       className="wb-slot-input"
-                                      style={{width: 90}}
+                                      style={{width: 110}}
                                       value={block.params.target ?? ''}
                                       onChange={(e) =>
                                         updateBlock(block.id, {target: e.target.value})
@@ -1331,7 +1377,7 @@ export function FormulaBuilderDialog({
                                   <input
                                     type="text"
                                     className="wb-slot-input"
-                                    style={{width: 110}}
+                                    style={{width: 125}}
                                     value={block.params.thenValue ?? 'พร้อมจำหน่าย'}
                                     onChange={(e) =>
                                       updateBlock(block.id, {thenValue: e.target.value})
@@ -1341,7 +1387,7 @@ export function FormulaBuilderDialog({
                                   <input
                                     type="text"
                                     className="wb-slot-input"
-                                    style={{width: 110}}
+                                    style={{width: 125}}
                                     value={block.params.elseValue ?? 'สินค้าหมด'}
                                     onChange={(e) =>
                                       updateBlock(block.id, {elseValue: e.target.value})
@@ -1358,7 +1404,7 @@ export function FormulaBuilderDialog({
                                 <input
                                   type="text"
                                   className="wb-slot-input"
-                                  style={{width: 70}}
+                                  style={{width: 90}}
                                   value={block.params.text ?? '*'}
                                   onChange={(e) =>
                                     updateBlock(block.id, {text: e.target.value})
@@ -1380,26 +1426,6 @@ export function FormulaBuilderDialog({
 
                           {/* Block Actions */}
                           <div className="wb-block-actions">
-                            {!isFirst && (
-                              <button
-                                type="button"
-                                className="wb-btn-act"
-                                title="เลื่อนบล็อกขึ้น"
-                                onClick={() => moveBlock(block.id, -1)}
-                              >
-                                <ChevronUp size={12} strokeWidth={2.5} color="#ffffff" />
-                              </button>
-                            )}
-                            {!isLast && (
-                              <button
-                                type="button"
-                                className="wb-btn-act"
-                                title="เลื่อนบล็อกลง"
-                                onClick={() => moveBlock(block.id, 1)}
-                              >
-                                <ChevronDown size={12} strokeWidth={2.5} color="#ffffff" />
-                              </button>
-                            )}
                             <button
                               type="button"
                               className="wb-btn-act"

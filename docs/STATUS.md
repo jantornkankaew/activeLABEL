@@ -872,3 +872,18 @@ Native CI is configured to execute real OS discovery and the read-only `-list` c
   - Production build passing (`npm run build`).
   - 25 Go unit tests passing (`go test ./...`).
   - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
+
+## 2026-10-16 — Drag-and-Drop Block Reordering & Readable Slot Inputs in LEGO® Word Blocks Studio
+
+- **Issues Addressed**:
+  - Moving blocks up/down previously required clicking tiny Up/Down arrow buttons (`ChevronUp` / `ChevronDown`) at the right end of each block; the user requested direct drag-and-drop reordering and removal of the arrow buttons.
+  - Input slots (`.wb-slot-input.num`, `.wb-slot-input.mini`, `.wb-slot-dropdown`) inside each block were clipped and unreadable because global `src/style.css` (`input, select { padding: 8px 10px; width: 100%; height: 35px; }`) and browser native `<input type="number">` spin buttons (`::-webkit-inner-spin-button`) consumed ~20px inside 52px-wide pill inputs.
+- **Fixes**:
+  - **Drag-and-Drop Reordering**: Replaced `moveBlock` and the Up/Down arrow buttons with HTML5 drag-and-drop reordering (`reorderBlock`) on `.wb-step-row`, including a `<GripVertical>` handle inside `.wb-block-index`, live swap on `onDragOver`, visual `.is-dragging` feedback, and automatic `draggable=false` on `onMouseDown` when interacting with `<input>`, `<select>`, or `<button>` controls.
+  - **Readable Slot Inputs & Dropdowns**: Removed native number spin buttons (`-webkit-appearance: none; display: none;` and `-moz-appearance: textfield`), widened `.wb-slot-input.num` to `68px !important`, `.wb-slot-input.mini` to `48px !important`, `.wb-slot-dropdown` to `min-width: 118px !important`, and text inputs to `90px–125px` with `6px` border-radius and `padding: 0 6px !important` / `0 8px !important`.
+- **Verification**:
+  - 95 TypeScript unit tests passing (`npm test`).
+  - Production build passing (`npm run build`).
+  - 25 Go unit tests passing (`go test ./...`).
+  - Cross-compilation verified for `windows/amd64`, `darwin/arm64`, and `darwin/amd64`.
+
