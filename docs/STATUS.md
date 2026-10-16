@@ -1,5 +1,17 @@
 # Implementation status
 
+## 2026-10-16 — Browser-Native Chrome Omnibox PWA Installation & Clean UI
+
+- **Native Chrome Address Bar PWA Installation (`src/App.tsx`, `src/FileMenu.tsx`, `src/atelier.css`)**:
+  - **Removed Custom In-App Buttons**: Fully eliminated custom in-app install buttons, menu items, and modals (`src/PwaInstallDialog.tsx`, `src/usePwaInstall.ts`, `.btn-pwa-install`, `FileMenu` install option) to keep the canvas and header interface distraction-free.
+  - **Unblocked Native Browser Experience**: Without `beforeinstallprompt` event interception or `e.preventDefault()`, Google Chrome automatically presents its native install icon (`🖥️⬇`) directly in the address bar (Omnibox) when visiting over HTTPS/localhost.
+  - **Maintained Full PWA Compliance**: PWA manifest (`public/manifest.webmanifest`), service worker (`public/sw.js`), and standard registration (`src/serviceWorkerRegistration.ts`) remain active to ensure seamless desktop and mobile browser installability.
+- **Verification**:
+  - 104 TypeScript tests passed (`bash scripts/rtk-exec.sh npm test`).
+  - Production build passed (`bash scripts/rtk-exec.sh npm run build`).
+  - All 25 Go tests in 8 packages passed (`bash scripts/rtk-exec.sh go test ./...`).
+  - Desktop print bridge cross-compiled for 6 OS/architecture targets with `scripts/build-printbridge.sh`.
+
 ## 2026-10-16 — Project Rebranding to activeLABEL
 
 - **Comprehensive Rebranding to activeLABEL (`index.html`, `public/manifest.webmanifest`, `src/App.tsx`, `src/ChatGPTWidget.tsx`, `src/PwaInstallDialog.tsx`, `src/printing.ts`, `src/ShareDialog.tsx`, `package.json`, `src/atelier.css`)**:
