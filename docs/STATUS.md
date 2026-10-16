@@ -1,5 +1,16 @@
 # Implementation status
 
+## 2026-10-16 — Mobile Short Property Context Bar & AI Chat De-collision
+
+- **Mobile Floating Controls Stack (`src/atelier.css`)**:
+  - **De-collided Short Property Bar (`.context-bar`)**: Moved the mobile selected object controls (short property) from `bottom: 84px` to `bottom: 128px`, positioning it cleanly above the AI Composer (`bottom: 84px`) with a 6px clearance gap and eliminating the visual overlap.
+  - **Workspace Clearance & Conversation Stacking**: Expanded mobile `.workspace` bottom padding to `172px` to prevent floating controls from obstructing canvas label content at the bottom of the viewport, and elevated expanded chat conversation z-index (`z-index: 15`).
+- **Verification**:
+  - 104 TypeScript tests passed (`bash scripts/rtk-exec.sh npm test`).
+  - Production build passed (`bash scripts/rtk-exec.sh npm run build`).
+  - All 25 Go tests in 8 packages passed (`bash scripts/rtk-exec.sh go test ./...`).
+  - Desktop print bridge cross-compiled for 6 OS/architecture targets with `scripts/build-printbridge.sh`.
+
 ## 2026-10-16 — Properties Header Direct Close Button (`X`) Next to Lock Icon
 
 - **Properties Drawer Header Layout (`src/App.tsx`, `src/atelier.css`)**:
