@@ -33,35 +33,35 @@ export function PrintDialog({
   [doc.objects]
  );
  const asked=useMemo(()=>{
-  const explicitVars=new Map<string,LabelVariable>((doc.variables??[]).map(v=>[v.name,v]));
+  const explicitVars=new Map<string,LabelVariable>();
+  for(const v of doc.variables??[]){
+   explicitVars.set(v.name,v);
+   explicitVars.set(v.name.toLowerCase(),v);
+  }
   const list:LabelVariable[]=[];
   const seen=new Set<string>();
+  // 1. Only include explicitly defined variables where prompt === true (ticked "Ask before print")
   for(const v of doc.variables??[]){
-   if(v.prompt!==false&&!seen.has(v.name)){
-    seen.add(v.name);
+   if(v.prompt===true&&!seen.has(v.name.toLowerCase())){
+    seen.add(v.name.toLowerCase());
     list.push(v);
    }
   }
-  for(const v of usedVariables(doc)){
-   const explicit=explicitVars.get(v.name);
-   if(explicit&&explicit.prompt===false)continue;
-   if(v.prompt!==false&&!seen.has(v.name)){
-    seen.add(v.name);
-    list.push(v);
-   }
-  }
+  // 2. Scan objects on canvas for ad-hoc undefined variables (exclude formula tokens and system counters)
   for(const obj of doc.objects){
    for(const name of variableNames(obj.template??'')){
-    const explicit=explicitVars.get(name);
-    if(explicit&&explicit.prompt===false)continue;
-    if(!seen.has(name)){
-     seen.add(name);
+    if(name.includes(':')||name.toLowerCase().startsWith('formula'))continue;
+    if(name==='serialIndex'||name==='serial'||name==='counter')continue;
+    const explicit=explicitVars.get(name)||explicitVars.get(name.toLowerCase());
+    if(explicit)continue;
+    if(!seen.has(name.toLowerCase())){
+     seen.add(name.toLowerCase());
      list.push({name,label:name,value:'',prompt:true});
     }
    }
   }
   return list;
- },[doc.variables,doc.objects,doc.formulas]);
+ },[doc.variables,doc.objects]);
  const [values,setValues]=useState(()=>variableValues(doc.variables,{},doc.formulas));
  const [copies,setCopies]=useState(1);
  const [serialCount,setSerialCount]=useState(1);
@@ -265,242 +265,27 @@ export function PrintDialog({
      </button>
     </div>
 
-    <div className="print-dialog-body">
-     {/* Left: Photo Album Preview Stage & Navigator */}
-     <div className="print-album-viewport">
-      <div className="print-album-stage">
-       {/* Floating Side Flippers */}
-       {clampedPreviewIndex>0&&(
-        <button
-         type="button"
-         className="album-stage-flipper flipper-prev"
-         aria-label="ฉลากก่อนหน้า"
-         title="ฉลากก่อนหน้า (Arrow Left)"
-         disabled={busy}
-         onClick={()=>goToSerial(clampedPreviewIndex-1,'prev')}
-        >
-         <ChevronLeft size={20}/>
-        </button>
-       )}
-
-       <div
-        className="album-3d-scene"
-        style={{
-         aspectRatio:`${doc.width}/${doc.height}`,
-         width:`min(100%, ${Math.max(180,Math.min(340,240*doc.width/doc.height))}px)`,
-        }}
-       >
-        {/* Left Card (Previous Label) */}
-        {prevResolvedDoc&&(
-         <div
-          className="album-card-side album-card-prev"
-          role="button"
-          tabIndex={0}
-          aria-label={`ดูฉลากก่อนหน้า ใบที่ ${clampedPreviewIndex}`}
-          title={`คลิกเพื่อดูฉลากใบที่ ${clampedPreviewIndex}`}
-          onClick={()=>goToSerial(clampedPreviewIndex-1,'prev')}
-          onKeyDown={e=>{if(e.key==='Enter'||e.key===' ')goToSerial(clampedPreviewIndex-1,'prev');}}
-         >
-          <div className="album-side-badge">ฉลากใบที่ {clampedPreviewIndex}</div>
-          <LabelSvg doc={prevResolvedDoc} fonts={fontStyles}/>
-         </div>
-        )}
-
-        {/* Right Card (Next Label) */}
-        {nextResolvedDoc&&(
-         <div
-          className="album-card-side album-card-next"
-          role="button"
-          tabIndex={0}
-          aria-label={`ดูฉลากถัดไป ใบที่ ${clampedPreviewIndex+2}`}
-          title={`คลิกเพื่อดูฉลากใบที่ ${clampedPreviewIndex+2}`}
-          onClick={()=>goToSerial(clampedPreviewIndex+1,'next')}
-          onKeyDown={e=>{if(e.key==='Enter'||e.key===' ')goToSerial(clampedPreviewIndex+1,'next');}}
-         >
-          <div className="album-side-badge">ฉลากใบที่ {clampedPreviewIndex+2}</div>
-          <LabelSvg doc={nextResolvedDoc} fonts={fontStyles}/>
-         </div>
-        )}
-
-        {/* Active Center Card */}
-        <div
-         key={animKey}
-         ref={preview}
-         className={`print-album-card ${slideDir==='next'?'flip-next':'flip-prev'}`}
-        >
-         {/* Gloss light sweep overlay */}
-         <div className="photo-gloss-sweep" aria-hidden="true"/>
-
-         {/* 4 Album Photo Mounting Corners */}
-         <div className="album-corner top-left" aria-hidden="true"/>
-         <div className="album-corner top-right" aria-hidden="true"/>
-         <div className="album-corner bottom-left" aria-hidden="true"/>
-         <div className="album-corner bottom-right" aria-hidden="true"/>
-
-         {/* Embossed Serial Badge Stamp */}
-         {serialCount>1&&(
-          <div className="album-serial-stamp" aria-hidden="true">
-           #{String(clampedPreviewIndex+1).padStart(Math.max(2,String(serialCount).length),'0')}
-          </div>
-         )}
-
-         <LabelSvg doc={resolved.doc} fonts={fontStyles}/>
-        </div>
-       </div>
-
-       {clampedPreviewIndex<serialCount-1&&(
-        <button
-         type="button"
-         className="album-stage-flipper flipper-next"
-         aria-label="ฉลากถัดไป"
-         title="ฉลากถัดไป (Arrow Right)"
-         disabled={busy}
-         onClick={()=>goToSerial(clampedPreviewIndex+1,'next')}
-        >
-         <ChevronRight size={20}/>
-        </button>
-       )}
-      </div>
-
-      {/* Album Dots Indicator (if 2 to 12 serials) */}
-      {serialCount>1&&serialCount<=12&&(
-       <div className="album-dots-bar" aria-label="Label page dots">
-        {Array.from({length:serialCount}).map((_,i)=>(
-         <button
-          key={i}
-          type="button"
-          className={`album-dot ${i===clampedPreviewIndex?'active':''}`}
-          aria-label={`ฉลากใบที่ ${i+1}`}
-          title={`ไปที่ฉลากใบที่ ${i+1}`}
-          disabled={busy}
-          onClick={()=>goToSerial(i,i>clampedPreviewIndex?'next':'prev')}
-         />
-        ))}
-       </div>
-      )}
-
-      {/* Floating Serial Navigator */}
-      <div className="print-serial-nav" aria-label="Serial preview navigation">
-       <button
-        type="button"
-        className="serial-nav-btn"
-        aria-label="ฉลากแรก"
-        title="เลื่อนไปฉลากแรก (ใบที่ 1)"
-        disabled={busy||clampedPreviewIndex<=0}
-        onClick={()=>goToSerial(0,'prev')}
-       >
-        <ChevronsLeft size={15}/>
-       </button>
-       <button
-        type="button"
-        className="serial-nav-btn"
-        aria-label="ฉลากก่อนหน้า"
-        title="ฉลากก่อนหน้า"
-        disabled={busy||clampedPreviewIndex<=0}
-        onClick={()=>goToSerial(clampedPreviewIndex-1,'prev')}
-       >
-        <ChevronLeft size={15}/>
-       </button>
-
-       <div className="serial-nav-jump">
-        <span>ฉลากใบที่</span>
-        <input
-         type="number"
-         className="serial-jump-input"
-         aria-label="ระบุหมายเลขฉลากที่ต้องการดู"
-         min={1}
-         max={serialCount}
-         disabled={busy}
-         value={jumpDraft}
-         onChange={e=>{
-          const raw=e.target.value;
-          setJumpDraft(raw);
-          const parsed=parseInt(raw,10);
-          if(Number.isFinite(parsed)&&parsed>=1&&parsed<=serialCount){
-           const target=parsed-1;
-           if(target!==clampedPreviewIndex){
-            setSlideDir(target>clampedPreviewIndex?'next':'prev');
-            setAnimKey(k=>k+1);
-            setPreviewIndex(target);
-           }
-          }
-         }}
-         onBlur={()=>{
-          const parsed=parseInt(jumpDraft,10);
-          if(Number.isFinite(parsed)){
-           goToSerial(parsed-1);
-          }else{
-           setJumpDraft(String(clampedPreviewIndex+1));
-          }
-         }}
-         onKeyDown={e=>{
-          if(e.key==='Enter'){
-           e.preventDefault();
-           const parsed=parseInt(jumpDraft,10);
-           if(Number.isFinite(parsed))goToSerial(parsed-1);
-          }
-         }}
-        />
-        <span>/ {serialCount}</span>
-       </div>
-
-       <button
-        type="button"
-        className="serial-nav-btn"
-        aria-label="ฉลากถัดไป"
-        title="ฉลากถัดไป"
-        disabled={busy||clampedPreviewIndex>=serialCount-1}
-        onClick={()=>goToSerial(clampedPreviewIndex+1,'next')}
-       >
-        <ChevronRight size={15}/>
-       </button>
-       <button
-        type="button"
-        className="serial-nav-btn"
-        aria-label="ฉลากสุดท้าย"
-        title={`เลื่อนไปฉลากสุดท้าย (ใบที่ ${serialCount})`}
-        disabled={busy||clampedPreviewIndex>=serialCount-1}
-        onClick={()=>goToSerial(serialCount-1,'next')}
-       >
-        <ChevronsRight size={15}/>
-       </button>
-      </div>
-
-      <div className="print-specs-pill">
-       <span>{Number(doc.width.toFixed(2))} × {Number(doc.height.toFixed(2))} mm</span>
-       <span className="dot-sep">·</span>
-       <span>{labelDpi} DPI</span>
-      </div>
-     </div>
-
-     {/* Right: Controls & Variables Sidebar */}
-     <div className="print-sidebar">
-      {/* Quantity Card */}
-      <section className="print-card print-card-qty" aria-label="Print quantity settings">
-       <div className="print-card-header">
-        <h4>จำนวนพิมพ์</h4>
-        <span className="print-badge-total">รวม {totalLabels} ดวง</span>
-       </div>
-
-       <div className="print-qty-rows">
-        <div className="print-qty-row">
-         <div className="print-qty-meta">
-          <span className="print-qty-title">จำนวน Serial</span>
-          <span className="print-qty-desc">รันเลขต่อเนื่อง (ฉลาก 1..{serialCount})</span>
-         </div>
-         <div className="print-qty-stepper">
+     <div className="print-dialog-body">
+      {/* Left: Photo Album Preview Stage with Floating HUD, Watermark & Minimal Bottom Bar */}
+      <div className="print-album-viewport">
+       {/* Floating Transparent Quantity HUD */}
+       <div className="preview-floating-hud" aria-label="Print quantity HUD">
+        <div className="hud-metric">
+         <span className="hud-label">Serial</span>
+         <div className="hud-stepper">
           <button
            type="button"
-           className="qty-step-btn"
+           className="hud-step-btn"
            aria-label="Decrease serial count"
+           title="ลดจำนวน Serial"
            disabled={busy||serialCount<=1}
            onClick={()=>updateSerialCount(serialCount-1)}
           >
-           <Minus size={13}/>
+           <Minus size={11}/>
           </button>
           <input
            type="number"
-           className="qty-number-input"
+           className="hud-num-input"
            aria-label="จำนวน Serial"
            min={1}
            max={500}
@@ -510,34 +295,35 @@ export function PrintDialog({
           />
           <button
            type="button"
-           className="qty-step-btn"
+           className="hud-step-btn"
            aria-label="Increase serial count"
+           title="เพิ่มจำนวน Serial"
            disabled={busy||serialCount>=500}
            onClick={()=>updateSerialCount(serialCount+1)}
           >
-           <Plus size={13}/>
+           <Plus size={11}/>
           </button>
          </div>
         </div>
 
-        <div className="print-qty-row">
-         <div className="print-qty-meta">
-          <span className="print-qty-title">จำนวน Copy</span>
-          <span className="print-qty-desc">พิมพ์ซ้ำ {copies} ใบต่อฉลาก</span>
-         </div>
-         <div className="print-qty-stepper">
+        <span className="hud-divider" aria-hidden="true"/>
+
+        <div className="hud-metric">
+         <span className="hud-label">Copy</span>
+         <div className="hud-stepper">
           <button
            type="button"
-           className="qty-step-btn"
+           className="hud-step-btn"
            aria-label="Decrease copies"
+           title="ลดจำนวน Copy"
            disabled={busy||copies<=1}
            onClick={()=>updateCopies(copies-1)}
           >
-           <Minus size={13}/>
+           <Minus size={11}/>
           </button>
           <input
            type="number"
-           className="qty-number-input"
+           className="hud-num-input"
            aria-label="จำนวน Copy"
            min={1}
            max={100}
@@ -547,57 +333,288 @@ export function PrintDialog({
           />
           <button
            type="button"
-           className="qty-step-btn"
+           className="hud-step-btn"
            aria-label="Increase copies"
+           title="เพิ่มจำนวน Copy"
            disabled={busy||copies>=100}
            onClick={()=>updateCopies(copies+1)}
           >
-           <Plus size={13}/>
+           <Plus size={11}/>
           </button>
          </div>
         </div>
-       </div>
-      </section>
 
-      {/* Variables Card (Scrollable, bounded height) */}
-      {asked.length>0&&(
-       <section className="print-card print-card-vars" aria-labelledby="print-values-title">
-        <div className="print-card-header">
-         <h4 id="print-values-title">กรอกข้อมูลตัวแปร</h4>
-         <span className="print-badge-vars">{asked.length} รายการ</span>
-        </div>
-        <p className="print-card-sub">ข้อมูลตัวแปรสำหรับฉลาก (บันทึกอัตโนมัติ)</p>
-        <div className="print-variables-scroll">
-         {asked.map((variable,index)=>{
-          const required=isRequired(variable);
-          const empty=required&&!(values[variable.name]??'').trim();
-          return (
-           <div key={variable.name} className="print-var-item">
-            <label htmlFor={`var-input-${variable.name}`}>
-             <span className="print-var-name">
-              {index+1}. {variable.label||variable.name}
-              {required&&<b aria-hidden="true">*</b>}
-             </span>
-             <input
-              id={`var-input-${variable.name}`}
-              aria-label={`Print variable ${variable.name}`}
-              required={required}
-              aria-invalid={empty}
-              value={values[variable.name]??''}
-              placeholder={`กรอก ${variable.label||variable.name}`}
-              onChange={e=>
-               setValues(current=>({...current,[variable.name]:e.target.value}))
-              }
-              onBlur={()=>remember(variable.name)}
-             />
-            </label>
-            {empty&&<small className="print-var-required">จำเป็นต้องกรอก</small>}
+        <span className="hud-total-tag" title={`พิมพ์ทั้งหมด ${totalLabels} ดวง`}>
+         รวม {totalLabels} ดวง
+        </span>
+       </div>
+
+       {/* Top-Right Watermark Label Size & DPI */}
+       <div className="preview-watermark-specs" aria-label="Label specifications">
+        <span>{Number(doc.width.toFixed(2))} × {Number(doc.height.toFixed(2))} mm</span>
+        <span className="specs-dot">·</span>
+        <span>{labelDpi} DPI</span>
+       </div>
+
+       <div className="print-album-stage">
+        {/* Floating Side Flippers */}
+        {clampedPreviewIndex>0&&(
+         <button
+          type="button"
+          className="album-stage-flipper flipper-prev"
+          aria-label="ฉลากก่อนหน้า"
+          title="ฉลากก่อนหน้า (Arrow Left)"
+          disabled={busy}
+          onClick={()=>goToSerial(clampedPreviewIndex-1,'prev')}
+         >
+          <ChevronLeft size={20}/>
+         </button>
+        )}
+
+        <div
+         className="album-3d-scene"
+         style={{
+          aspectRatio:`${doc.width}/${doc.height}`,
+          width:`min(100%, ${Math.max(180,Math.min(340,240*doc.width/doc.height))}px)`,
+         }}
+        >
+         {/* Left Card (Previous Label) */}
+         {prevResolvedDoc&&(
+          <div
+           className="album-card-side album-card-prev"
+           role="button"
+           tabIndex={0}
+           aria-label={`ดูฉลากก่อนหน้า ใบที่ ${clampedPreviewIndex}`}
+           title={`คลิกเพื่อดูฉลากใบที่ ${clampedPreviewIndex}`}
+           onClick={()=>goToSerial(clampedPreviewIndex-1,'prev')}
+           onKeyDown={e=>{if(e.key==='Enter'||e.key===' ')goToSerial(clampedPreviewIndex-1,'prev');}}
+          >
+           <div className="album-side-badge">ฉลากใบที่ {clampedPreviewIndex}</div>
+           <LabelSvg doc={prevResolvedDoc} fonts={fontStyles}/>
+          </div>
+         )}
+
+         {/* Right Card (Next Label) */}
+         {nextResolvedDoc&&(
+          <div
+           className="album-card-side album-card-next"
+           role="button"
+           tabIndex={0}
+           aria-label={`ดูฉลากถัดไป ใบที่ ${clampedPreviewIndex+2}`}
+           title={`คลิกเพื่อดูฉลากใบที่ ${clampedPreviewIndex+2}`}
+           onClick={()=>goToSerial(clampedPreviewIndex+1,'next')}
+           onKeyDown={e=>{if(e.key==='Enter'||e.key===' ')goToSerial(clampedPreviewIndex+1,'next');}}
+          >
+           <div className="album-side-badge">ฉลากใบที่ {clampedPreviewIndex+2}</div>
+           <LabelSvg doc={nextResolvedDoc} fonts={fontStyles}/>
+          </div>
+         )}
+
+         {/* Active Center Card */}
+         <div
+          key={animKey}
+          ref={preview}
+          className={`print-album-card ${slideDir==='next'?'flip-next':'flip-prev'}`}
+         >
+          {/* Gloss light sweep overlay */}
+          <div className="photo-gloss-sweep" aria-hidden="true"/>
+
+          {/* 4 Album Photo Mounting Corners */}
+          <div className="album-corner top-left" aria-hidden="true"/>
+          <div className="album-corner top-right" aria-hidden="true"/>
+          <div className="album-corner bottom-left" aria-hidden="true"/>
+          <div className="album-corner bottom-right" aria-hidden="true"/>
+
+          {/* Embossed Serial Badge Stamp */}
+          {serialCount>1&&(
+           <div className="album-serial-stamp" aria-hidden="true">
+            #{String(clampedPreviewIndex+1).padStart(Math.max(2,String(serialCount).length),'0')}
            </div>
-          );
-         })}
+          )}
+
+          <LabelSvg doc={resolved.doc} fonts={fontStyles}/>
+         </div>
         </div>
-       </section>
-      )}
+
+        {clampedPreviewIndex<serialCount-1&&(
+         <button
+          type="button"
+          className="album-stage-flipper flipper-next"
+          aria-label="ฉลากถัดไป"
+          title="ฉลากถัดไป (Arrow Right)"
+          disabled={busy}
+          onClick={()=>goToSerial(clampedPreviewIndex+1,'next')}
+         >
+          <ChevronRight size={20}/>
+         </button>
+        )}
+       </div>
+
+       {/* Ultra-Minimal Bottom Navigation Bar at Very Bottom Edge */}
+       <div className="preview-bottom-bar" aria-label="Label preview navigation">
+        {serialCount>1&&(
+         <div className="minimal-serial-nav">
+          <button
+           type="button"
+           className="min-nav-arrow"
+           aria-label="ฉลากแรก"
+           title="เลื่อนไปฉลากแรก (ใบที่ 1)"
+           disabled={busy||clampedPreviewIndex<=0}
+           onClick={()=>goToSerial(0,'prev')}
+          >
+           <ChevronsLeft size={13}/>
+          </button>
+          <button
+           type="button"
+           className="min-nav-arrow"
+           aria-label="ฉลากก่อนหน้า"
+           title="ฉลากก่อนหน้า"
+           disabled={busy||clampedPreviewIndex<=0}
+           onClick={()=>goToSerial(clampedPreviewIndex-1,'prev')}
+          >
+           <ChevronLeft size={13}/>
+          </button>
+
+          <div className="min-nav-counter">
+           <input
+            type="number"
+            className="min-jump-input"
+            aria-label="หมายเลขฉลาก"
+            min={1}
+            max={serialCount}
+            disabled={busy}
+            value={jumpDraft}
+            onChange={e=>{
+             const raw=e.target.value;
+             setJumpDraft(raw);
+             const parsed=parseInt(raw,10);
+             if(Number.isFinite(parsed)&&parsed>=1&&parsed<=serialCount){
+              const target=parsed-1;
+              if(target!==clampedPreviewIndex){
+               setSlideDir(target>clampedPreviewIndex?'next':'prev');
+               setAnimKey(k=>k+1);
+               setPreviewIndex(target);
+              }
+             }
+            }}
+            onBlur={()=>{
+             const parsed=parseInt(jumpDraft,10);
+             if(Number.isFinite(parsed)){
+              goToSerial(parsed-1);
+             }else{
+              setJumpDraft(String(clampedPreviewIndex+1));
+             }
+            }}
+            onKeyDown={e=>{
+             if(e.key==='Enter'){
+              e.preventDefault();
+              const parsed=parseInt(jumpDraft,10);
+              if(Number.isFinite(parsed))goToSerial(parsed-1);
+             }
+            }}
+           />
+           <span className="min-nav-sep">/</span>
+           <span className="min-nav-total">{serialCount}</span>
+          </div>
+
+          <button
+           type="button"
+           className="min-nav-arrow"
+           aria-label="ฉลากถัดไป"
+           title="ฉลากถัดไป"
+           disabled={busy||clampedPreviewIndex>=serialCount-1}
+           onClick={()=>goToSerial(clampedPreviewIndex+1,'next')}
+          >
+           <ChevronRight size={13}/>
+          </button>
+          <button
+           type="button"
+           className="min-nav-arrow"
+           aria-label="ฉลากสุดท้าย"
+           title={`เลื่อนไปฉลากสุดท้าย (ใบที่ ${serialCount})`}
+           disabled={busy||clampedPreviewIndex>=serialCount-1}
+           onClick={()=>goToSerial(serialCount-1,'next')}
+          >
+           <ChevronsRight size={13}/>
+          </button>
+         </div>
+        )}
+
+        {serialCount>1&&serialCount<=12&&(
+         <div className="minimal-dots-strip" aria-label="Serial dots">
+          {Array.from({length:serialCount}).map((_,i)=>(
+           <button
+            key={i}
+            type="button"
+            className={`min-dot ${i===clampedPreviewIndex?'active':''}`}
+            aria-label={`ฉลากใบที่ ${i+1}`}
+            title={`ไปที่ฉลากใบที่ ${i+1}`}
+            disabled={busy}
+            onClick={()=>goToSerial(i,i>clampedPreviewIndex?'next':'prev')}
+           />
+          ))}
+         </div>
+        )}
+       </div>
+      </div>
+
+      {/* Right: Controls & Excel-Themed Variables Table */}
+      <div className="print-sidebar">
+       {/* Excel-Style Variables Table */}
+       {asked.length>0&&(
+        <section className="print-card print-card-vars excel-theme" aria-labelledby="print-values-title">
+         <div className="print-card-header">
+          <div className="excel-header-title">
+           <span className="excel-grid-icon" aria-hidden="true">⊞</span>
+           <h4 id="print-values-title">กรอกข้อมูลตัวแปร</h4>
+          </div>
+          <span className="print-badge-vars">{asked.length} รายการ</span>
+         </div>
+         <p className="print-card-sub">ข้อมูลตัวแปรสำหรับฉลาก (บันทึกอัตโนมัติ)</p>
+
+         <div className="excel-table-wrapper">
+          <div className="excel-table" role="table" aria-label="ตารางกรอกข้อมูลตัวแปร">
+           <div className="excel-thead" role="rowgroup">
+            <div className="excel-tr header-row" role="row">
+             <div className="excel-th col-index" role="columnheader">#</div>
+             <div className="excel-th col-name" role="columnheader">ตัวแปร (Field)</div>
+             <div className="excel-th col-value" role="columnheader">ค่าที่พิมพ์ (Value)</div>
+            </div>
+           </div>
+           <div className="excel-tbody" role="rowgroup">
+            {asked.map((variable,index)=>{
+             const required=isRequired(variable);
+             const empty=required&&!(values[variable.name]??'').trim();
+             return (
+              <div key={variable.name} className={`excel-tr ${empty?'cell-invalid':''}`} role="row">
+               <div className="excel-td col-index" role="cell">{index+1}</div>
+               <div className="excel-td col-name" role="cell" title={variable.label||variable.name}>
+                <span className="var-label-text">{variable.label||variable.name}</span>
+                {required&&<span className="var-req-star" title="จำเป็นต้องระบุ">*</span>}
+               </div>
+               <div className="excel-td col-value" role="cell">
+                <input
+                 id={`var-input-${variable.name}`}
+                 className="excel-cell-input"
+                 aria-label={`Print variable ${variable.name}`}
+                 required={required}
+                 aria-invalid={empty}
+                 value={values[variable.name]??''}
+                 placeholder="พิมพ์ค่าที่นี่…"
+                 onChange={e=>
+                  setValues(current=>({...current,[variable.name]:e.target.value}))
+                 }
+                 onBlur={()=>remember(variable.name)}
+                />
+               </div>
+              </div>
+             );
+            })}
+           </div>
+          </div>
+         </div>
+        </section>
+       )}
 
       {/* Barcode & Status Alerts */}
       {preflight.errors.length>0&&(

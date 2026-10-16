@@ -1,5 +1,20 @@
 # Implementation status
 
+## 2026-10-16 — Print Dialog Floating HUD, Watermark Specs, Minimal Nav & Excel Variable Grid
+
+- **Enhanced Print Dialog UX (`src/PrintDialog.tsx`, `src/print-dialog.css`)**:
+  - **Natural 3D Coverflow Slide Motion**: Refined `albumFlipNext` and `albumFlipPrev` animations (0.52s with `cubic-bezier(0.22, 1, 0.36, 1)`) to start directly from the adjacent 3D neighbor card slot coordinates (`translateX(±58%) translateZ(-50px) rotateY(∓22deg) scale(0.85)`), providing a natural, observable glide into center view without jarring flashes.
+  - **Floating Semi-Transparent Quantity HUD**: Integrated Serial and Copy counter steppers into a frosted glass HUD capsule (`background: rgba(255,255,255,0.82); backdrop-filter: blur(14px)`) floating at the top-left of the preview stage, accompanied by an emerald total badge (`รวม X ดวง`), saving significant vertical space on the sidebar.
+  - **Watermark-Style Size & DPI Indicator**: Relocated document physical dimensions and printer DPI (`55 × 35 mm · 203 DPI`) to the top-right corner of the preview area as a subtle, elegant watermark (`opacity: 0.42`).
+  - **Ultra-Minimal Bottom Navigation Dock**: Positioned a sleek, capsule-style navigation bar at the very bottom edge of the preview viewport, incorporating compact step buttons, page indicator, and page dots without bulky cards.
+  - **Excel-Style Variable Input Table**: Redesigned the variable input section into a structured spreadsheet grid table with row numbers `#`, bold field labels, and focused cell outlines (`#00866c`).
+  - **Strict Variable Prompt Filtering**: Completely eliminated non-prompted variables (`prompt: false`), formula tokens (`formula:*`), and internal counters from appearing in the print inputs.
+- **Verification**:
+  - 104 TypeScript tests passed (`bash scripts/rtk-exec.sh npm test`).
+  - Production build passed (`bash scripts/rtk-exec.sh npm run build`).
+  - All 25 Go tests in 8 packages passed (`bash scripts/rtk-exec.sh go test ./...`).
+  - Desktop print bridge cross-compiled for 6 OS/architecture targets with `scripts/build-printbridge.sh`.
+
 ## 2026-10-16 — Mobile Side-Drawer Slide-Out Object Properties Panel
 
 - **Right Side-Drawer for Mobile Viewport (`src/App.tsx`, `src/atelier.css`)**:
