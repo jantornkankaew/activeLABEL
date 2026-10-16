@@ -1,5 +1,19 @@
 # Implementation status
 
+## 2026-10-16 — Active5 Copyright & Website Link Branding
+
+- **Active5 Copyright & Website Link Integration (`src/App.tsx`, `src/DesignSurface.tsx`, `src/FileMenu.tsx`, `src/atelier.css`)**:
+  - **Sleek Brand Pill in Header**: Positioned beside the `LabelCraft` title as an elegant, compact pill badge linking to `https://www.active5.co.th` (`© Active5 · www.active5.co.th ↗`). Features subtle hovering interaction, emerald accent coloring, and responsive collapsing on narrow viewports.
+  - **Canvas Status Toolbar Credit**: Integrated seamlessly into the bottom canvas toolbar (`DesignSurface.tsx`) alongside zoom controls for persistent yet non-intrusive brand recognition.
+  - **File Menu Footer**: Positioned as a dedicated, clean footer item within the `File` dropdown panel (`FileMenu.tsx`).
+  - **Cloud Gate Branding**: Integrated the Active5 copyright badge into the cloud authentication splash screen.
+  - **Strict Security & Accessibility**: Implemented with `target="_blank"` and `rel="noopener noreferrer"`, explicit title tooltips, and SVG icon indicators.
+- **Verification**:
+  - 104 TypeScript tests passed (`bash scripts/rtk-exec.sh npm test`).
+  - Production build passed (`bash scripts/rtk-exec.sh npm run build`).
+  - All 25 Go tests in 8 packages passed (`bash scripts/rtk-exec.sh go test ./...`).
+  - Desktop print bridge cross-compiled for 6 OS/architecture targets with `scripts/build-printbridge.sh`.
+
 ## 2026-10-16 — Chrome Desktop PWA Installation & App Manifest Compliance
 
 - **PWA Installation Experience for Google Chrome (`index.html`, `public/manifest.webmanifest`, `src/usePwaInstall.ts`, `src/PwaInstallDialog.tsx`)**:

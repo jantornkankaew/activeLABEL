@@ -247,6 +247,29 @@
 .pwa-steps-list{margin:0;padding-left:16px;font-size:11.5px;line-height:1.6;color:#14532d}
 .pwa-install-footer{display:flex;justify-content:flex-end;gap:8px}
 
+/* Active5 Copyright & Link Branding */
+.atelier .brand-group{display:inline-flex;align-items:center;gap:10px}
+.active5-header-credit{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:500;color:#64748b;background:rgba(241,245,249,.85);border:1px solid #e2e8f0;text-decoration:none;line-height:1.2;transition:all .15s ease;box-shadow:0 1px 2px rgba(0,0,0,.02);user-select:none}
+.active5-header-credit:hover{background:#ecfdf5;border-color:#a7f3d0;color:#047857;text-decoration:none;box-shadow:0 2px 4px rgba(4,120,87,.08)}
+.active5-header-credit .active5-ext-icon{opacity:.5;flex-shrink:0;transition:opacity .15s ease,transform .15s ease}
+.active5-header-credit:hover .active5-ext-icon{opacity:1;transform:translate(1px,-1px);color:#047857}
+.active5-sep{opacity:.4;font-weight:400}
+@media(max-width:1080px){.active5-header-credit .active5-domain{display:none}}
+@media(max-width:640px){.active5-header-credit{display:none}}
+
+.atelier .active5-toolbar-credit{order:4;display:inline-flex;align-items:center;gap:4px;padding:2px 8px;margin-left:4px;border-left:1px solid #e5e4df;font-size:11px;font-weight:500;color:#71767d;text-decoration:none;white-space:nowrap;transition:all .15s ease;line-height:1}
+.atelier .active5-toolbar-credit:hover{color:#00866c;text-decoration:none}
+.atelier .active5-toolbar-credit .active5-ext-icon{opacity:.5;transition:opacity .15s ease,transform .15s ease}
+.atelier .active5-toolbar-credit:hover .active5-ext-icon{opacity:1;transform:translate(1px,-1px);color:#00866c}
+@media(max-width:980px){.atelier .active5-toolbar-credit .active5-domain{display:none}}
+@media(max-width:800px){.atelier .active5-toolbar-credit{display:none}}
+
+.file-menu-credit{margin-top:8px;padding-top:8px;border-top:1px solid #f1f2ee;text-align:center}
+.file-menu-credit-link{display:inline-flex;align-items:center;justify-content:center;gap:5px;font-size:11px;font-weight:500;color:#82878d;text-decoration:none;padding:4px 8px;border-radius:6px;transition:all .15s ease;width:100%;box-sizing:border-box}
+.file-menu-credit-link:hover{color:#00866c;background:#ecfdf5;text-decoration:none}
+.file-menu-credit-link .active5-ext-icon{opacity:.5;transition:opacity .15s ease}
+.file-menu-credit-link:hover .active5-ext-icon{opacity:1;color:#00866c}
+
 
 
 
