@@ -1,5 +1,24 @@
 # Implementation status
 
+## 2026-10-16 — Offline Support, Network Status Indicator & Automatic Cloud Re-sync
+
+- **Offline-First PWA Capabilities**:
+  - Implemented Service Worker (`public/sw.js`) with Cache Storage strategy for offline app shell caching (`index.html`, scripts, styles, bundled Thai/Latin fonts, SVG assets).
+  - Added Web App Manifest (`public/manifest.webmanifest`) and application icon (`public/icon.svg`) for installable PWA support.
+  - Safe registration via `src/serviceWorkerRegistration.ts` during window load.
+- **Real-Time Network Status Indicator (`NetworkStatusBadge.tsx` & `network-status.css`)**:
+  - Placed in top header action bar with distinct states: `🟢 Online`, `🟠 Offline (X changes pending)`, `🔄 Syncing…`, `✅ Synced`, and `⚠️ Error`.
+  - Interactive popover dialog provides network details, local storage confirmation, queued changes count, last synced timestamp, and manual "Sync Now" button.
+- **Offline Sync Queue & Automatic Re-sync Engine (`src/syncEngine.ts`)**:
+  - When offline, changes are safely persisted to `localStorage` (`labelcraft-jobs-v1`) and queued into `labelcraft-offline-sync-v1`.
+  - Network state listeners (`online` / `offline` events) automatically trigger background sync when connectivity is restored, flushing pending documents to the cloud without losing edits.
+  - Cloud gate allows instant fallback with `ทำงานแบบออฟไลน์ (Continue Offline)`.
+- **Verification**:
+  - 102 TypeScript tests passed (`bash scripts/rtk-exec.sh npm test`).
+  - Production build passed (`bash scripts/rtk-exec.sh npm run build`).
+  - All 25 Go tests in 8 packages passed (`bash scripts/rtk-exec.sh go test ./...`).
+  - Desktop print bridge cross-compiled for 6 OS/architecture targets with `scripts/build-printbridge.sh`.
+
 ## 2026-10-16 — Print Dialog Redesign (Studio 2-Column, Photo Album Preview & Variable Management)
 
 - **Print Dialog Studio Redesign**:
