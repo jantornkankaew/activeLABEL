@@ -913,6 +913,23 @@ export function PrintDialog({
        ไม่พบเครื่องพิมพ์: Destination → See more… หรือ Print using system dialog…
       </p>
      </details>
+     <div className="print-mode-summary-bar" aria-live="polite">
+      {printLayer==='direct'?(
+       <div className="mode-summary-direct">
+        <Cpu size={14} className="mode-summary-icon"/>
+        <span>
+         โหมด: <strong>ส่งตรงถึงเครื่องพิมพ์</strong> ({activeProfile.name} · {activeProfile.language.toUpperCase()}) ผ่าน <strong>{selectedTransportType.toUpperCase()}</strong>
+        </span>
+       </div>
+      ):(
+       <div className="mode-summary-system">
+        <Printer size={14} className="mode-summary-icon"/>
+        <span>
+         โหมด: <strong>พิมพ์ผ่านไดรเวอร์ระบบ</strong> (เวกเตอร์ SVG · {labelDpi} DPI → หน้าต่างพิมพ์ของเบราว์เซอร์)
+        </span>
+       </div>
+      )}
+     </div>
      <div className="print-footer-actions">
       <button
        type="button"
@@ -932,8 +949,8 @@ export function PrintDialog({
        {busy
         ?'กำลังดำเนินการ…'
         :printLayer==='direct'
-        ?(totalLabels>1?`พิมพ์ตรง (${totalLabels} ดวง)`:'พิมพ์ตรง (Direct Print)')
-        :(totalLabels>1?`Print (${totalLabels} ดวง)`:'Print…')}
+        ?(totalLabels>1?`พิมพ์ตรง ${totalLabels} ดวง (${activeProfile.language.toUpperCase()})`:`ส่งพิมพ์ตรง (${activeProfile.language.toUpperCase()})`)
+        :(totalLabels>1?`เปิดหน้าต่างพิมพ์ระบบ (${totalLabels} ดวง)`:'เปิดหน้าต่างพิมพ์ของระบบ (System Print)')}
       </button>
      </div>
     </div>

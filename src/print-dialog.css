@@ -1321,3 +1321,36 @@
  color:#0f172a;
 }
 
+.print-mode-summary-bar{
+ display:flex;
+ align-items:center;
+ font-size:11.5px;
+ line-height:1.4;
+ padding:4px 0;
+}
+.mode-summary-direct{
+ display:inline-flex;
+ align-items:center;
+ gap:6px;
+ color:#0b6953;
+ background:#e6f4ea;
+ padding:4px 10px;
+ border-radius:6px;
+ border:1px solid #a8d5c8;
+ font-size:11px;
+}
+.mode-summary-system{
+ display:inline-flex;
+ align-items:center;
+ gap:6px;
+ color:#334155;
+ background:#f1f5f9;
+ padding:4px 10px;
+ border-radius:6px;
+ border:1px solid #e2e8f0;
+ font-size:11px;
+}
+.mode-summary-icon{
+ flex-shrink:0;
+}
+

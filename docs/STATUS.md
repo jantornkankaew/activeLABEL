@@ -1,6 +1,6 @@
 # Implementation status
 
-## 2026-10-18 — activeLABEL Printing Engine (Layer 1 & Layer 2 Direct Print)
+## 2026-10-18 — activeLABEL Printing Engine (Layer 1 & Layer 2 Direct Print & Mode Visibility)
 
 - **Dual-Layer Architecture Implementation (`src/printing/`, `src/PrintDialog.tsx`, `src/print-dialog.css`)**:
   - **Layer 1 Enhancements (System Driver)**:
@@ -14,9 +14,9 @@
     - **Transports (`src/printing/transports/`)**: Implemented `MockTransport` (for automated CI tests), `WebUSBTransport` (Printer Class 7 bulk OUT), `WebSerialTransport` (configurable baud rate), `WebBluetoothTransport` (BLE GATT chunking), and `LocalBridgeTransport` (local loopback bridge).
     - **Printer Profiles Registry (`src/printing/profiles/registry.ts`)**: Registered Generic TSPL (203/300 DPI), Generic ZPL (203/300 DPI), Xprinter XP-365B / XP-420B, and Zebra ZD220/ZD230 with custom profile persistence in `localStorage`.
     - **Calibration & Test Print (`src/printing/calibration.ts`)**: Test pattern generation with outer registration frame, center crosshairs, Thai mark typography test, stepped barcodes, and darkness ladder.
-  - **UI Integration in Print Dialog**:
-    - Dual-layer tab selector: "ไดรเวอร์ระบบ (Layer 1)" vs "ส่งตรงถึงเครื่อง (Layer 2)".
-    - Direct print profile and transport selector with live connection toggle and test print trigger.
+  - **Print Mode Visibility & Verification UX**:
+    - Added real-time mode summary bar (`.print-mode-summary-bar`) directly above the action buttons displaying the active route, printer profile, language (TSPL/ZPL), and transport (USB/Serial/BLE).
+    - Differentiated primary action button labels: `เปิดหน้าต่างพิมพ์ของระบบ (System Print)` for Layer 1 vs `ส่งพิมพ์ตรง (TSPL/ZPL)` for Layer 2 to make user execution intent unambiguous.
 - **Verification**:
   - 112 TypeScript unit tests passed (`bash scripts/rtk-exec.sh npm test`).
   - Production build passed (`bash scripts/rtk-exec.sh npm run build`).
