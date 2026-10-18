@@ -10,11 +10,31 @@ import {
  ChevronsRight,
  Minus,
  Plus,
+ Download,
+ Cpu,
+ Usb,
+ Wifi,
+ Check,
+ AlertCircle,
+ Sliders,
 } from 'lucide-react';
 import {defaultDocumentSettings,type LabelDocument,type Command,type LabelVariable} from './core';
 import {LabelSvg,exportSvg} from './renderer';
 import {fontStyles} from './fontStyles';
-import {openSystemPrint} from './printing';
+import {
+ openSystemPrint,
+ getAllProfiles,
+ createTransport,
+ executeDirectPrint,
+ createCalibrationDocument,
+ calculateModuleDots,
+ checkQuietZones,
+ rasterizeSvgToBitmap,
+ exportMonochromePng,
+ type PrinterProfile,
+ type Transport,
+ type TransportType,
+} from './printing';
 import {resolveDocument,usedVariables,variableNames,variableValues} from './variables';
 import './print-dialog.css';
 
@@ -72,6 +92,15 @@ export function PrintDialog({
  const [busy,setBusy]=useState(false);
  const [status,setStatus]=useState('');
  const preview=useRef<HTMLDivElement>(null);
+
+ const [printLayer,setPrintLayer]=useState<'system'|'direct'>('system');
+ const profiles=useMemo(()=>getAllProfiles(),[]);
+ const [selectedProfileId,setSelectedProfileId]=useState('generic-tspl-203');
+ const activeProfile=useMemo(()=>profiles.find(p=>p.id===selectedProfileId)||profiles[0],[profiles,selectedProfileId]);
+ const [selectedTransportType,setSelectedTransportType]=useState<TransportType>('usb');
+ const transportRef=useRef<Transport|null>(null);
+ const [isConnected,setIsConnected]=useState(false);
+ const [connecting,setConnecting]=useState(false);
 
  const isRequired=(variable:LabelVariable)=>usedOnCanvas.has(variable.name);
  const missingValues=asked.filter(variable=>isRequired(variable)&&!(values[variable.name]??'').trim());
@@ -241,6 +270,112 @@ export function PrintDialog({
   }finally{
    setBusy(false);
   }
+ }
+
+ const quietZoneResult=useMemo(()=>checkQuietZones(resolved.doc,labelDpi),[resolved.doc,labelDpi]);
+ const barcodeObj=useMemo(()=>resolved.doc.objects.find(o=>o.kind==='barcode'),[resolved.doc.objects]);
+ const moduleInfo=useMemo(()=>{
+  if(!barcodeObj)return null;
+  const targetModuleMm=barcodeObj.barcodeScale?((barcodeObj.barcodeScale/100)*0.33):Math.max(0.25,barcodeObj.width/120);
+  return calculateModuleDots(targetModuleMm,labelDpi);
+ },[barcodeObj,labelDpi]);
+
+ async function connectTransport(){
+  setConnecting(true);
+  setStatus('');
+  try{
+   if(transportRef.current&&isConnected){
+    await transportRef.current.disconnect();
+    setIsConnected(false);
+    setStatus('ตัดการเชื่อมต่อเรียบร้อย');
+    return;
+   }
+   const transportConfig=activeProfile.transports.find(t=>t.type===selectedTransportType)||{type:selectedTransportType};
+   const transport=createTransport(transportConfig);
+   await transport.connect();
+   transportRef.current=transport;
+   setIsConnected(true);
+   setStatus(`เชื่อมต่อ ${transport.name} สำเร็จ`);
+  }catch(err:any){
+   setStatus((err as Error).message);
+   setIsConnected(false);
+  }finally{
+   setConnecting(false);
+  }
+ }
+
+ async function directPrint(overrideDoc?:LabelDocument){
+  const printTargetDoc=overrideDoc||resolved.doc;
+  setBusy(true);
+  setStatus('กำลังสร้างภาพบิตแมป 1-bit...');
+  try{
+   const svg=preview.current?.querySelector('svg');
+   if(!svg)throw Error('Print preview unavailable');
+   const rawSvg=exportSvg(printTargetDoc,svg.outerHTML);
+   const bitmap=await rasterizeSvgToBitmap(rawSvg,printTargetDoc.width,printTargetDoc.height,activeProfile.dpi,{
+    threshold:activeProfile.options?.threshold??128,
+    dither:activeProfile.options?.ditherImages??false,
+   });
+
+   let transport=transportRef.current;
+   if(!transport||!transport.isConnected()){
+    const transportConfig=activeProfile.transports.find(t=>t.type===selectedTransportType)||{type:selectedTransportType};
+    transport=createTransport(transportConfig);
+    await transport.connect();
+    transportRef.current=transport;
+    setIsConnected(true);
+   }
+
+   setStatus('กำลังส่งข้อมูลไปยังเครื่องพิมพ์...');
+   await executeDirectPrint({
+    bitmap,
+    copies,
+    labelWidthMm:printTargetDoc.width,
+    labelHeightMm:printTargetDoc.height,
+    gapMm:activeProfile.labelPresets?.[0]?.gapMm??2,
+    speed:activeProfile.options?.speed,
+    darkness:activeProfile.options?.darkness,
+    offsetXDots:activeProfile.options?.offsetXDots,
+    offsetYDots:activeProfile.options?.offsetYDots,
+   },activeProfile,transport,(sent,total)=>{
+    setStatus(`กำลังส่ง... ${Math.round((sent/total)*100)}%`);
+   });
+
+   setStatus('พิมพ์ตรงสำเร็จเรียบร้อย');
+   setTimeout(()=>setStatus(''),4000);
+  }catch(err:any){
+   setStatus((err as Error).message);
+  }finally{
+   setBusy(false);
+  }
+ }
+
+ async function download1BitPng(){
+  const svg=preview.current?.querySelector('svg');
+  if(!svg)return;
+  setBusy(true);
+  try{
+   const rawSvg=exportSvg(resolved.doc,svg.outerHTML);
+   const bitmap=await rasterizeSvgToBitmap(rawSvg,resolved.doc.width,resolved.doc.height,labelDpi);
+   const blob=await exportMonochromePng(bitmap);
+   const url=URL.createObjectURL(blob);
+   const a=document.createElement('a');
+   a.href=url;
+   a.download=`${resolved.doc.title||'label'}-${labelDpi}dpi-1bit.png`;
+   a.click();
+   URL.revokeObjectURL(url);
+   setStatus('ดาวน์โหลดไฟล์ PNG 1-bit เรียบร้อย');
+   setTimeout(()=>setStatus(''),3000);
+  }catch(err:any){
+   setStatus((err as Error).message);
+  }finally{
+   setBusy(false);
+  }
+ }
+
+ function printTestPattern(){
+  const calDoc=createCalibrationDocument(doc.width,doc.height);
+  void directPrint(calDoc);
  }
 
  const totalLabels=serialCount*copies;
@@ -560,6 +695,129 @@ export function PrintDialog({
 
       {/* Right: Controls & Excel-Themed Variables Table */}
       <div className="print-sidebar">
+       {/* Dual-Layer Mode Selector Tabs */}
+       <div className="print-layer-tabs" role="tablist" aria-label="เลือกวิธีการพิมพ์">
+        <button
+         type="button"
+         role="tab"
+         aria-selected={printLayer==='system'}
+         className={`print-layer-tab ${printLayer==='system'?'active':''}`}
+         onClick={()=>setPrintLayer('system')}
+        >
+         <Printer size={15}/> ไดรเวอร์ระบบ (Layer 1)
+        </button>
+        <button
+         type="button"
+         role="tab"
+         aria-selected={printLayer==='direct'}
+         className={`print-layer-tab ${printLayer==='direct'?'active':''}`}
+         onClick={()=>setPrintLayer('direct')}
+        >
+         <Cpu size={15}/> ส่งตรงถึงเครื่อง (Layer 2)
+        </button>
+       </div>
+
+       {/* Direct Print Configuration (Layer 2) */}
+       {printLayer==='direct'&&(
+        <section className="direct-print-card" aria-label="ตั้งค่าเครื่องพิมพ์ตรง">
+         <div className="direct-field-group">
+          <label className="direct-field-label" htmlFor="select-printer-profile">เลือกรุ่น / โปรไฟล์เครื่องพิมพ์</label>
+          <select
+           id="select-printer-profile"
+           className="direct-select"
+           value={selectedProfileId}
+           onChange={e=>setSelectedProfileId(e.target.value)}
+          >
+           {profiles.map(p=>(
+            <option key={p.id} value={p.id}>{p.name}</option>
+           ))}
+          </select>
+         </div>
+
+         <div className="direct-field-group">
+          <span className="direct-field-label">ช่องทางเชื่อมต่อ (Transport)</span>
+          <div className="transport-buttons">
+           <button
+            type="button"
+            className={`transport-btn ${selectedTransportType==='usb'?'active':''}`}
+            onClick={()=>setSelectedTransportType('usb')}
+           >
+            <Usb size={13}/> USB
+           </button>
+           <button
+            type="button"
+            className={`transport-btn ${selectedTransportType==='serial'?'active':''}`}
+            onClick={()=>setSelectedTransportType('serial')}
+           >
+            COM / Serial
+           </button>
+           <button
+            type="button"
+            className={`transport-btn ${selectedTransportType==='ble'?'active':''}`}
+            onClick={()=>setSelectedTransportType('ble')}
+           >
+            <Wifi size={13}/> BLE
+           </button>
+          </div>
+         </div>
+
+         <div className="direct-actions-row">
+          <button
+           type="button"
+           className={`btn-connect-printer ${isConnected?'connected':''}`}
+           disabled={connecting||busy}
+           onClick={connectTransport}
+          >
+           {isConnected?<><Check size={13}/> เชื่อมต่อแล้ว</>:<><Usb size={13}/> {connecting?'กำลังค้นหา…':'เชื่อมต่อเครื่อง'}</>}
+          </button>
+          <button
+           type="button"
+           className="btn-test-print"
+           title="พิมพ์ฉลากทดสอบตั้งระยะและเส้นความเข้ม"
+           disabled={busy}
+           onClick={printTestPattern}
+          >
+           <Sliders size={13}/> Test Print
+          </button>
+         </div>
+        </section>
+       )}
+
+       {/* System Driver Specs & Fallbacks (Layer 1) */}
+       {printLayer==='system'&&(
+        <section className="module-specs-card" aria-label="ข้อมูลจุดความละเอียด">
+         <div className="module-specs-title">
+          <span>ความละเอียดหัวพิมพ์</span>
+          <span className="module-dots-badge">{labelDpi} DPI</span>
+         </div>
+         {moduleInfo&&(
+          <p className="module-specs-desc">
+           ความกว้างแท่งจริง: <strong>{moduleInfo.moduleDots} จุด</strong> ({moduleInfo.actualModuleMm.toFixed(2)} มม.)
+          </p>
+         )}
+         {moduleInfo?.warning&&(
+          <div className="module-warning-banner">
+           <AlertCircle size={14} style={{flexShrink:0}}/>
+           <span>{moduleInfo.warning}</span>
+          </div>
+         )}
+         {quietZoneResult.warnings.length>0&&(
+          <div className="module-warning-banner">
+           <AlertCircle size={14} style={{flexShrink:0}}/>
+           <span>{quietZoneResult.warnings[0]}</span>
+          </div>
+         )}
+         <button
+          type="button"
+          className="btn-download-png"
+          disabled={busy}
+          onClick={download1BitPng}
+         >
+          <Download size={13}/> ดาวน์โหลด PNG 1-bit ({labelDpi} DPI)
+         </button>
+        </section>
+       )}
+
        {/* Excel-Style Variables Table */}
        {asked.length>0&&(
         <section className="print-card print-card-vars excel-theme" aria-labelledby="print-values-title">
@@ -668,10 +926,14 @@ export function PrintDialog({
        type="button"
        className="primary btn-print-submit"
        disabled={busy||preflight.errors.length>0||missingValues.length>0}
-       onClick={()=>void print()}
+       onClick={()=>printLayer==='direct'?void directPrint():void print()}
       >
        <Printer size={16}/>
-       {busy?'กำลังเตรียมพิมพ์…':totalLabels>1?`Print (${totalLabels} ดวง)`:'Print…'}
+       {busy
+        ?'กำลังดำเนินการ…'
+        :printLayer==='direct'
+        ?(totalLabels>1?`พิมพ์ตรง (${totalLabels} ดวง)`:'พิมพ์ตรง (Direct Print)')
+        :(totalLabels>1?`Print (${totalLabels} ดวง)`:'Print…')}
       </button>
      </div>
     </div>

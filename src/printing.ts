@@ -27,3 +27,5 @@ export async function openSystemPrint(doc:LabelDocument,svg:string|string[],copi
  try{printWindow.focus();printWindow.print();}catch(error){frame.remove();throw error;}
 }
 export function localBridgeURL(value:string,pageProtocol:string){const url=new URL(value);if(!['localhost','127.0.0.1','[::1]'].includes(url.hostname)||url.username||url.password||url.search||url.hash||url.pathname!=='/'||!['http:','https:'].includes(url.protocol))throw Error('ใช้ URL ของ print bridge ในเครื่องนี้ เช่น https://localhost:28171');return url.origin;}
+
+export * from './printing/index';

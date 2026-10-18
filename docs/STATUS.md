@@ -1,5 +1,41 @@
 # Implementation status
 
+## 2026-10-18 — activeLABEL Printing Engine (Layer 1 & Layer 2 Direct Print)
+
+- **Dual-Layer Architecture Implementation (`src/printing/`, `src/PrintDialog.tsx`, `src/print-dialog.css`)**:
+  - **Layer 1 Enhancements (System Driver)**:
+    - Added physical dot calculations (`calculateModuleDots`), whole-dot integer rounding metrics, and warnings when module < 2 dots at 203 DPI.
+    - Implemented quiet zone preflight analysis (`checkQuietZones`) enforcing >= 10 modules for Code 128 / Code 39 / Code 93 and 11+7 modules for EAN-13.
+    - Added 1-bit high-resolution PNG export (`download1BitPng` via `exportMonochromePng`) matching literal printer DPI.
+  - **Layer 2 Direct Printing Engine**:
+    - **1-bit Rasterizer (`src/printing/raster.ts`)**: Converts canvas/SVG designs into packed 1-bit monochrome bitmap (`MonochromeBitmap`) with thresholding and Floyd-Steinberg error-diffusion dithering for raster images.
+    - **TSPL/TSPL2 Encoder (`src/printing/encoders/tspl.ts`)**: Produces binary `SIZE`, `GAP`, `SPEED`, `DENSITY`, `CLS`, `BITMAP`, and `PRINT` commands with polarity inversion.
+    - **ZPL II Encoder (`src/printing/encoders/zpl.ts`)**: Produces `^XA`, `^PW`, `^LL`, `~SD`, `^PR`, `^GFA` (ASCII Hex graphic field), `^PQ`, and `^XZ` blocks.
+    - **Transports (`src/printing/transports/`)**: Implemented `MockTransport` (for automated CI tests), `WebUSBTransport` (Printer Class 7 bulk OUT), `WebSerialTransport` (configurable baud rate), `WebBluetoothTransport` (BLE GATT chunking), and `LocalBridgeTransport` (local loopback bridge).
+    - **Printer Profiles Registry (`src/printing/profiles/registry.ts`)**: Registered Generic TSPL (203/300 DPI), Generic ZPL (203/300 DPI), Xprinter XP-365B / XP-420B, and Zebra ZD220/ZD230 with custom profile persistence in `localStorage`.
+    - **Calibration & Test Print (`src/printing/calibration.ts`)**: Test pattern generation with outer registration frame, center crosshairs, Thai mark typography test, stepped barcodes, and darkness ladder.
+  - **UI Integration in Print Dialog**:
+    - Dual-layer tab selector: "ไดรเวอร์ระบบ (Layer 1)" vs "ส่งตรงถึงเครื่อง (Layer 2)".
+    - Direct print profile and transport selector with live connection toggle and test print trigger.
+- **Verification**:
+  - 112 TypeScript unit tests passed (`bash scripts/rtk-exec.sh npm test`).
+  - Production build passed (`bash scripts/rtk-exec.sh npm run build`).
+  - All 25 Go tests in 8 packages passed (`bash scripts/rtk-exec.sh go test ./...`).
+  - Desktop print bridge cross-compiled for 6 OS/architecture targets with `scripts/build-printbridge.sh`.
+
+## 2026-10-16 — Unified Mobile Bottom Dock Width & Minimal Horizontal Dividers
+
+- **Unified Width & Minimal Dividers (`src/App.tsx`, `src/atelier.css`)**:
+  - **Identical Width Across All Bottom Bars**: Assigned identical width (`width: calc(100% - 16px); max-width: 440px; box-sizing: border-box; left: 50%; transform: translateX(-50%);`) across all 4 mobile bottom rows: `.context-bar` (shortcut property bar), `.composer` (AI chat prompt), `.document-controls` (Layers, Variables, Formulas, Document size), and `.canvas-toolbar` (Canvas navigation & Zoom).
+  - **Removed Bulky Pill Borders & Capsules**: Eliminated individual oval capsule shapes (`border-radius: 999px`), heavy drop shadows, and separate bounding boxes around each bar.
+  - **Subtle 1px Horizontal Dividers**: Integrated the 4 rows into a sleek, unified frosted-glass floating dock where rows seamlessly connect, partitioned purely by subtle 1px horizontal separator lines (`border-bottom: 1px solid rgba(0,0,0,0.08)`), delivering an ultra-clean, minimal aesthetic.
+  - **Dynamic Top-Corner Adaptation**: When an item is selected (`.composer.has-selection`), `.context-bar` adopts the rounded top corners (`border-radius: 14px 14px 0 0`) and seamlessly docks above `.composer`, while without selection `.composer` crowns the top of the dock.
+- **Verification**:
+  - 104 TypeScript tests passed (`bash scripts/rtk-exec.sh npm test`).
+  - Production build passed (`bash scripts/rtk-exec.sh npm run build`).
+  - All 25 Go tests in 8 packages passed (`bash scripts/rtk-exec.sh go test ./...`).
+  - Desktop print bridge cross-compiled for 6 OS/architecture targets with `scripts/build-printbridge.sh`.
+
 ## 2026-10-16 — Mobile Short Property Context Bar & AI Chat De-collision
 
 - **Mobile Floating Controls Stack (`src/atelier.css`)**:
