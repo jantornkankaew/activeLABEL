@@ -39,7 +39,7 @@ export function AIConnectionSettings({provider, connections, onSave, onClose}: {
       <button className="wide" disabled={checking} onClick={check}>{checking ? 'กำลังตรวจสอบ…' : 'ตรวจสอบการเชื่อมต่อ'}</button>
       {status && <p role="status" className="connection-status">{status}</p>}
     </>}
-    <div className="connection-info"><h3>ใช้ LabelCraft ภายใน ChatGPT</h3><p>เปิด editor เป็นแอปในบทสนทนา ChatGPT ได้ ไม่ต้องติดตั้งตัวเชื่อมใน Windows/macOS หรือใส่ API key แต่ต้องเพิ่มแอปจาก MCP server ที่ deploy แล้วก่อน</p><a href="https://github.com/jantornkankaew/labelcraft/blob/main/docs/CHATGPT_APP.md" target="_blank" rel="noreferrer">วิธีเพิ่ม LabelCraft ใน ChatGPT</a></div>
+    <div className="connection-info"><h3>ใช้ LabelCraft ภายใน ChatGPT</h3><p>เปิด editor เป็นแอปในบทสนทนา ChatGPT ได้ ไม่ต้องติดตั้งตัวเชื่อมใน Windows/macOS หรือใส่ API key แต่ต้องเพิ่มแอปจาก MCP server ที่ deploy แล้วก่อน</p><a href="https://github.com/jantornkankaew/activeLABEL/blob/main/docs/CHATGPT_APP.md" target="_blank" rel="noreferrer">วิธีเพิ่ม LabelCraft ใน ChatGPT</a></div>
     <div className="modal-actions"><button disabled={checking} onClick={onClose}>Cancel</button><button className="primary" disabled={checking || (selected !== 'demo' && !verified)} onClick={() => onSave(selected, draft)}><Check size={16}/> ใช้ตัวเลือกนี้</button></div>
   </div></div>;
 }

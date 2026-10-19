@@ -1,6 +1,6 @@
 import {validatePrintBounds} from './labelBounds';
 import {migrateDocument,validate,type LabelDocument} from './core';
-export const standaloneURL='https://jantornkankaew.github.io/labelcraft/';
+export const standaloneURL='https://jantornkankaew.github.io/activeLABEL/';
 export function printHandoffURL(doc:LabelDocument){validate(doc);const json=JSON.stringify(doc);if(json.length>200_000)throw Error('ฉลากใหญ่เกินกว่าจะเปิดหน้าพิมพ์ ดาวน์โหลด JSON แล้วเปิดในเว็บแทน');return standaloneURL+'#print='+encodeURIComponent(json);}
 export function readPrintHandoff():LabelDocument|null {if(typeof window==='undefined'||!window.location.hash.startsWith('#print='))return null;try{const json=decodeURIComponent(window.location.hash.slice(7));if(json.length>200_000)throw Error('Too large');return migrateDocument(JSON.parse(json));}catch{return null;}}
 export function printWindowCSS(doc:LabelDocument){validate(doc);validatePrintBounds(doc);return `@page{size:${doc.width}mm ${doc.height}mm;margin:0}*{box-sizing:border-box}body{margin:0;background:#edf2f4;font:14px Arial,sans-serif}.print-instructions{padding:20px;max-width:720px;margin:auto;line-height:1.8}.print-sheet{width:${doc.width}mm;height:${doc.height}mm;margin:20px auto;background:white;break-after:page;overflow:hidden}.print-sheet:last-child{break-after:auto}.print-sheet svg{display:block;width:${doc.width}mm!important;height:${doc.height}mm!important}@media print{body{background:white}.print-instructions{display:none}.print-sheet{margin:0;break-inside:avoid}}`;}

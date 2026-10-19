@@ -15,7 +15,7 @@ This is not the finished commercial application. The ChatGPT widget, MCP contrac
 
 Use [the ChatGPT app setup guide](docs/CHATGPT_APP.md). The widget opens inside ChatGPT and supports manual editing, validated AI proposals, explicit Apply/Reject, Undo/Redo and JSON/SVG export. It uses the existing TypeScript engine on both the UI and Go MCP server. It does not extract ChatGPT tokens or call an inference API.
 
-[Deploy the MCP server to Render using GitHub](https://render.com/deploy?repo=https://github.com/jantornkankaew/labelcraft), then add the actual HTTPS `/mcp` endpoint in ChatGPT's developer app settings. GitHub Pages cannot run this server. Account eligibility, hosting and app registration remain user steps; preparing the code is not a completed connection to ChatGPT.
+[Deploy the MCP server to Render using GitHub](https://render.com/deploy?repo=https://github.com/jantornkankaew/activeLABEL), then add the actual HTTPS `/mcp` endpoint in ChatGPT's developer app settings. GitHub Pages cannot run this server. Account eligibility, hosting and app registration remain user steps; preparing the code is not a completed connection to ChatGPT.
 
 ## RTK CLI for Codex
 
@@ -35,7 +35,7 @@ Every 1D barcode also has an independent 10–100% bar-height control. Drag eith
 
 The **File** menu provides New label, Open file, Export JSON and Export SVG. Open labels appear as stable tabs below the header. When `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are configured, the standalone website requires GitHub sign-in and autosaves documents, variables, settings and the active document to the user's cloud workspace. Row-level security isolates every account. Without those deployment variables it retains the local browser workflow. Download JSON remains a portable backup.
 
-To enable cloud workspaces, create a Supabase project, enable the GitHub auth provider, run `supabase/migrations/20261015000000_cloud_workspace.sql`, and add the site URL plus `https://jantornkankaew.github.io/labelcraft/` to the Auth redirect URLs. Add `VITE_SUPABASE_URL` and the publishable/anon key as GitHub Actions repository variables; they are public browser configuration, while the service-role key must never be added to the frontend.
+To enable cloud workspaces, create a Supabase project, enable the GitHub auth provider, run `supabase/migrations/20261015000000_cloud_workspace.sql`, and add the site URL plus `https://jantornkankaew.github.io/activeLABEL/` to the Auth redirect URLs. Add `VITE_SUPABASE_URL` and the publishable/anon key as GitHub Actions repository variables; they are public browser configuration, while the service-role key must never be added to the frontend.
 
 Each label file is self-contained. Objects, fonts, variables and remembered print values, unit, DPI, grid visibility, snap and grid spacing autosave with that document and travel in JSON and Share links. Opening another label restores its own settings. Application concerns such as AI connections and credentials remain outside label files.
 
@@ -55,7 +55,7 @@ Open the Vite URL. Chat starts in offline command-demo mode. Supported examples:
 
 ## Open in Chrome with GitHub Pages
 
-In this repository's GitHub **Settings → Pages**, choose **GitHub Actions** as the build source. The `Deploy LabelCraft to GitHub Pages` workflow builds and publishes the frontend on pushes to `main`; it can also be run manually from **Actions**. After a successful deployment, open `https://jantornkankaew.github.io/labelcraft/` in Chrome.
+In this repository's GitHub **Settings → Pages**, choose **GitHub Actions** as the build source. The `Deploy LabelCraft to GitHub Pages` workflow builds and publishes the frontend on pushes to `main`; it can also be run manually from **Actions**. After a successful deployment, open `https://jantornkankaew.github.io/activeLABEL/` in Chrome.
 
 Pages hosts the standalone static editor with offline demo or API mode. ChatGPT integration uses the separate [embedded app](docs/CHATGPT_APP.md), not a local Codex connector or an OAuth login on GitHub Pages. API mode needs a configured HTTPS API with the Pages origin explicitly allowed. The default Chrome system-dialog print route needs an installed OS printer queue; it does not need the bridge. The optional direct print bridge runs on the printer's computer. Do not put provider keys into GitHub Pages or browser code.
 

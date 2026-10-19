@@ -6,7 +6,7 @@
 
 ## 1. Deploy server จาก GitHub
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/jantornkankaew/labelcraft)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/jantornkankaew/activeLABEL)
 
 1. กด **Deploy to Render** ด้านบน แล้วเลือกล็อกอิน Render ด้วย **GitHub** (ต้องสร้าง/ยืนยันบัญชี Render ถ้ายังไม่มี)
 2. ตรวจ blueprint `labelcraft-chatgpt` ที่ใช้ `Dockerfile.chatgpt` และเลือกแผนที่ต้องการ configuration ตั้งต้นขอแผน `free` แต่ราคา/โควตา/สิทธิ์สมัครให้ตรวจจาก Render ก่อนยืนยัน

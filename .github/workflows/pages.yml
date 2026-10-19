@@ -50,7 +50,7 @@ jobs:
           VITE_SHARE_SERVICE_URL: ${{ vars.VITE_SHARE_SERVICE_URL }}
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
-        run: npm run build -- --base=/labelcraft/
+        run: npm run build -- --base=/activeLABEL/
       - uses: actions/setup-go@v5
         with:
           go-version: '1.27.2'

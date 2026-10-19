@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-const target = "https://jantornkankaew.github.io/labelcraft/"
+const target = "https://jantornkankaew.github.io/activeLABEL/"
 
 var idPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{12}$`)
 
@@ -80,7 +80,7 @@ func (s *service) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	parsed, e := url.Parse(input.URL)
-	if e != nil || parsed.Scheme != "https" || parsed.Host != "jantornkankaew.github.io" || parsed.Path != "/labelcraft/" || parsed.RawQuery != "" || parsed.User != nil {
+	if e != nil || parsed.Scheme != "https" || parsed.Host != "jantornkankaew.github.io" || (parsed.Path != "/activeLABEL/" && parsed.Path != "/labelcraft/") || parsed.RawQuery != "" || parsed.User != nil {
 		http.Error(w, "invalid destination", 400)
 		return
 	}

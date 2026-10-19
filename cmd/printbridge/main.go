@@ -22,7 +22,7 @@ import (
 	"time"
 )
 
-const appURL = "https://jantornkankaew.github.io/labelcraft/"
+const appURL = "https://jantornkankaew.github.io/activeLABEL/"
 
 func main() {
 	config := flag.String("config", "", "optional explicit printer profiles; default discovers OS queues")

@@ -18,7 +18,7 @@ LabelCraft มี 3 โหมด: ทดลองคำสั่งออฟไ�
 
 ### 2. ดาวน์โหลดตัวเชื่อม
 
-เปิด <https://github.com/jantornkankaew/labelcraft/actions/workflows/connectors.yml> เลือก run ที่สำเร็จและตรงกับ commit ล่าสุด แล้วดาวน์โหลด artifact **LabelCraft-AI-Connectors** (GitHub อาจให้ล็อกอินก่อนดาวน์โหลด)
+เปิด <https://github.com/jantornkankaew/activeLABEL/actions/workflows/connectors.yml> เลือก run ที่สำเร็จและตรงกับ commit ล่าสุด แล้วดาวน์โหลด artifact **LabelCraft-AI-Connectors** (GitHub อาจให้ล็อกอินก่อนดาวน์โหลด)
 
 แตก ZIP แล้วเลือก ZIP ภายในให้ตรงเครื่อง:
 
@@ -52,7 +52,7 @@ Codex จะเปิดขั้นตอนล็อกอินทางก�
 
 ### 4. จับคู่กับเว็บ
 
-เปิด <https://jantornkankaew.github.io/labelcraft/> ใน Chrome → **Settings** หรือ **เปลี่ยน** ข้างโหมด AI:
+เปิด <https://jantornkankaew.github.io/activeLABEL/> ใน Chrome → **Settings** หรือ **เปลี่ยน** ข้างโหมด AI:
 
 1. เลือก **ChatGPT · ผ่าน Codex บนเครื่องคุณ**
 2. Local connector URL: `https://localhost:28172`

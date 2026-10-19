@@ -1,5 +1,18 @@
 # Implementation status
 
+## 2026-10-19 — Repository Rename to activeLABEL
+
+- **GitHub Repository & Endpoints Alignment**:
+  - Renamed GitHub repository from `jantornkankaew/labelcraft` to `jantornkankaew/activeLABEL` via `gh repo rename activeLABEL`.
+  - Updated git remote origin URL to `https://github.com/jantornkankaew/activeLABEL.git`.
+  - Updated GitHub Pages build base path in `.github/workflows/pages.yml` to `--base=/activeLABEL/`.
+  - Updated `standaloneURL`, `appURL`, `target` and documentation references across `README.md`, `docs/`, `src/printing.ts`, `src/AIConnectionSettings.tsx`, `cmd/chatgpt/main.go`, `cmd/printbridge/main.go`, `cmd/share/main.go`, and test assertions in `tests/freeform-sharing.test.ts`.
+- **Verification**:
+  - 112 TypeScript unit tests passed (`bash scripts/rtk-exec.sh npm test`).
+  - Production build passed (`bash scripts/rtk-exec.sh npm run build`).
+  - All 25 Go tests in 8 packages passed (`bash scripts/rtk-exec.sh go test ./...`).
+  - Desktop print bridge cross-compiled for 6 OS/architecture targets with `scripts/build-printbridge.sh`.
+
 ## 2026-10-18 — activeLABEL Printing Engine (Layer 1 & Layer 2 Direct Print & Mode Visibility)
 
 - **Dual-Layer Architecture Implementation (`src/printing/`, `src/PrintDialog.tsx`, `src/print-dialog.css`)**:
